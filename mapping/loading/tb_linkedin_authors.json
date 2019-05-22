@@ -1,0 +1,65 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "graph": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "dateCreatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "dateUpdatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "fullname": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "lnkurl": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "fmt_headline": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "imgurl": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "finished": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "peekType": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "referenceType": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "imgname": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "publications_id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
+

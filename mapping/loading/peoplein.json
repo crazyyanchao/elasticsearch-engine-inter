@@ -1,0 +1,101 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "graph": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "UID": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "addresses": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "age": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "alias": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "edu": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "email": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "finished": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "firstname": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "job": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "lastname": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "locality": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "middlename": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "nameid": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "phone": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "postcode": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "region": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "relatives": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "street": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "ups": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "type": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}
+

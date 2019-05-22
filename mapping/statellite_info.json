@@ -1,0 +1,81 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "graph": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "md5": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "ALTITUDEKM": {
+          "index": "not_analyzed",
+          "type": "double"
+        },
+        "UTC": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "LocalSiderealTime": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "LONGITUDE": {
+          "index": "not_analyzed",
+          "type": "double"
+        },
+        "LOCALTIME": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "ELEVATION": {
+          "index": "not_analyzed",
+          "type": "double"
+        },
+        "SPEEDMIS": {
+          "index": "not_analyzed",
+          "type": "double"
+        },
+        "DECLINATION": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "SPEEDKMS": {
+          "index": "not_analyzed",
+          "type": "double"
+        },
+        "NORADID": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "RIGHTASCENSION": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "ALTITUDEMI": {
+          "index": "not_analyzed",
+          "type": "double"
+        },
+        "LATITUDE": {
+          "index": "not_analyzed",
+          "type": "double"
+        },
+        "AZIMUTH": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "pubtime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        }
+      }
+    }
+  }
+}
+

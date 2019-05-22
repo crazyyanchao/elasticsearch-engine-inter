@@ -1,0 +1,85 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "graph": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "dateCreatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "dateUpdatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "fullname": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "imgurl": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "headline": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "location": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "industry": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "current": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "past": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "education": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "twitter": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "email": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "imim": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "phone": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "address": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "people_id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
+

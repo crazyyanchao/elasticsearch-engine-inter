@@ -1,0 +1,49 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "graph": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "dateCreatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "dateUpdatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "whos": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "title": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "staticimgurl": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "imgname": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "experiences_id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
+

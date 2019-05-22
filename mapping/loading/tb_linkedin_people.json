@@ -1,0 +1,57 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "graph": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "dateCreatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "dateUpdatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "collectionTime": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "lnkid": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "summary": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "digPerson": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "nodeid": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "urlpattern": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "imgcode_id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
+

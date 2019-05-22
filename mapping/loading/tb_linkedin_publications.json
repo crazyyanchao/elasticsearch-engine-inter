@@ -1,0 +1,53 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "graph": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "dateCreatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "dateUpdatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "title": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "publisher": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "date": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "description": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "linkurl": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "people_id": {
+          "index": "not_analyzed",
+          "type": "integer"
+        }
+      }
+    }
+  }
+}
+
