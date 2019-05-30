@@ -14,6 +14,8 @@
 ### 3、Mapping数据类型参考
 [Mapping数据类型参考](https://blog.csdn.net/chengyuqiang/article/details/79048800)
 
+[Mapping模板](https://blog.csdn.net/laoyang360/article/details/78396928)
+
 [Elaticsearch-5.6.X官方技术文档](https://www.elastic.co/guide/en/elasticsearch/plugins/current/index.html)
 
 ## 二、数据转储到ES

@@ -208,7 +208,7 @@ public class HttpRequest {
 	/**
 	 * 处理可能出现的压缩格式
 	 * 
-	 * @param method
+	 * @param //method
 	 * @return byte[]
 	 */
 	public synchronized byte[] getResponseBody(HttpResponse response) {

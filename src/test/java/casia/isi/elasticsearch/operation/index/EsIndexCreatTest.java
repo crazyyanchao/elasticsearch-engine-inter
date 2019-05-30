@@ -75,7 +75,7 @@ public class EsIndexCreatTest {
         //		String fileName = "mapping/linkin/peoplein.json";
 //		String fileName = "mapping/linkin/tb_linkedin_additionalinfo.json";
 
-        String fileName = "mapping/linkin/tb_linkedin_projects.json";
+        String fileName = "mapping/loading/tb_linkedin_projects.json";
 
         String url = "http://localhost:9200/tb_linkedin_projects";
 
@@ -161,6 +161,26 @@ public class EsIndexCreatTest {
 
         // 需要生成MD5字段数据
         boolean it = esIndexCreat.index( dataList , "ID" );
+    }
+
+    @Test
+    public void smallAllIndex(){
+        String fileName = "mapping/test/smallAllIndex.json";
+
+        String url = "http://192.168.12.109:9210/small_all_index";
+
+        HttpRequest httpExcutetor = new HttpRequest();
+
+        try {
+            String json = JSONObject.parseObject(FileUtil.readAllLine(fileName, "UTF-8")).toJSONString();
+            System.out.println(json);
+            String rt = httpExcutetor.httpPut(url, json);
+            System.out.println(rt);
+            System.out.println("end");
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
 }

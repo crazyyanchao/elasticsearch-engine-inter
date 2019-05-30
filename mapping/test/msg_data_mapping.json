@@ -1,0 +1,90 @@
+{
+  "settings": {
+    "number_of_shards": 6,
+    "number_of_replicas": 2
+  },
+  "mappings": {
+    "msg_data": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "md5": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "con_md5": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "pid": {
+          "index": "not_analyzed",
+          "type": "long"
+        },
+        "wx_id": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "abstract": {
+          "analyzer": "ik_max_word",
+          "search_analyzer": "ik_max_word",
+          "fielddata": true,
+          "store": true,
+          "type": "text"
+        },
+        "article_url": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "media_url": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "title": {
+          "analyzer": "ik_max_word",
+          "search_analyzer": "ik_max_word",
+          "fielddata": true,
+          "store": true,
+          "type": "text"
+        },
+        "content": {
+          "analyzer": "ik_max_word",
+          "search_analyzer": "ik_max_word",
+          "fielddata": true,
+          "store": true,
+          "type": "text"
+        },
+        "txt_file": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "info_type": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "genre": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "is_dup": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "fans_count": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "pubtime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "insert_time": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        }
+      }
+    }
+  }
+}
+

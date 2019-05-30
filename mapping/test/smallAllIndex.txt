@@ -1,0 +1,189 @@
+{
+  "mappings": {
+    "smallAllIndex": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "it": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "gid": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "title": {
+          "analyzer": "standard",
+          "store": true,
+          "type": "text"
+        },
+        "content": {
+          "analyzer": "standard",
+          "store": true,
+          "type": "text"
+        },
+        "contact_info": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "is_contact": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "summary": {
+          "analyzer": "standard",
+          "store": true,
+          "type": "text"
+        },
+        "url": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "domain": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "host": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "pubtime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "store": true,
+          "type": "date"
+        },
+        "author": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "site": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "source_type": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "integer"
+        },
+        "nation_category": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "integer"
+        },
+        "genus": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "integer"
+        },
+        "insert_time": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "store": true,
+          "type": "date"
+        },
+        "area_list": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "repub": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "keywords": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "picture": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "language": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "blogger_id": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "website_id": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "rttcount": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "commtcount": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "favcount": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "reviewcount": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "replycount": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "postUserIp": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "ip"
+        },
+        "tag_info": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "playcount": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "board_name": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        }
+      }
+    }
+  },
+  "settings": {
+    // 测试0 线上1
+    "number_of_replicas": 0,
+    // 大索引10 小索引5
+    "number_of_shards": 5
+  }
+}
+

@@ -1,0 +1,8 @@
+{
+  "TABLE_COMMENT": "facebook信息表",
+  "TABLE_NAME": "facebook_blog",
+  "COLUMN_NAME": "auto_id",
+  "COLUMN_COMMENT": "自增ID",
+  "COLUMN_KEY": "PRI",
+  "COLUMN_TYPE": "bigint(20)"
+}

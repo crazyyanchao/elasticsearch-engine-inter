@@ -1,0 +1,36 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "test_data": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "type": "long"
+        },
+        "content": {
+          "analyzer": "ik_max_word",
+          "search_analyzer": "ik_max_word",
+          "fielddata": true,
+          "type": "text"
+        },
+        "eid": {
+          "index": "not_analyzed",
+          "type": "integer"
+        },
+        "lal": {
+          "type": "geo_point"
+        },
+        "name": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}

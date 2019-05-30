@@ -1,0 +1,31 @@
+{
+  "_source": [
+    "content",
+    "crawler_time"
+  ],
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "query": "+id:(237501394733502460 OR 237501394733502461)"
+          }
+        }
+      ],
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "range": {
+                "crawler_time": {
+                  "gte": "2019-03-01 09:56:04",
+                  "lte": "2019-05-23 09:56:04"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

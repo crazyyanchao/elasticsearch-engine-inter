@@ -1,0 +1,30 @@
+{
+  "_source": [
+    "area_list"
+  ],
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "query": "+area_list:(长春 OR 北京)"
+          }
+        }
+      ],
+      "filter": {
+        "bool": {
+          "must": [
+            {
+              "range": {
+                "pubtimeAll": {
+                  "gte": "2019-05-18 09:56:04",
+                  "lte": "2019-05-28 09:56:04"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

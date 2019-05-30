@@ -1,0 +1,30 @@
+{
+  "mappingOneFields": [
+    "id",
+    "organization",
+    "cause",
+    "people_id",
+    "dateCreatedTime",
+    "description",
+    "role",
+    "date",
+    "dateUpdatedTime"
+  ],
+  "diffrenceAndMappingOneLack": [
+    "dateUpdatedTime2",
+    "date2"
+  ],
+  "mappingTwoFields": [
+    "id",
+    "dateUpdatedTime2",
+    "organization",
+    "cause",
+    "people_id",
+    "dateCreatedTime",
+    "description",
+    "date2",
+    "role",
+    "date",
+    "dateUpdatedTime"
+  ]
+}

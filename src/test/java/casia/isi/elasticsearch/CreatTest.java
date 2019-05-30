@@ -12,6 +12,7 @@ import org.apache.log4j.PropertyConfigurator;
 import casia.isi.elasticsearch.operation.index.EsIndexCreat;
 
 public class CreatTest {
+
 	private Logger logger = Logger.getLogger(CreatTest.class);
 	
 	public static void main(String[] args) throws SQLException, NumberFormatException, ParseException {
@@ -46,4 +47,6 @@ public class CreatTest {
 			System.out.println(string);
 		}*/
 	}
+
 }
+

@@ -1,0 +1,99 @@
+{
+    "settings": {
+        "number_of_shards": 5,
+        "number_of_replicas": 2
+    },
+    "mappings": {
+        "analysis_data": {
+            "dynamic": "false",
+            "_source": {
+                "enabled": true
+            },
+            "properties": {
+                "md5": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "id": {
+                    "index": "not_analyzed",
+                    "type": "integer"
+                },
+                "msg_type": {
+                    "index": "not_analyzed",
+                    "type": "integer"
+                },
+                "uid": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "uwid": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "gid": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "rid": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "rwid": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "content": {
+                    "analyzer": "ik_max_word",
+                    "search_analyzer": "ik_max_word",
+                    "fielddata": true,
+                    "store": true,
+                    "type": "text"
+                },
+                "info_type": {
+                    "index": "not_analyzed",
+                    "type": "integer"
+                },
+                "ip": {
+                    "index": "not_analyzed",
+                    "type": "ip"
+                },
+                "country": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "province": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "city": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "prefecture": {
+                    "index": "not_analyzed",
+                    "type": "keyword"
+                },
+                "lal": {
+                    "type": "geo_point"
+                },
+                "warning_level": {
+                    "index": "not_analyzed",
+                    "type": "integer"
+                },
+                "action": {
+                    "index": "not_analyzed",
+                    "store": true,
+                    "type": "keyword"
+                },
+                "pubtime": {
+                    "format": "yyyy-MM-dd HH:mm:ss",
+                    "type": "date"
+                },
+                "insert_time": {
+                    "format": "yyyy-MM-dd HH:mm:ss",
+                    "type": "date"
+                }
+            }
+        }
+    }
+}
