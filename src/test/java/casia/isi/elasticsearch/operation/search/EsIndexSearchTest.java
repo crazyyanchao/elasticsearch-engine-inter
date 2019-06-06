@@ -66,7 +66,6 @@ public class EsIndexSearchTest {
             System.out.println("");
         }
 
-
 		/*System.out.println("\r\n---------------------------2.原子、短语、非空------------------------\r\n");
 		searchClient.reset();//重置
 		searchClient.debug = true;

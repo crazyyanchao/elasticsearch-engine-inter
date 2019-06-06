@@ -1,7 +1,7 @@
 package casia.isi.elasticsearch.common;
 /**
  * 枚举类型,符号
- * @author wzy
+ * @author
  *
  */
 public enum Symbol {

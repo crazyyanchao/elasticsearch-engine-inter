@@ -1,7 +1,6 @@
 package casia.isi.elasticsearch.operation.delete;
 
 import casia.isi.elasticsearch.common.FieldOccurs;
-import casia.isi.elasticsearch.operation.search.EsIndexSearch;
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.Before;
 import org.junit.Test;
@@ -112,7 +111,7 @@ public class EsIndexDeleteTest {
     @Test
     public void deleteDataByTimeRange() {
 
-        esSmallIndexDelete.addRangeTerms("pubtime", "2019-01-15 00:00:00", "2019-05-20 00:00:00", FieldOccurs.MUST);
+        esSmallIndexDelete.addRangeTerms("pubtime", "2019-05-15 00:00:00", "2019-05-21 00:00:00", FieldOccurs.MUST);
         esSmallIndexDelete.execute();
         System.out.println(esSmallIndexDelete.getDeleteTotal());
 

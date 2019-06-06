@@ -2,7 +2,7 @@ package casia.isi.elasticsearch.common;
 
 /**
  * 枚举类，与或
- * @author wzy
+ * @author
  *
  */
 public enum FieldCombine {

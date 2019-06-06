@@ -6,6 +6,8 @@ import java.io.StringReader;
 import java.util.*;
 
 import casia.isi.elasticsearch.common.FieldOccurs;
+import casia.isi.elasticsearch.common.KeywordsCombine;
+import casia.isi.elasticsearch.common.RangeOccurs;
 import casia.isi.elasticsearch.common.SortOrder;
 import casia.isi.elasticsearch.util.Validator;
 import com.alibaba.fastjson.JSON;
@@ -17,13 +19,14 @@ import com.alibaba.fastjson.JSONArray;
 
 import casia.isi.elasticsearch.util.RegexUtil;
 import casia.isi.elasticsearch.util.StringUtil;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.wltea.analyzer.core.IKSegmenter;
 import org.wltea.analyzer.core.Lexeme;
 
 /**
  * ElasticSearch的索引查询接口(Http方式)
  *
- * @author wzy
+ * @author
  * @version elasticsearch - 5.6.3
  */
 public class EsIndexSearch extends EsIndexSearchImp {
@@ -49,8 +52,7 @@ public class EsIndexSearch extends EsIndexSearchImp {
      */
     public static List<String> extractKeywords(String text, int size) {
 
-        Map<String, Integer> map = new HashMap<String, Integer>();
-        //Set<String> set = new LinkedHashSet<String>();
+        Map<String, Integer> map = new HashMap<>();
         StringReader stringReader = new StringReader(text);
         TokenStream ts = analyzer.tokenStream("", stringReader);
         try {
@@ -216,7 +218,7 @@ public class EsIndexSearch extends EsIndexSearchImp {
     /**
      * @param
      * @return
-     * @Description: TODO(输出索引查询结果)
+     * @Description: TODO(输出索引查询语句)
      */
     public JSONObject outputQueryJson() {
         return super.queryJson;
@@ -283,6 +285,177 @@ public class EsIndexSearch extends EsIndexSearchImp {
             map.put(strings[0], Long.valueOf(String.valueOf(strings[1])));
         }
         return map;
+    }
+
+    /**
+     * @param field:被查询的字段
+     * @param sentence:字段值
+     * @return
+     * @Description: TODO(相似性查询)
+     */
+    public void addMoreLikeThisQuery(String field, String sentence) {
+        if ((field == null) || ("".equals(field.trim())))
+            return;
+        sentence = sentence.replace("\\pP|\\pS\\b", " ");
+        super.addKeywordsQuery(field, sentence, FieldOccurs.MUST, KeywordsCombine.OR);
+    }
+
+    /**
+     * @param field:被查询的字段
+     * @param sentence:字段值
+     * @param keywordSize:控制分词数量(负数时返回所有分词结果)
+     * @return
+     * @Description: TODO(相似性查询 - 控制分词)
+     */
+    public void addMoreLikeThisQuery(String field, String sentence, int keywordSize) {
+        if ((field == null) || ("".equals(field.trim())))
+            return;
+        List list = extractKeywords(sentence, keywordSize);
+        super.addKeywordsQuery(field, list, FieldOccurs.MUST);
+    }
+
+    /**
+     * 筛选某区间内的数据，筛选的字段必须为数字形式。 如时间、 id、 评论数等
+     *
+     * @param field       筛选的字段
+     * @param value       区间结束值
+     * @param occurs      是否必须作为过滤条件 一般为must
+     * @param rangeOccurs 选择过滤方式（大于/大于等于/小于/小于等于）
+     */
+    public void addRangeTerms(String field, String value, FieldOccurs occurs, RangeOccurs rangeOccurs) {
+        if (!Validator.check(value) && !Validator.check(value)) {
+            return;
+        }
+        JSONObject fieldJson = new JSONObject();
+        if (Validator.check(value)) {
+            //大于等于
+            fieldJson.put(rangeOccurs.getSymbolValue(), value);
+        }
+        JSONObject json = new JSONObject();
+        JSONObject rangejson = new JSONObject();
+        json.put(field, fieldJson);
+        rangejson.put("range", json);
+        if (occurs.equals(FieldOccurs.MUST)) {
+            super.queryFilterMustJarr.add(rangejson);
+        } else if (occurs.equals(FieldOccurs.MUST_NOT)) {
+            super.queryFilterMustNotJarr.add(rangejson);
+        }
+    }
+
+    /**
+     * 筛选某区间内的数据，筛选的字段必须为数字形式。 如时间、 id、 评论数等
+     *
+     * @param field           筛选的字段
+     * @param startTerm       区间开始值
+     * @param startRangeOccur 指定开始值的开闭区间
+     * @param endTerm         区间结束值
+     * @param stopRangeOccur  指定结束值的开闭区间
+     * @param occurs          是否必须作为过滤条件 一般为must
+     */
+    public void addRangeTerms(String field, String startTerm, RangeOccurs startRangeOccur, String endTerm, RangeOccurs stopRangeOccur, FieldOccurs occurs) {
+        if (!Validator.check(field)) {
+            return;
+        }
+        if ((!Validator.check(startTerm)) && (!Validator.check(endTerm))) {
+            return;
+        }
+        JSONObject fieldJson = new JSONObject();
+        if (Validator.check(startTerm)) {
+            fieldJson.put(startRangeOccur.getSymbolValue(), startTerm);
+        }
+        if (Validator.check(endTerm)) {
+            fieldJson.put(stopRangeOccur.getSymbolValue(), endTerm);
+        }
+        JSONObject json = new JSONObject();
+        JSONObject rangejson = new JSONObject();
+        json.put(field, fieldJson);
+        rangejson.put("range", json);
+        if (occurs.equals(FieldOccurs.MUST)) {
+            this.queryFilterMustJarr.add(rangejson);
+        } else if (occurs.equals(FieldOccurs.MUST_NOT)) {
+            this.queryFilterMustNotJarr.add(rangejson);
+        }
+    }
+
+    /**
+     * 根据时间粒度统计 聚合数量
+     * 类似统计每一天it字段下各个类型数据量
+     *
+     * @param TimeField   查询的时间字段
+     * @param format      时间格式 例如：yyyy-MM-dd
+     * @param interval    粒度 (1M代表每月，1d代表每日，1H代表每小时)
+     * @param secondField 要聚合的字段s
+     * @return
+     * @Description: TODO(根据时间粒度统计)
+     */
+
+    public List<String[]> facetDateBySecondFieldValueCount(String TimeField, String format, String interval, String secondField) {
+        //添加查询
+        //添加查询
+        setRow(0);
+        super.getQueryString(null);
+
+        JSONObject aggs_json = new JSONObject();
+
+        JSONObject histog_json = new JSONObject();
+        histog_json.put("field", TimeField);
+        histog_json.put("format", format);
+        histog_json.put("interval", interval);
+        histog_json.put("min_doc_count", 0);
+        JSONObject sales_json = new JSONObject();
+        sales_json.put("date_histogram", histog_json);
+
+        //添加统计字段
+        JSONObject aggregationJsonObject = new JSONObject();
+
+        JSONObject cardinalityJsonObject = new JSONObject();
+        cardinalityJsonObject.put("field", secondField);
+        JSONObject countJsonObject = new JSONObject();
+        countJsonObject.put("terms", cardinalityJsonObject);
+        aggregationJsonObject.put(secondField, countJsonObject);
+
+        sales_json.put("aggs", aggregationJsonObject);
+        aggs_json.put(TimeField, sales_json);
+
+        super.queryJson.put("aggs", aggs_json);
+        String queryStr = super.queryJson.toString();
+        if (super.debug) {
+            super.logger.info(super.queryUrl + " -d " + queryStr);
+        }
+        String queryResult = super.request.httpPost(super.queryUrl, queryStr);
+        if (queryResult != null)
+            super.queryJsonResult = JSONObject.parseObject(queryResult);
+        if (super.debug) {
+            super.logger.info(super.queryJsonResult);
+        }
+
+        //解析结果
+        List<String[]> list = new LinkedList<String[]>();
+
+        if (super.queryJsonResult == null || super.queryJsonResult.size() == 0 || !super.queryJsonResult.containsKey("hits")) {
+            return list;
+        }
+        JSONArray bucketJsons = super.queryJsonResult.getJSONObject("aggregations").getJSONObject(TimeField).getJSONArray("buckets");
+        super.countTotle = bucketJsons.size();
+        for (int index = 0; index < bucketJsons.size(); index++) {
+            JSONObject bucketJson = bucketJsons.getJSONObject(index);
+            JSONArray secondbucketJsons = bucketJson.getJSONObject(secondField).getJSONArray("buckets");
+            String[] rs = new String[2 + 2 * secondbucketJsons.size()];
+
+            rs[0] = bucketJson.getString("key_as_string");
+            rs[1] = bucketJson.getString("doc_count");
+            int inn = 2;
+            for (int i = 0; i < secondbucketJsons.size(); i++) {
+                JSONObject bucket = secondbucketJsons.getJSONObject(i);
+                rs[inn] = bucket.getString("key");
+                inn += 1;
+                rs[inn] = bucket.getString("doc_count");
+                inn += 1;
+            }
+
+            list.add(rs);
+        }
+        return list;
     }
 
 }

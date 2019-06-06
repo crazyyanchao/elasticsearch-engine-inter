@@ -42,8 +42,8 @@ public class HttpRequest {
 			httpClient.getParams().setParameter(CoreProtocolPNames.HTTP_CONTENT_CHARSET, HttpHeader.Encoding_UTF_8 );
 		}
 		httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
-		httpClient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 2 * 60 * 1000);
-		httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, 2 * 60 * 1000);
+		httpClient.getParams().setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, 20 * 60 * 1000);
+		httpClient.getParams().setParameter(CoreConnectionPNames.SO_TIMEOUT, 20 * 60 * 1000);
 		httpClient.getParams().setParameter("http.protocol.single-cookie-header", true);
 	} 
 	

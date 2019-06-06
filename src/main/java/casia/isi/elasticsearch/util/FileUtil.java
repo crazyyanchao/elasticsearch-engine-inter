@@ -43,7 +43,7 @@ import java.util.*;
  * @Description: TODO(File operate util)
  * @date 2018/1/18 11:49
  */
-public final class FileUtil {
+public class FileUtil {
 
     private final static Logger logger = Logger.getLogger(FileUtil.class);
 

@@ -2,26 +2,26 @@ package casia.isi.elasticsearch.common;
 
 /**
  * 枚举类，字段出现情况
- * @author wzy
  *
+ * @author
  */
 public enum FieldOccurs {
-	/**
-	 * 必须出现
-	 */
-	MUST("+"),
-	/**
-	 * 必须不能出现
-	 */
-	MUST_NOT("-");
-	
-	private String symbol;
+    /**
+     * 必须出现
+     */
+    MUST("+"),
+    /**
+     * 必须不能出现
+     */
+    MUST_NOT("-");
 
-	private FieldOccurs(String symbol) {
-		this.symbol = symbol;
-	}
+    private String symbol;
 
-	public String getSymbolValue() {
-		return this.symbol;
-	}
+    FieldOccurs(String symbol) {
+        this.symbol = symbol;
+    }
+
+    public String getSymbolValue() {
+        return this.symbol;
+    }
 }

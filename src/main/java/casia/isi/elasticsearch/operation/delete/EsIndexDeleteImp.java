@@ -48,7 +48,7 @@ public class EsIndexDeleteImp {
     /**
      * 索引名称
      */
-    private static String IndexName;
+    public static String IndexName;
     /**
      * 索引类型
      */
@@ -56,11 +56,16 @@ public class EsIndexDeleteImp {
     /**
      * 删除索引地址
      */
-    private static String deleteUrl;
+    public static String deleteUrl;
+
+    /**
+     * 接口地址
+     **/
+    public static String delete_url;
     /**
      * http访问对象
      */
-    private HttpRequest httpRequest;
+    public HttpRequest httpRequest;
 
     /**
      * 空格符
@@ -73,11 +78,11 @@ public class EsIndexDeleteImp {
     /**
      * queryResult 结果
      */
-    private String queryResult;
+    public String queryResult;
     /**
      * 构造删除条件的json串
      */
-    private JSONObject queryJson = null;
+    public JSONObject queryJson = null;
     /**
      * 构造查询必须条件的Arry串
      */
@@ -89,15 +94,20 @@ public class EsIndexDeleteImp {
     /**
      * 构造过滤否定条件的json串
      */
-    private JSONArray queryFilterMustNotJarr = null;
+    public JSONArray queryFilterMustNotJarr = null;
     /**
      * 构造过滤肯定条件的json串
      */
-    private JSONArray queryFilterMustJarr = null;
+    public JSONArray queryFilterMustJarr = null;
     /**
      * 记录关键词，以及关键词出现情况
      */
     private String keywordString = "";
+
+    /**
+     * 删除接口配置的参数
+     **/
+    public static String deleteParameters = "";
 
     /**
      * 构造函数
@@ -183,6 +193,8 @@ public class EsIndexDeleteImp {
         this.queryMustNotJarr.clear();
         this.queryFilterMustNotJarr.clear();
         this.queryFilterMustJarr.clear();
+        this.deleteParameters = "";
+        this.delete_url = "";
     }
 
     /**
@@ -789,8 +801,7 @@ public class EsIndexDeleteImp {
     public void execute() {
         String queryStr = getDeleteString();
 
-        String delete_url = this.deleteUrl + "/" + this.IndexName + "/" + this.IndexType + "/_delete_by_query";
-
+        delete_url = getDleteHttpUrl();
         if (debug) {
             logger.info("curl:" + delete_url + " -d " + queryStr);
             System.out.println("curl:" + delete_url + " -d " + queryStr);
@@ -799,6 +810,18 @@ public class EsIndexDeleteImp {
         if (debug) {
             logger.info("queryResult: -d " + this.queryResult);
         }
+    }
+
+    /**
+     * @return
+     * @Description: TODO(获取删除接口地址)
+     */
+    private String getDleteHttpUrl() {
+        if (!"".equals(deleteParameters)) {
+            deleteParameters = "?" + deleteParameters.replace("?", "&").substring(1,deleteParameters.length());
+        }
+        return this.deleteUrl + "/" + this.IndexName + "/" + this.IndexType + "/_delete_by_query" + deleteParameters;
+
     }
 
 }
