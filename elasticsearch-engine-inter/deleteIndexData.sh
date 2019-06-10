@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
 
-myJarPath=./lib/dx_monitor_caiji_es_indexer.jar
+myJarPath=./lib/elasticsearch-engine-inter.jar
 
 # ---------------------------启动小索引数据删除进程---------------------------
 
 # 索引类型
-indexType="caiji_small"
+indexType="monitor_caiji_small"
 
 # 索引名称-多个索引名称使用逗号分隔
-indexName="index_mall,index_all"
+indexName="news_small,blog_small,forum_threads_small,mblog_info_small,video_brief_small,wechat_message_xigua_small,appdata_small,newspaper_info_small"
 
 # IP和端口-使用冒号分隔
-ipPort="192.168.12.109:9210"
+ipPort="localhost:9200"
 
 # 索引mapping中的时间字段 根据发布时间或者插入时间删除
 timeField="pubtime"
 
 # 每隔delayTime执行一次删除数据操作 - 延时执行-支持按天/小时/分钟（格式数字加d/h/m：1d/24h/60m/60s）
+# delayTime="5m"
 delayTime="30m"
 
 # 删除beforeDataTime以前的数据 - 行一次时删除多久以前的数据-支持按天/小时/分钟（格式数字加d/h/m：1d/24h/60m/60s）
@@ -31,5 +32,4 @@ debug="true"
 #*****************************************************************
 isForceMerge="false"
 
-nohup java -Xmx512m -cp ${myJarPath} casia.isi.delete.DeleteIndexData ${indexType} ${indexName} ${ipPort} ${timeField} ${delayTime} ${beforeDataTime} ${debug} ${isForceMerge} >>logs/delete.DeleteIndexData.log 2>&1 &
-
+nohup java -Xmx512m -cp ${myJarPath} casia.isi.elasticsearch.operation.delete.shell.DeleteDataByShell ${indexType} ${indexName} ${ipPort} ${timeField} ${delayTime} ${beforeDataTime} ${debug} ${isForceMerge} >>logs/delete.DeleteDataByShell.log 2>&1 &

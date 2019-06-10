@@ -388,7 +388,6 @@ public class EsIndexSearch extends EsIndexSearchImp {
      * @return
      * @Description: TODO(根据时间粒度统计)
      */
-
     public List<String[]> facetDateBySecondFieldValueCount(String TimeField, String format, String interval, String secondField) {
         //添加查询
         //添加查询

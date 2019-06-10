@@ -153,7 +153,7 @@ public final class DeleteDataByShell {
         String currentThreadTime = getCurrentThreadTime();
 
         esIndexDataDelete.addRangeTerms(timeField, currentThreadTime, FieldOccurs.MUST, RangeOccurs.LTE);
-        esIndexDataDelete.setRefresh(true);
+        esIndexDataDelete.setRefresh("wait_for");
         esIndexDataDelete.setScrollSize(1000);
         esIndexDataDelete.conflictsProceed("proceed");
         esIndexDataDelete.setWaitForCompletion(false);

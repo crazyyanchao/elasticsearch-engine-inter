@@ -38,7 +38,7 @@ public class DeleteDataByShellTest {
     @Test
     public void forceMerge() {
         HttpRequest httpRequest = new HttpRequest();
-        String url = "http://192.168.12.109:9210/news_small,blog_small,forum_threads_small,mblog_info_small,video_brief_small,wechat_message_xigua_small,appdata_small,newspaper_info_small/_forcemerge?\n" +
+        String url = "http://localhost:9210/news_small,blog_small,forum_threads_small,mblog_info_small,video_brief_small,wechat_message_xigua_small,appdata_small,newspaper_info_small/_forcemerge?\n" +
                 "only_expunge_deletes=true&max_num_segments=1";
     }
 
@@ -55,7 +55,7 @@ public class DeleteDataByShellTest {
          **/
         String indexType = "monitor_caiji_small";
         String indexName = "news_small,blog_small,forum_threads_small,mblog_info_small,video_brief_small,wechat_message_xigua_small,appdata_small";
-        String ipPort = "192.168.12.109:9210";
+        String ipPort = "localhost:9210";
         String timeField = "pubtime";
 
         // 每隔5s执行一次删除数据操作

@@ -1,16 +1,17 @@
 package casia.isi.elasticsearch.operation.search;
 
-import casia.isi.elasticsearch.common.FieldOccurs;
-import casia.isi.elasticsearch.common.RangeOccurs;
-import casia.isi.elasticsearch.common.SortOrder;
+import casia.isi.elasticsearch.common.*;
 import casia.isi.elasticsearch.util.DateUtil;
+import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 　　　　　　　 ┏┓       ┏┓+ +
@@ -50,8 +51,8 @@ public class EsIndexSearchImpTest {
 
     private static EsIndexSearch esWarningIndexSearch;
 
-    private String ipPort = "192.168.12.109:9210";
-//    private String ipPort = "localhost:9200";
+//    private String ipPort = "192.168.12.109:9210";
+    private String ipPort = "localhost:9200";
 
     private static HashMap<String, String> itMap = new HashMap<>();
 
@@ -93,12 +94,22 @@ public class EsIndexSearchImpTest {
     @Test
     public void addPrimitiveTermFilter() {
         PropertyConfigurator.configureAndWatch("config/log4j.properties");
-        esSmallIndexSearch.addRangeTerms("crawler_time", "2019-03-01 09:56:04", "2019-05-23 09:56:04");
+        esSmallIndexSearch.addRangeTerms("insert_time", "2019-03-01 09:56:04", "2019-07-23 09:56:04");
 
         String[] ids = new String[]{"237501394733502460", "237501394733502461"};
 
-        esSmallIndexSearch.addPrimitiveTermFilter("id", "237501394733502460", FieldOccurs.MUST);
-        String[] fields = {"content", "crawler_time"};
+        /**
+         * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
+         * 本方法也可以对分词的数据进行检索，但传入的内容不能有任何的标点符号以及空格，否则检索结果会出现异常<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  字段
+         * @param term   字段对应的值，只能转入一个，且不能有有空格.如果传入的值为负值，请用双引号包起来，例如：<br>
+         *               client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST);
+         * @param occurs 是否必须作为过滤条件
+         */
+        esSmallIndexSearch.addPrimitiveTermFilter("id", "174324364", FieldOccurs.MUST);
+        String[] fields = {"content", "insert_time"};
         esSmallIndexSearch.execute(fields);
         System.out.println(esSmallIndexSearch.outputQueryJson());
         List<String[]> resultList = esSmallIndexSearch.getResults();
@@ -123,19 +134,29 @@ public class EsIndexSearchImpTest {
     public void addPrimitiveTermQuery() {
         PropertyConfigurator.configureAndWatch("config/log4j.properties");
 
-        esSmallIndexSearch.addRangeTerms("crawler_time", "2019-03-01 09:56:04", "2019-05-23 09:56:04");
+        esSmallIndexSearch.addRangeTerms("insert_time", "2019-03-01 09:56:04", "2019-07-23 09:56:04");
 
         String[] ids = new String[]{"237501393831731200", "237501396138594300"};
 
+        /**
+         * 与 {@link #addPrimitiveTermQuery(String, String, FieldOccurs)} 方法类似<br>
+         * 字段对应的值可以输入多个，多个值之间为或的关系，满足其中一个值就会返回记录<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  检索字段
+         * @param terms  字段对应的多值，值之间是或的关系
+         * @param occurs 是否必须作为过滤条件
+         */
         esSmallIndexSearch.addPrimitiveTermQuery("id", ids, FieldOccurs.MUST);
 
-        String[] fields = {"content", "crawler_time"};
+        String[] fields = {"content", "insert_time"};
         esSmallIndexSearch.execute(fields);
         System.out.println(esSmallIndexSearch.outputQueryJson());
 
         List<String[]> resultList = esSmallIndexSearch.getResults();
         esSmallIndexSearch.outputResult(resultList);
     }
+
 
     @Test
     public void facetCountQuerysOrderByCount() {
@@ -144,6 +165,19 @@ public class EsIndexSearchImpTest {
 //        List<String[]> resultList =   esSmallIndexSearch.facetDate("pubtime","yyyyMMdd","1d");
 //        esSmallIndexSearch.outputResult(resultList);
 
+        /**
+         * 多字段一次聚合
+         * 此方法可以针对索引中多项数据进行统计（类似于数据库的count(*) 与 group by结合）并返回多项统计结果<br>
+         * 该方法返回的列表中按照各字段的聚合数<br>
+         * 统计的字段包括uid、gid、eid、ip等。 假设针对uid和gid进行统计，<br>
+         * 会针对索引中每个不同uid和gid进行统计<br>
+         * 返回Map<String,long> uid多少个，gid多少个<br>
+         * <p>
+         * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回100000,以便增加精确度。
+         *
+         * @param field 统计的字段
+         * @return 注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
+         */
         Map<String, Long> map = esSmallIndexSearch.facetCountQuerysOrderByCount(new String[]{"site", "gid"});
         System.out.println(map);
     }
@@ -154,6 +188,17 @@ public class EsIndexSearchImpTest {
 
 //        List<String[]> result =  esSmallIndexSearch.facetDate("pubtimeAll","yyyy-MM-dd","1d");
 //        List<String[]> result =  esSmallIndexSearch.facetDate("pubtimeAll","HH:mm:ss","10h");
+
+        /**
+         * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
+         * 本方法也可以对分词的数据进行检索，但传入的内容不能有任何的标点符号以及空格，否则检索结果会出现异常<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  字段
+         * @param terms  字段对应的值，只能转入一个，且不能有有空格.如果传入的值为负值，请用双引号包起来，例如：<br>
+         *               client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST); 段对应的多值，值之间是或的关系
+         * @param occurs 是否必须作为过滤条件
+         */
         esSmallIndexSearch.addPrimitiveTermFilter("area_list", new String[]{"长春"}, FieldOccurs.MUST);
 //        esSmallIndexSearch.addPhraseQuery("area_list", "长春", FieldOccurs.MUST);
 //        esSmallIndexSearch.addPrimitiveTermQuery("area_list", new String[]{"长春","北京"}, FieldOccurs.MUST);
@@ -167,7 +212,31 @@ public class EsIndexSearchImpTest {
     public void facetCountArrayTypeTermsQuery() {
         esSmallIndexSearch.addRangeTerms("pubtime", "2019-06-04 00:00:00", "2019-06-04 14:45:00");
 
+        /**
+         * 单字段一次聚合
+         * 此方法可以针对索引中某项数据进行统计（类似于数据库的count(*) 与 group by结合）并返回统计结果<br>
+         * 该方法返回的列表中按照统计数由大到小排序<br>
+         * 统计的字段包括pubdate、pubtime、eid、ip、user_id、group_id 等。 假设针对user_id进行统计，<br>
+         * 会针对索引中每个不同user_id进行统计<br>
+         * ，分别得到匹配的文档数，按照每个website_id统计得到的文档数排序，返回前topN个website_id 和对应的文档数<br>
+         * <p>
+         * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回100000,以便增加精确度。
+         *
+         * @param field 统计的字段
+         * @param topN  要求返回的结果数 ,topN 等于 0 时，将返回所有的统计结果 。topN 小于0时，不返回结果。
+         * @return 前topN个结果的list ， 每一项为一个数组， 第一项为统计字段，第二项为字段等于该值的文档数 。
+         * 注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
+         * 执行 getCountTotal()方法               为条件过滤后执行聚合总量；
+         */
 //        List<String[]> result =esSmallIndexSearch.facetCountQueryOrderByCount("area_list",10, SortOrder.DESC);
+
+        /**
+         * @param field：统计的字段
+         * @param topN：要求返回的结果数 ,topN 等于 0 时，将返回所有的统计结果 。topN 小于0时，不返回结果。
+         * @param sort：可选的排序方式
+         * @return
+         * @Description: TODO(支持数组字段内的聚合)
+         */
         Map<String, Long> result = esSmallIndexSearch.facetCountQueryOrderByCountToMap("it", 0, SortOrder.DESC);
         esSmallIndexSearch.outputResult(result);
 
@@ -208,6 +277,13 @@ public class EsIndexSearchImpTest {
     public void addConditionQueryTest() {
         esSmallIndexSearch.addRangeTerms("pubtime", "2019-05-21 18:39:54", "2019-05-28 18:39:54");
 
+        /**
+         * @param arrayFieldName:数组字段名称
+         * @param terms:数组值-多值必须都满足才返回 - terms查询
+         * @param occur:定义此过滤条件与其它过滤条件的的组合方式
+         * @return
+         * @Description: TODO(添加过滤条件 - 过滤数组类型的字段)
+         */
         esSmallIndexSearch.addArrayTypeTermsQuery("area_list", new String[]{"吉林"}, FieldOccurs.MUST);
         esSmallIndexSearch.addQueryCondition("+((title:\"吉林\") OR (content:\"吉林\"))");
 
@@ -220,8 +296,24 @@ public class EsIndexSearchImpTest {
     public void addSortField() {
         esSmallIndexSearch.addRangeTerms("pubtime", "2019-05-21 18:39:54", "2019-05-28 18:39:54");
 
+        /**
+         * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
+         * 本方法也可以对分词的数据进行检索，但传入的内容不能有任何的标点符号以及空格，否则检索结果会出现异常<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  字段
+         * @param term   字段对应的值，只能转入一个，且不能有有空格.如果传入的值为负值，请用双引号包起来，例如：<br>
+         *               client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST);
+         * @param occurs 是否必须作为过滤条件
+         */
         esSmallIndexSearch.addPrimitiveTermQuery("content", "中国品牌更懂中国人", FieldOccurs.MUST);
 
+        /**
+         * 设置排序方式，本方法可多次调用，结果按照传递的排序方式顺序排列
+         *
+         * @param field 所需排序字段 （_score字段为elasticsearch内置字段）
+         * @param order 顺序（升序、降序）
+         */
         // 相关性评分搜索
         esSmallIndexSearch.addSortField("_score", SortOrder.DESC);
 
@@ -231,7 +323,7 @@ public class EsIndexSearchImpTest {
     }
 
     @Test
-    public void deleteDataByShellTest() {
+    public void addRangeTermsGetCountTotal() {
         esSmallIndexSearch.addRangeTerms("pubtime", "0000-05-27 19:41:12", "2019-05-27 19:41:12");
 
         esSmallIndexSearch.execute(new String[]{"pubtime", "url"});
@@ -294,6 +386,24 @@ public class EsIndexSearchImpTest {
 
         // it数据类型：新闻 a; 博客 b; 论坛 c; 微博 d; 视频 e; qq群 f; mblog_userinfo g;微信 h;移动app i
 
+
+        /**
+         * 二次聚合
+         * 此方法可以针对索引中某项数据分组后 ,再对子项数据进行分组统计（类似于数据库两个字段的count(*) 与 group by结合）并返回统计结果<br>
+         * 类似sql：select a.eid,COUNT(0)  FROM (  SELECT eid,qid FROM `content`  GROUP BY eid,qid) a GROUP BY a.eid  ;<br>
+         * 该方法返回的列表中按照统计数由大到小排序<br>
+         * 统计的字段包括pubdate、pubtime、eid、ip、user_id、group_id 等。 假设针对不同eid下的user_id进行统计，<br>
+         * 会针对索引中每个不同eid，不同user_id进行统计<br>
+         * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回1000000000,以便增加精确度。
+         *
+         * @param field      统计分组的父字段
+         * @param childField 统计分组的子字段
+         * @param topN       要求返回的结果数 ,topN 等于0 时，将返回所有的统计结果
+         * @param sort       子字段统计排序
+         * @return 前topN个结果的list ， 每一项为一个数组，数组 【0】为统计父字段，【1】为父子段所查询文档的数量，【2】为子字段聚合的统计数
+         * * 	注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
+         * 执行 getCountTotal()方法               为条件过滤后执行聚合总量；
+         */
         /**
          * 二次聚合
          * **/
@@ -326,6 +436,9 @@ public class EsIndexSearchImpTest {
 
     @Test
     public void facetMultipleCountQueryOrderByCount() {
+
+        esSmallIndexSearch.addRangeTerms("pubtime", "2018-05-31 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
+
         /**
          * 多次聚合
          * 此方法可以针对索引中某项数据分组后 ,再对子项数据进行分组统计（类似于数据库两个字段的count(*) 与 group by结合）并返回统计结果<br>
@@ -343,13 +456,15 @@ public class EsIndexSearchImpTest {
          * * 	注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
          * 执行 getCountTotal()方法               为条件过滤后执行聚合总量；
          */
-        esSmallIndexSearch.addRangeTerms("pubtime", "2018-05-31 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
         List<String[]> result = esSmallIndexSearch.facetMultipleCountQueryOrderByCount("it", new String[]{"id"}, 100);
         esSmallIndexSearch.outputResult(result);
     }
 
     @Test
     public void facetDateByCount() {
+
+        esSmallIndexSearch.addRangeTerms("pubtime", "2018-05-31 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
+
         /**
          * 根据时间粒度统计 聚合数量
          * 类似统计每一天有多少个用户；
@@ -360,7 +475,6 @@ public class EsIndexSearchImpTest {
          * @param CountFields 要聚合的字段s
          * @return
          */
-        esSmallIndexSearch.addRangeTerms("pubtime", "2018-05-31 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
         List<String[]> result = esSmallIndexSearch.facetDateByCount("pubtime", "yyyy-MM-dd", "1d", new String[]{"it"});
         esSmallIndexSearch.outputResult(result);
     }
@@ -451,6 +565,1099 @@ public class EsIndexSearchImpTest {
 
         List<String[]> result = esWarningIndexSearch.getResults();
         esWarningIndexSearch.outputResult(result);
+    }
+
+    @Test
+    public void setLogger() {
+        Logger logger = Logger.getLogger(EsIndexSearchImp.class);
+        /**
+         * 设置日志输出对象
+         *
+         * @param logger log4j对象
+         */
+        esSmallIndexSearch.setLogger(logger);
+        System.out.println(esSmallIndexSearch.logger);
+    }
+
+    @Test
+    public void analysis() {
+        String text = "原标题形势严峻这个地方书记市长纪委书记为何连续空降市委书记市长市委副书记接连落马的广东江门市政治生态修复从补齐关键岗位开始在连续迎来空降市委书记市长候选人后江门新一任纪委书记近日也到岗了值得关注的是他也是从省里空降的还是纪检部门这位新纪委书记叫项天保任职省纪委年在案例管理派驻机构巡视部门等关键岗位都工作过经验十分丰富去年底江门成立市委巡察工作机构时任省委巡视办副主任的项天保亲赴江门参加了启动仪式长安街知事此前曾介绍过江门是腐败的重灾区市委书记毛荣楷市长邓伟根市委副书记政法委书记邹家军市委常委王积俊市人大常委会副主任聂党权曾任市委副书记落马班子塌方全国罕见中央派来了一个沙瑞金省委书记又派来了一个田国富纪委书记这是人民的名义里的一个情节以此说明推动从严治党的迫切性江门的情况与此类似市委书记林应武市长候选人刘毅都是从省委组织部副部长任上调来江门的补位落马前任如今新纪委书记又从省级纪检部门调来从一个侧面也反映出地方反腐形势的严峻性就在项天保就任的会议上前任纪委书记胡钛也以新身份亮相他已经出任市委副书记政法委书记也就是说现在江门市委常委班子中有两名来自纪检系统的领导胡钛是军转干部年底刚刚调任江门市纪委书记他有两次救火经历一次是梅州一次是江门年梅州市委书记朱泽君和纪委书记李纯德相继被调离此后又相继被查媒体对两人内斗多有报道胡钛正是接替了李的梅州纪委书记职务而去年赴江门履新正是该市市委书记毛荣楷和市委副书记邹家军落马之后胡钛之前的江门市纪委书记周伟万也是一名老纪检在纪检政法战线工作了年今年初当选市政协主席面对从严治党的新形势和班子塌方的旧局面接力反腐任重道远近日召开的江门全市领导干部大会上广东省委常委组织部长邹铭根据省委书记胡春华同志的指示对全市领导干部提出三点要求其中特别指出要进一步严明政治纪律和政治规矩营造良好的政治生态要保持干部队伍思想稳定和改革发展大局稳定积极引导广大干部群众把违纪违法的个人问题与江门整体工作区分开来不因人废事不因案划线不因此否定江门的工作影响江门的发展稳定营造良好的政治生态更好地推动发展无疑是江门工作当下的重中之重来源长安街知事责任编辑初晓慧文章关键词纪委书记市长纪检我要反馈保存网页";
+        Set<String> set = EsIndexSearch.analysis(text, true, 2);
+        for (String word : set) {
+            System.out.println(word);
+        }
+    }
+
+    @Test
+    public void addRangeTermsCondition() {
+
+        /**
+         * （设置区间范围过滤条件）- 筛选某区间内的数据，筛选的字段必须为数字形式。 如时间、 id、 评论数等
+         *
+         * @param field       筛选的字段
+         * @param value       区间结束值
+         * @param occurs      是否必须作为过滤条件 一般为must
+         * @param rangeOccurs 选择过滤方式（大于/大于等于/小于/小于等于）
+         */
+        // addRangeTerms(String field, String value, FieldOccurs occurs, RangeOccurs rangeOccurs)
+    }
+
+    @Test
+    public void addRangeTerms1Condition() {
+        /**
+         * （设置区间范围过滤条件）- 筛选某区间内的数据，筛选的字段必须为数字形式。 如时间、 id、 评论数等
+         *
+         * @param field           筛选的字段
+         * @param startTerm       区间开始值
+         * @param startRangeOccur 指定开始值的开闭区间
+         * @param endTerm         区间结束值
+         * @param stopRangeOccur  指定结束值的开闭区间
+         * @param occurs          是否必须作为过滤条件 一般为must
+         */
+        //addRangeTerms(String field, String startTerm, RangeOccurs startRangeOccur, String endTerm, RangeOccurs stopRangeOccur, FieldOccurs occurs)
+    }
+
+    @Test
+    public void search() {
+        PropertyConfigurator.configureAndWatch("config" + File.separator + "log4j.properties");
+
+//		EsIndexSearch searchClient = new EsIndexSearch("106.75.136.149:61230&106.75.136.149:61231","all_data","analysis_data");
+//		EsIndexSearch searchClient = new EsIndexSearch("106.75.177.129:61233","test2","wechat_new");
+        EsIndexSearch searchClient = new EsIndexSearch("192.168.12.110:9200", "aircraft_info", "graph");
+//		EsIndexUpdate es = new EsIndexUpdate("106.75.137.175:61233", "event_data_extract_result_v*,event_data_extract_result_q*", "analysis_data");
+
+        System.out.println("\r\n---------------------------1.关键词、范围、分页、排序------------------------\r\n");
+//		searchClient.addKeywordsQuery( "content" , "北京大学", FieldOccurs.MUST , KeywordsCombine.OR);//针对分词字段检索，检索内容也会分词，例如检索北京大学，返回结果可能存在北京理工大学
+//		searchClient.addRangeTerms("id", "0", "19741");//数字类型范围
+//		searchClient.addRangeTerms("pubtime", "2017-04-01 00:16:27", null);//日期类型范围
+        searchClient.setStart(0);//分页
+        searchClient.setRow(4);//分页
+//		searchClient.addSortField("pubtime", SortOrder.ASC);//排序
+        String[] fields = {"_id", "pubtime"};//返回字段
+        searchClient.execute(fields);//执行查询
+        System.out.println("总量：" + searchClient.getTotal());//获取结果总量
+        List<String[]> resultList = searchClient.getResults();//获取结果
+        for (String[] strings : resultList) {
+            for (String string : strings) {
+                System.out.print(string + "\t");
+            }
+            System.out.println("");
+        }
+
+		/*System.out.println("\r\n---------------------------2.原子、短语、非空------------------------\r\n");
+		searchClient.reset();//重置
+		searchClient.debug = true;
+		List<String> list = new ArrayList<String>();
+		list.add("北京 深圳");
+		list.add("上海 深圳");
+		searchClient.addPhraseQuery("content",list, FieldOccurs.MUST,KeywordsCombine.OR,KeywordsCombine.AND);
+//		searchClient.addPhraseQuery("uid", "b966ac68db", FieldOccurs.MUST,KeywordsCombine.AND);//content必须包含完整的北京大学才能匹配到
+		searchClient.addPhraseQuery("province", "北京", FieldOccurs.MUST,KeywordsCombine.OR);
+		searchClient.addPhraseQuery("city", "北京市", FieldOccurs.MUST,KeywordsCombine.OR);
+		searchClient.addPhraseQuery("prefecture", "怀柔区", FieldOccurs.MUST,KeywordsCombine.OR);//content必须包含完整的北京大学才能匹配到
+//		searchClient.addPrimitiveTermQuery("_id", "554491",  FieldOccurs.MUST );//不可分割数据检索，例如int,long型数据的genus，alarm等字段
+//		searchClient.addExistsFilter( "content" );//非空
+//		searchClient.addMissingFilter( "content" );//为空
+		searchClient.addSortField("pubtime", SortOrder.DESC);
+		searchClient.setStart(0);
+		searchClient.setRow(10);
+		String[] fieldss = {"_id","country","province","city","prefecture"};
+		searchClient.execute(fieldss);
+		System.out.println("总量："+searchClient.getTotal());
+		List<String[]> resultLists = searchClient.getResults();
+		for (String[] strings : resultLists) {
+			for (String string : strings) {
+				System.out.print(searchClient.extractStringGroup(string)+"\t");
+			}
+			System.out.println("");
+		}
+		Date a = new Date();
+		a.setMinutes(0);
+		a.setSeconds(0);
+		System.out.println(new SimpleDateFormat("YYYY-MM-dd HH:mm:ss").format(a));*/
+
+		/*System.out.println("\r\n---------------------------3.获取数据量------------------------\r\n");
+		searchClient.reset();//重置
+//		searchClient.addPhraseQuery("_id", "9bae4d74920644e33d3197bbb55ed5a9", FieldOccurs.MUST,KeywordsCombine.AND);//content必须包含完整的北京大学才能匹配到
+		searchClient.addRangeTerms("insertime", "2018-07-03 13:50:00", "2018-07-03 14:10:00");
+		long total = searchClient.searchTotal();
+		System.out.println(total);*/
+
+		/*System.out.println("\r\n----------------------------4.单字段聚合-----------------------\r\n");
+		searchClient.reset();//重置
+
+		//针对uid字段进行聚合，按uid聚合的文档数倒序，返回前5条(返回参数小于0时返回0条，参数等于0时返回全部，参数大于0时返回参数指定数)
+//		searchClient.addPhraseQuery("gid", "zx858x0004 y44yz3xyx ywz83500xz x303yx434y xx9z58y9wx w9055508xw xz389x8z03 80wzxz0340 8yz3334yx5 x85x3x04w0 y358xzx3z4 8yx054x083 8yy0wy8935 w849zxxx58 ww80340yw5 wz305y9904 x3540y5095 x8wwyx5xxw xw8w3w8yyx 4z9x0yxww 8y54w8983x 8yyw5w9099 w04550x304 w085993449 w09wyz4y40 w30y93z58z w583095y8w w5ww5z00wy w5x0xz08x3 w80w54ww3y w8550w439w w8x080x888 ww0z339098 wx90448xzy wyw5y5z90x wyyx4xz358 wzxx5y5y39 x3zw0y535y x438zwxxwz x498y5yyxx y4zz384w85 53yx0ywy5y 805x5440x8 80z4w50090 8y30wy508w 8y44339ww4 8y8w5z4zx4 8y93zyzy43 8yy35xw854 8yzy5x9430 8z54xz900z 8z55389z53 8zx0wyx8z0 8zzx5x9334 9y4wz55xw w0yw3w9w3z w3wy3y8w3z w485zy4544 w59454458y w59843x8z5 w5x9334w40 w5yyx3x5z4 w8943934xz w90454y0x3 w9w0390x49 w9z05095w3 w9zww4x45z ww0y80xwx3 ww39409353 wwyy593543 wx35w4405y wy8w3w8z0z wy9zy5x40w wyyy4y3y8y wzx95yxz30 x338y50908 x35y5zx4y0 x443385543 x53w39z503 x55xyz4z35 x5x8z985yw x80z3ww094 x894380z4y x898zwy5z0 x9y94534x5 xw4330y4x3 xw8x3w8y3z xw935z5384 xx50504y0w xx5z0y5354 xyxy08z33 y850354wz8 yy83yy0w98 z3x09yxw9w z909z004y5 308y050080 3z3x8980w 58zwyz59w 8033389xz0 8054390y44 80585yy8z5 8080x3yyzz 809w99y09z 80xyw434zw 80yxx5y33x 8x094y8w5 8y3x339z50 8yx459535z 8yy5044zxx 8z4w544953 8z55w58y48 8z84408400 8zw03z5zwy 8zw9x3xyxx 8zx53893xy 8zx8w4w30y 8zxx548z5w 8zyy339388 w08xy5y303 w0x0zy3w33 w0x4333x8x w0xwy5z9wy w0xz5y4339 w0y5y5z888 w0yx3x859y w308wx3385 w39xwxyx35 w3xw405w84 w3yx3ww954 w44z893090 w45z405zz3 w48xx9x0zw w498339390 w5095w58xz w53w0939xy w545y0w9x4 w555y35393 w583x0y0w4 w59xx550zw w5w8w89995 w5y445ww98 w5z0x598wz w830wx4385 w840w3z8xx w843333wz3 w84939044w w84953y545 w84w340535 w84xz0xy8w w8943900wy w8ww3y55xw w8xy340zx5 w8yy3893zw w8z9339z03 w8zyy4z900 w94z5wx5x0 w95wwz4403 w95x08y3x3 w9858yww95 w985xw59x9 w99434wxzz w99yz0y4xz w9w9389350 ww895809xw ww8x543yxw www438895w wwy4x4yyy0 wwz854098w wx3w355y0x wx3xwzyyzy wx59w983y9 wx84339004 wxx3w48w54 wxxw0894zx wxz53898z5 wy30y0x48x wy3x349z5y wy853wz449 wy933wz33y wy99w8w404 wyw9y53y9z wyy0458zx9 wyyw39y49y wyyx0x583x wyyxyz3984 wyz5z3wy3x wz0w330y39 wz384w8995 wz40y5y4x9 wz4zy5y4yx x38zyz08zx x39308zy45 x39wy5y539 x3w05z4940 x3w80x053y x3x4yz459y x4093w005w x440y54449 x4z95z9y4y x5033zy483 x5xw3493z3 x5y3zz0509 x8393x9w4z x85z38533z x8939wyy4x x895yz3885 x89y40x989 x89yy03x0w x89yyz3983 x8x94zw949 x8xx30wx3y x8zz5z0998 x90z4z890y x94xyz4y49 x99x08x040 x9w3yz4330 x9yy340yxx xw05y08594 xw34z3x38w xw850y4844 xwy4yz045w xwyx0y48z3 xx054393w3 xx05yz4zw9 xx394848x4 xx44y5z8w8 xx8yy098w5 xx90y54ywy xx93y5y4ww xxyy3zxz3y y33x5yw840 y3838yx80x y394xyyw08 y409yxx945 y5000038y9 y5444w99z4 y80yzyx8x9 y94xxz45x0 yw003w5898 yw0w33wx ywx00583y3 ywy5094z4w z0x8w4z094 z30y48xxy8 z3yzw5w00y z4430449wx z4y3yx8w9y z543834z95 z94933xxw8 z94xz8y5z9 zw983yx533 zw9xzxwx53 zz80995434 30wzx8z895 33583504z 34y595xywy 394wx4xxy 3wxyz8x03 3yx3w4483y 533w998485 540y9wz305 585y9x95x0 5ww598y99y 5ywwz4939 5z559w9z4 65111 800055583y 8005544x3y 8033393z05 8083x4x8yy 808w39zw9w 808zy35489 809x590y8z 80w35y84yw 80w3xy8zx8 80wz4y040x 80wz5z339z 80wzx00054 80x55444x4 80x939z003 80xx339x8x 80yy389xyz 80zy4349y3 84y38w4y 8y044zz9x4 8y0830xz0z 8y0wwzw5yx 8y0y54w85y 8y3w5w0z95 8y3x4wyxz0 8y50385wy4 8y55598xw4 8y555x5089 8y90w849xy 8yw0548489 8yxyx34w0z 8yy339z4w5 8yz353wxz4 8yz8w9ww59 8yzw54wx90 8z03w9wz9z 8z38w99y3w 8z38xx05xw 8z39y98w4w 8z4w509zz3 8z54340zy4 8z80wy339x 8z8339wx53 8z8y39zzw4 8z9y333yxy 8zwxxw3083 8zwz550w89 8zxzx34y50 8zy4xzy00x 8zyz5949xy w009y5yx50 w00yy58959 w00z4w385x w03w3w84z4 w03w493zy4 w04y4x90z9 w059yz4yx4 w08308xyxw w0833wz5wz w08y4y34x8 w09345zx3z w095y80305 w099y5x9w8 w0x94x90zx w0y53zyyxz w0y5404wzy w0yz40xyw8 w30895533z w3599xz5xy w393083zy9 w3w9wz4z98 w4090498w9 w49xw85w5w w4w94z90yw w50y054403 w53354398z w539339xww w53w390zz8 w53x335w8x w53xxwx55w w54xw08804 w54y58ww3x w558593w59 w55x4y5zy4 w55x5x4855 w55z54905w w594544855 w599389990 w59x3w0w93 w59x5w3zz0 w5w83wzy04 w5x4w4w34x w5y439z0z3 w5y4yzz59z w5y533955z w5yz38949w w5z3389wx0 w5z9x00w8x w5zw5w8xz3 w80454xz0z w804w95ww3 w80859y844 w83439z4xz w8344zw330 w8483z4y88 w854xy8z94 w85953xz90 w88054zw38 w8845x90x8 w884xzzwx5 w89z395y00 w8w0xy9xx4 w8x0yy9z59 w8xy80y3zy w8y5x3xx30 w8yx4800y3 w8zz344yy4 w9354500z3 w9383w05zz w93y389xx5 w9485w9094 w95354wxyy w954xz3zw3 w955588954 w958538y59 w958w90x58 w98x43y80w w990x38x30 w994y3x43z w99wy84889 w99y588w45 w99yw0y085 w9w0390y35 w9w0w4wxx0 w9wxwzyy05 w9wxx3z9z4 w9wy3888z5 w9x0zw4xx3 w9x338wxxz w9x455w30y w9x9404y05 w9y0099z4y w9y0x4w450 w9z3390yxz w9z8z40yy3 w9zz3333x9 ww03x5xz5 ww055xx933 ww09wz43x4 ww0w48zz00 ww0y44w8yx ww0z5wxx83 ww3y54wx4x ww3yxww880 ww3zzw805x ww44z8wyy9 ww45x8zx98 ww485xzx45 ww503zyz88 ww533395y9 ww5w5y40w5 ww5yzwwx0x ww5zx5w8x3 ww8w0558w0 ww8z558449 ww94390xw9 ww9w5z8353 ww9x5y8948 wwx45x5853 wwx4x3w5y8 wwx8353zz9 wwy0x94w45 wwy45583w8 wx0x53z5yx wx3455zy3x wx48040909 wx53w8394x wx8zxy35yz wx9w39zyzw wx9yx88899 wxw9558x83 wxy85yzwy5 wxz9zywww5 wy03484w4y wy0y485w4y wy34434554 wy3538xx09 wy44y93440 wy49433304 wyw9548zxy wyx0545wy0 wyx839z9y9 wyy3yz3wz0 wz0345x498 wz043x8xy8 wz3509305w wz3y3xx8y0 wz3y5x0yw5 wz580y50wx wz5zy5y3w8 wz8y3x93w5 wz9854xzyw wz9w3x8003 wz9y4y80w0 wzw90049yw wzw9x0009y wzwyyw9zx5 wzy04w350x wzy0x3xy43 wzy43ywyz5 wzy93wy0z3 wzyxy59933 wzzw38430y x30909y44x x3335z304 x33w5yw8zy x343y5z9xx x34x3z85xy x353yz00z0 x353yz535w x355449y0w x358y5y4z0 x38wy8zx93 x390yz5y34 x3935880wx x393zy09ww x39z5y8w8z x3w8y54z9x x3wzy5yxw4 x3yw49598w x3yy3wz449 x403y5y958 x433y48zyy x4344x9495 x4444z95xx ",FieldOccurs.MUST, KeywordsCombine.OR);
+		searchClient.addPhraseQuery("eid", "3",FieldOccurs.MUST, KeywordsCombine.OR);
+//		searchClient.addExistsFilter("action");
+		List<String[]> s = searchClient.facetCountQueryOrderByCount("action", 50, SortOrder.DESC );
+		//返回结果s为list，其中每个String[]的 第0位为uid字段值， 第1位为该uid字段匹配到的文档数。
+		System.out.println("文档总量："+searchClient.getTotal());//检索的文档总数
+		System.out.println("结果总量："+searchClient.getCountTotal());//结果文档总数
+		String a ="";
+		for(String[] infos: s){
+			for(String info:infos)
+				System.out.print(info + "\t");
+			System.out.println("");
+			a=a+infos[0]+" ";
+		}
+		System.out.println(a);*/
+
+	/*	System.out.println("\r\n----------------------------5.多字段聚合统计-----------------------\r\n");
+		searchClient.reset();//重置
+		//针对uid，gid字段分别聚合统计文档数
+		Map<String, Long> s = searchClient.facetCountQuerysOrderByCount(new String[]{"uid","gid"} );
+		//返回结果map类型，key值为聚合的字段，value为该字段聚合的文档数
+		System.out.println("文档总量："+searchClient.getTotal());
+		Set<String> keys = s.keySet();
+		for (String key : keys) {
+			System.out.println(key+"\t"+s.get(key));
+		}*/
+
+		/*System.out.println("\r\n----------------------------6.二次聚合-----------------------\r\n");
+		searchClient.reset();//重置
+		searchClient.debug=true;
+		searchClient.addPhraseQuery("eid","1",FieldOccurs.MUST);
+//		searchClient.addExistsFilter("action");
+		//返回结果较慢，不建议用,针对第一个字段eid聚合情况下，再聚合info_type
+		//参数5为限制返回结果5条；参数boolean为true时结果返回info_type详细数据；参数SortOrder为排序
+		List<String[]> ss = searchClient.facetTwoCountQueryOrderByCount("uid","info_type",5, true, SortOrder.DESC );
+		//结果ss为list数组，其中每个Sting[]，第0位为eid的值，第1位为该eid匹配到的文档数，第2位为info_type字段的聚合数，第3位为info_type字段的聚合的详细信息
+		System.out.println("文档总量："+searchClient.getTotal());
+		for(String[] infos: ss){
+			for(String info:infos)
+				System.out.print(info + "\t");
+			System.out.println("");
+		}*/
+
+
+	/*	System.out.println("\r\n----------------------------7.多次聚合-----------------------\r\n");
+		searchClient.reset();//重置
+
+		searchClient.addPhraseQuery("uid","5zyz0y8x 64168 26022 24106",FieldOccurs.MUST,KeywordsCombine.OR);
+		// 1、field 统计分组的父字段；2、 childFields 统计分组的子字段,数组格式  ；3、topN 要求返回的结果数 ,topN 等于0 时，将返回所有的统计结果；4、orderFiled 排序的字段，为空时， 默认排序为父字段的文档数； 5、sort 排序
+		List<String[]> ss = searchClient.facetMultipleCountQueryOrderByCount("ip", new String[]{"uid"}, 5, "ip", SortOrder.DESC );
+		// 返回结果 前topN个结果的list ， 每一项为一个数组，数组 【0】为统计父字段值，【1】为父子段所查询文档的数量，【N】为子字段聚合的统计数(顺序与设置childFields字段顺序一致)
+		System.out.println("文档总量："+searchClient.getTotal());
+		System.out.println("结果总量："+searchClient.getCountTotal());
+		for(String[] infos: ss){
+			for(String info:infos)
+				System.out.print(info + "\t");
+			System.out.println("");
+		}*/
+
+
+		/*System.out.println("\r\n----------------------------8.按时间粒度统计文档数-----------------------\r\n");
+		searchClient.reset();//重置
+		searchClient.addPhraseQuery("eid","1",FieldOccurs.MUST);
+//		searchClient.addRangeTerms("pubtime", "2017-04-16 00:00:00", "2017-04-19 00:00:00");
+		//针对时间类型字段进行时间间隔文档数量统计；参数：1、field为时间类型字段；2、format为时间类型格式；3、interval为间隔粒度；4、startTime为开始时间；5、endTime为结束时间；6、每个时间段返回最小文档数
+		List<String[]> list = searchClient.facetDate("pubtime", "yyyy-MM-dd", "1d","2017-04-16","2017-04-19",0);
+		//返回结果list数组，每个String[]的第0位为时间区间，第1位为该区间的文档数；
+		for(String[] infos: list){
+			for(String info:infos)
+				System.out.print(info + "\t");
+			System.out.println("");
+		}*/
+
+		/*System.out.println("\r\n----------------------------9.按时间粒度统计聚合字段-----------------------\r\n");
+		searchClient.reset();//重置
+
+		searchClient.addPhraseQuery("eid","1",FieldOccurs.MUST);
+		searchClient.addRangeTerms("pubtime", "2017-04-13 00:00:00", "2017-04-19 00:00:00");
+		//针对时间类型字段进行时间间隔文档数量统计，并且进一步聚合统计每个时间区间的uid字段数量；参数：1、field为时间类型字段；2、format为时间类型格式；3、interval为间隔粒度；4、startTime为开始时间；5、endTime为结束时间；6、每个时间段返回最小文档数；7、CountField为聚合的字段
+		List<String[]> list7 = searchClient.facetDateByCount("pubtime", "yyyy-MM-dd", "1d","2017-04-13","2017-04-19", "uid");
+		//返回结果list数组，每个String[]的第0位为时间区间，第1位为该区间的文档数,第2位为该区间内聚合的uid字段值；
+		for(String[] infos: list7){
+			for(String info:infos)
+				System.out.print(info + "\t");
+			System.out.println("");
+		}*/
+
+		/*System.out.println("\r\n----------------------------10.按时间粒度统计聚合字段----------------------\r\n");
+		searchClient.reset();//重置
+
+		searchClient.addPhraseQuery("eid","3",FieldOccurs.MUST);
+		searchClient.addRangeTerms("pubtime", "2017-05-13 00:00:00", "2017-05-19 00:00:00");
+		//针对时间类型字段进行时间间隔文档数量统计；参数：1、field为时间类型字段；2、format为时间类型格式；3、interval为间隔粒度；4、CountField为聚合的字段
+		List<String[]> list = searchClient.facetDateByCount("pubtime", "HH", "1H",new String[]{"warning_level"});
+		//返回结果list数组，每个String[]的第0位为时间区间，第1位为该区间的文档数；
+		for(String[] infos: list){
+			for(String info:infos)
+				System.out.print(info + "\t");
+			System.out.println("");
+		}*/
+
+		/*System.out.println("\r\n----------------------------11.按时间粒度统计聚合字段-----------------------\r\n");
+		searchClient.reset();//重置
+
+		searchClient.addPhraseQuery("eid","1",FieldOccurs.MUST);
+//		searchClient.addRangeTerms("pubtime", "2018-04-13 00:00:00", "2018-04-19 00:00:00");
+		List<String[]> list = searchClient.facetDate("pubtime", "HH",0);//可用于小时粒度统计
+		for(String[] infos: list){
+			for(String info:infos)
+				System.out.print(info + "\t");
+			System.out.println("");
+		}*/
+
+		/*System.out.println("\r\n----------------------------12.按时间粒度统计聚合字段各类型数据量----------------------\r\n");
+		searchClient.reset();//重置
+		searchClient.debug=true;
+//		searchClient.addPhraseQuery("eid","1",FieldOccurs.MUST);
+		searchClient.addRangeTerms("pubtime", "2017-05-13 00:00:00", "2017-05-19 00:00:00");
+		//针对时间类型字段进行时间间隔文档数量统计；参数：1、field为时间类型字段；2、format为时间类型格式；3、interval为间隔粒度；4、CountField为聚合的字段
+		List<String[]> list = searchClient.facetDateByTypeCount("pubtime","yyyy-MM-dd HH","1H","2017-05-13 00","2017-05-19 00","msg_type");
+		//返回结果list数组，每个String[]的第0位为时间区间，第1位为该区间的文档数；第2位为聚合字段各类型是数据量；
+		//结果数组样例样例 ：2017-04-10	3	[{"doc_count":2,"key":3},{"doc_count":1,"key":4}]
+		for(String[] infos: list){
+			for(String info:infos)
+				System.out.print(info + "\t");
+			System.out.println("");
+		}*/
+
+		/*System.out.println("\r\n---------------------------13.自定义查询------------------------\r\n");
+		searchClient.reset();//重置
+		searchClient.debug=true;
+		searchClient.addPhraseQuery("eid", "1", FieldOccurs.MUST,KeywordsCombine.AND);
+		String querstring = "+( (content:\"北京\" AND \"上访\") OR (content:\"长春\" OR \"呼吁给孩子无条件接受教育的权利\") )";
+		searchClient.addQueryCondition(querstring);//自定义
+		String [] fieldsss = {"id","content"};
+		searchClient.execute(fieldsss);
+		System.out.println("总量："+searchClient.getTotal());
+		List<String[]> resultLists2 = searchClient.getResults();
+		for (String[] strings : resultLists2) {
+			for (String string : strings) {
+				System.out.print(string+"\t");
+			}
+			System.out.println("");
+		}*/
+
+
+		/*System.out.println("\r\n---------------------------14.自定义查询------------------------\r\n");
+		searchClient.reset();//重置
+		String lucene = "{\"query\":{\"match\":{\"eid\":1}}}";
+		String json = searchClient.addQueryConditionBylucene(lucene);
+		System.out.println(json);*/
+
+		/*System.out.println("\r\n----------------------------15.分词工具-----------------------\r\n");
+		String content = "中国科学院自动化研究所";
+		System.out.println("语料："+content);
+		List<String> li = searchClient.extractKeywords(content, -1);
+		for (String string : li) {
+			System.out.print(string+"|");
+		}*/
+    }
+
+    @Test
+    public void extractKeywords() {
+        /**
+         * 工具类：对传入的字符串进行分词
+         *
+         * @param //keywords 要分词的字符串
+         * @param size       返回数量,负数时返回全部
+         * @return 返回一个{@code Set<String>}对象，存放分词后的关键词
+         */
+        // extractKeywords(String text, int size)
+    }
+
+    @Test
+    public void extractStringGroup2() {
+        /**
+         * 工具类：对数组类型的字符串进行转换为数组
+         *
+         * @param //keywords 要转换的字符串
+         * @return 返回一个{@code String[]}对象
+         */
+        // @SuppressWarnings("static-access")
+        // extractStringGroup2(String text)
+    }
+
+    @Test
+    public void extractStringGroup() {
+        /**
+         * 工具类：对数组类型的字符串进行转换为以分号间隔的字符串
+         * 例如：["a","b","c"]  转换为    a;b;c;
+         *
+         * @param //keywords 要转换的字符串
+         * @return 返回一个{@code String[]}对象
+         */
+        // extractStringGroup(String text)
+    }
+
+    @Test
+    public void addQueryString() {
+        /**
+         * 添加查询条件，查询条件必须满足lucene的查询语法
+         *
+         * @param query_string
+         */
+        // addQueryString(String query_string, FieldOccurs occurs)
+    }
+
+    @Test
+    public void outputQueryJson() {
+        /**
+         * @param
+         * @return
+         * @Description: TODO(输出索引查询语句)
+         */
+        // JSONObject outputQueryJson()
+    }
+
+    @Test
+    public void outputResult() {
+        /**
+         * @param
+         * @return
+         * @Description: TODO(输出索引查询结果)
+         */
+        // JSONObject outputResult()
+    }
+
+    @Test
+    public void outputResult1() {
+        /**
+         * @param resultList:索引的查询结果 - 包含具体字段名
+         * @return
+         * @Description: TODO(输出索引查询结果)
+         */
+        // void outputResult(List<String[]> resultList)
+    }
+
+    @Test
+    public void outputResult2() {
+        /**
+         * @param result:索引的查询结果 - 包含具体字段名
+         * @return
+         * @Description: TODO(输出索引查询结果)
+         */
+        // void outputResult(Map<String, Long> result)
+    }
+
+    @Test
+    public void facetCountQueryOrderByCountToMap() {
+        /**
+         * @param field：统计的字段
+         * @param topN：要求返回的结果数 ,topN 等于 0 时，将返回所有的统计结果 。topN 小于0时，不返回结果。
+         * @param sort：可选的排序方式
+         * @return
+         * @Description: TODO(支持数组字段内的聚合)
+         */
+        // Map<String, Long> facetCountQueryOrderByCountToMap(String field, int topN, SortOrder sort)
+    }
+
+    @Test
+    public void addMoreLikeThisQuery1() {
+        /**
+         * @param field:被查询的字段
+         * @param sentence:字段值
+         * @return
+         * @Description: TODO(相似性查询)
+         */
+        // void addMoreLikeThisQuery(String field, String sentence)
+
+        /**
+         * @param field:被查询的字段
+         * @param sentence:字段值
+         * @param keywordSize:控制分词数量(负数时返回所有分词结果)
+         * @return
+         * @Description: TODO(相似性查询 - 控制分词)
+         */
+        // void addMoreLikeThisQuery(String field, String sentence, int keywordSize)
+    }
+
+    @Test
+    public void addKeywordsQuery() {
+
+        esSmallIndexSearch.addKeywordsQuery("content", "北京大学", FieldOccurs.MUST, KeywordsCombine.OR);//针对分词字段检索，检索内容也会分词，例如检索北京大学，返回结果可能存在北京理工大学\
+
+        /**
+         * 构造关键词查询片段,如果输入的关键词以空格分割，那么将以空格切分开，作为多个关键词处理，多个关键词之间的关系由KeywordsCombine对象指定<br>
+         * 关键词查询会走分词，如关键词为 北京科技大学，则有可能会搜索出北京大学的记录来<br>
+         * 该方法对索引中字段类型配置为text（即有分词的类型）才有效<br>
+         *
+         * @param field    要查询的字段
+         * @param keywords 关键词
+         * @param occurs   字段出现情况
+         * @param combine  以空格隔开的关键词的关系
+         */
+        // void addKeywordsQuery(String field, String keywords, FieldOccurs occurs, KeywordsCombine combine)
+
+        /**
+         * 构造关键词查询片段,关键词查询会走分词，如关键词为 北京科技大学，则有可能会搜索出北京大学的记录来<br>
+         * 该方法对索引中字段类型配置为text（即有分词的类型）才有效<br>
+         *
+         * @param field    要查询的字段
+         * @param keywords 关键词
+         * @param occurs   字段出现情况
+         */
+        // void addKeywordsQuery(String field, String keywords, FieldOccurs occurs)
+
+        /**
+         * 构造关键词查询片段,关键词查询会走分词，如关键词为 北京科技大学，则有可能会搜索出北京大学的记录来<br>
+         * <p>
+         * 该方法对索引中字段类型配置为text（即有分词的类型）才有效<br>
+         *
+         * @param fields   要查询的字段
+         * @param keywords 关键词
+         * @param combine  多个字段间的关系
+         */
+        // void addKeywordsQuery(String[] fields, String keywords, KeywordsCombine combine)
+
+        /**
+         * 关键词查询：单字段多组关键词的全文检索查询，组间是或关系<br>
+         * 构造关键词查询,keywords是数组，每个词组之间是或的关系<br>
+         * 每一组词中可以包含空格，空格之间是与的关系<br>
+         * 关键词查询会走分词，如关键词为 北京科技大学，则有可能会搜索出北京大学的记录来<br>
+         * 该方法对索引中字段类型配置为text（即有分词的类型）才有效<br>
+         *
+         * @param field    要查询的字段
+         * @param keywords 关键词
+         * @param occurs   字段出现情况
+         */
+        // void addKeywordsQuery(String field, List<String> keywords, FieldOccurs occurs)
+
+    }
+
+    @Test
+    public void addPhraseQuery() {
+        /**
+         * 构造短语查询片段,如果输入的短语以空格分割，那么将以空格切分开，作为多个短语处理，多个短语之间的关系由KeywordsCombine对象指定<br>
+         * 短语查询不走分词，如短语为 北京科技大学，则必须完整含有北京科技大学的记录才会被匹配<br>
+         * 该方法对solr中字段类型配置为text（即有分词的类型）才有效<br>
+         *
+         * @param field    要查询的字段
+         * @param keywords 关键词
+         * @param occurs   字段出现情况
+         * @param combine  关键词组合情况
+         */
+        // void addPhraseQuery(String field, String keywords, FieldOccurs occurs, KeywordsCombine combine)
+    }
+
+    @Test
+    public void addPhraseQuery1() {
+        /**
+         * 构造短语查询片段,如果输入的短语以空格分割，那么将以空格切分开，作为多个短语处理，多个短语之间的关系由KeywordsCombine对象指定<br>
+         * 短语查询不走分词，如短语为 北京科技大学，则必须完整含有北京科技大学的记录才会被匹配<br>
+         * 该方法对solr中字段类型配置为text（即有分词的类型）才有效<br>
+         *
+         * @param fields   要查询的字段多个字段
+         * @param keywords 关键词
+         * @param occurs   字段出现情况
+         * @param combine  关键词组合情况
+         */
+        // void addPhraseQuery(String[] fields, String keywords, FieldOccurs occurs, KeywordsCombine combine, FieldCombine filedCombine)
+    }
+
+    @Test
+    public void addPhraseQuery2() {
+        /**
+         * 构造多组短语查询片段,多组关系由KeywordsCombine groupRelation指定，如果每组输入的短语以空格分割，那么将以空格切分开，作为多个短语处理，多个短语之间的关系由KeywordsCombine combine对象指定<br>
+         * 短语查询不走分词，如短语为 北京科技大学，则必须完整含有北京科技大学的记录才会被匹配<br>
+         * 该方法对solr中字段类型配置为text（即有分词的类型）才有效<br>
+         *
+         * @param field         要查询的字段
+         * @param keywords      多组关键词，每一组中的关键词可按空格分割
+         * @param occurs        字段出现情况
+         * @param groupRelation 多组之间组合情况
+         * @param combine       每组关键词组合情况
+         */
+        // void addPhraseQuery(String field, List<String> keywords, FieldOccurs occurs, KeywordsCombine groupRelation, KeywordsCombine combine)
+    }
+
+    @Test
+    public void addPhraseQuery3() {
+        /**
+         * 构造短语查询片段,如果输入的短语以空格分割，那么将以空格切分开，作为多个短语处理，多个短语之间为与的关系<br>
+         * 短语查询不走分词，如短语为 北京科技大学，则必须完整含有北京科技大学的记录才会被匹配<br>
+         * 该方法对solr中字段类型配置为text（即有分词的类型）才有效<br>
+         *
+         * @param field    要查询的字段
+         * @param keywords 关键词
+         * @param occurs   字段出现情况
+         */
+        // void addPhraseQuery(String field, String keywords, FieldOccurs occurs)
+    }
+
+    @Test
+    public void addPhraseQuery4() {
+        /**
+         * 短语查询：多字段多组关键词的短语查询<br>
+         * 构造关键词查询片段,多字段之间是或的关系<br>
+         * keywords是数组，每个词组之间是或的关系，如果输入的关键词含有空格，空格之间是与的关系<br>
+         * 短语查询不走分词，如短语为 北京科技大学，则必须完整含有北京科技大学的记录才会被匹配<br>
+         * <p>
+         * 该方法对索引中字段类型配置为text（即有分词的类型）才有效<br>
+         * //* @param field
+         * 要查询的字段
+         *
+         * @param keywords 关键词
+         * @param occurs   字段出现情况
+         */
+        // void addPhraseQuery(String[] fields, String[] keywords, FieldOccurs occurs)
+    }
+
+    @Test
+    public void addPrimitiveTermQuery1() {
+        /**
+         * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
+         * 本方法也可以对分词的数据进行检索，但传入的内容不能有任何的标点符号以及空格，否则检索结果会出现异常<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  字段
+         * @param term   字段对应的值，只能转入一个，且不能有有空格.如果传入的值为负值，请用双引号包起来，例如：<br>
+         *               client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST);
+         * @param occurs 是否必须作为过滤条件
+         */
+        // void addPrimitiveTermQuery(String field, String term, FieldOccurs occurs)
+
+        /**
+         * 与 {@link #addPrimitiveTermQuery(String, String, FieldOccurs)} 方法类似<br>
+         * 字段对应的值可以输入多个，多个值之间为或的关系，满足其中一个值就会返回记录<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  检索字段
+         * @param terms  字段对应的多值，值之间是或的关系
+         * @param occurs 是否必须作为过滤条件
+         */
+        // void addPrimitiveTermQuery(String field, String[] terms, FieldOccurs occurs)
+    }
+
+    @Test
+    public void addPrimitiveTermFilter1() {
+        /**
+         * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
+         * 本方法也可以对分词的数据进行检索，但传入的内容不能有任何的标点符号以及空格，否则检索结果会出现异常<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  字段
+         * @param term   字段对应的值，只能转入一个，且不能有有空格.如果传入的值为负值，请用双引号包起来，例如：<br>
+         *               client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST);
+         * @param occurs 是否必须作为过滤条件
+         */
+        // void addPrimitiveTermFilter(String field, String term, FieldOccurs occurs)
+    }
+
+    @Test
+    public void addPrimitiveTermFilter2() {
+        /**
+         * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
+         * 本方法也可以对分词的数据进行检索，但传入的内容不能有任何的标点符号以及空格，否则检索结果会出现异常<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  字段
+         * @param terms  字段对应的值，只能转入一个，且不能有有空格.如果传入的值为负值，请用双引号包起来，例如：<br>
+         *               client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST); 段对应的多值，值之间是或的关系
+         * @param occurs 是否必须作为过滤条件
+         */
+        // void addPrimitiveTermFilter(String field, String[] terms, FieldOccurs occurs)
+
+
+        /**
+         * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
+         * 本方法也可以对分词的数据进行检索，但传入的内容不能有任何的标点符号以及空格，否则检索结果会出现异常<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  字段
+         * @param terms  字段对应的值，只能转入一个，且不能有有空格.如果传入的值为负值，请用双引号包起来，例如：<br>
+         *               client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST); 段对应的多值，值之间是或的关系
+         * @param occurs 是否必须作为过滤条件
+         */
+        // void addPrimitiveTermFilter(String field, Set<String> terms, FieldOccurs occurs)
+    }
+
+    @Test
+    public void addRangeTerms() {
+        /**
+         * 范围过滤.startTerm和endTerm构成闭区间 <br/>
+         * 如果field为pubtime、pubdate,查询时参数请按照下面的格式进行传递：<br>
+         * pubdate:长度为8，例如20110822,表示2011年08月22日<br>
+         * pubtime:长度为14,例如:20110822142613,表示2011年08月22日14时26分13秒 <br>
+         * startTerm、endTerm构成闭区间
+         *
+         * @param field     查询字段
+         * @param startTerm 开始项
+         * @param endTerm   结束项
+         */
+        // void addRangeTerms(String field, String startTerm, String endTerm)
+    }
+
+    @Test
+    public void addRangeTerms1() {
+        /**
+         * 筛选某区间内的数据，筛选的字段必须为数字形式。 如时间、 id、 评论数等
+         *
+         * @param field     筛选的字段
+         * @param startTerm 区间开始值
+         * @param endTerm   区间结束值
+         * @param occurs    是否必须作为过滤条件 一般为must
+         */
+        // void addRangeTerms(String field, String startTerm, String endTerm, FieldOccurs occurs)
+
+        /**
+         * 筛选某区间内的数据，筛选的字段必须为数字形式。 如时间、 id、 评论数等
+         *
+         * @param field       筛选的字段
+         * @param value       区间结束值
+         * @param occurs      是否必须作为过滤条件 一般为must
+         * @param rangeOccurs 选择过滤方式（大于/大于等于/小于/小于等于）
+         */
+        // void addRangeTerms(String field, String value, FieldOccurs occurs, RangeOccurs rangeOccurs)
+
+        /**
+         * 筛选某区间内的数据，筛选的字段必须为数字形式。 如时间、 id、 评论数等
+         *
+         * @param field           筛选的字段
+         * @param startTerm       区间开始值
+         * @param startRangeOccur 指定开始值的开闭区间
+         * @param endTerm         区间结束值
+         * @param stopRangeOccur  指定结束值的开闭区间
+         * @param occurs          是否必须作为过滤条件 一般为must
+         */
+        // void addRangeTerms(String field, String startTerm, RangeOccurs startRangeOccur, String endTerm, RangeOccurs stopRangeOccur, FieldOccurs occurs)
+    }
+
+    @Test
+    public void addExistsFilter() {
+        /**
+         * 添加非空过滤
+         *
+         * @param field
+         */
+        // void addExistsFilter(String field)
+    }
+
+    @Test
+    public void addMissingFilter() {
+        /**
+         * 添加空值过滤
+         *
+         * @param field
+         */
+        // void addMissingFilter(String field)
+    }
+
+    @Test
+    public void setStart() {
+        /**
+         * 从第几条结果取数据
+         *
+         * @param start 开始记录号
+         */
+        // void setStart(int start)
+    }
+
+    @Test
+    public void setRow() {
+        /**
+         * 取多少条数据
+         *
+         * @param rows 要取出的记录数
+         */
+        // void setRow(int rows)
+    }
+
+    @Test
+    public void setTrackScores() {
+        /**
+         * 设置是否计算score
+         */
+        // void setTrackScores()
+    }
+
+    @Test
+    public void setMinScore() {
+        /**
+         * 设置最小匹配度
+         *
+         * @param minscore
+         */
+        // void setMinScore(double minscore)
+    }
+
+    @Test
+    public void reset() {
+        /**
+         * 重置搜索条件
+         */
+        // void reset()
+    }
+
+    @Test
+    public void getQueryString() {
+        /**
+         * 获取提交请求串
+         *
+         * @param fields 索引查询后要返回值的字段，只有建索引时，有存储的字段此处才可能有返回值，对于只索引不存储的字段，此处得不到返回值
+         * @return
+         */
+        // String getQueryString(String[] fields)
+    }
+
+    @Test
+    public void searchTotal() {
+        /**
+         * 查询文档总量
+         * 分页，排序条件将进行无效过滤。
+         */
+        // long searchTotal()
+    }
+
+    @Test
+    public void execute() {
+        /**
+         * 提交请求
+         *
+         * @param fields 索引查询后要返回值的字段，只有建索引时，有存储的字段此处才可能有返回值，对于只索引不存储的字段，此处得不到返回值
+         * @return
+         */
+        // void execute(String[] fields)
+    }
+
+    @Test
+    public void execute1() {
+        /**
+         * 提交请求
+         *
+         * @param esQuery 索引查询后要返回值的字段，只有建索引时，有存储的字段此处才可能有返回值，对于只索引不存储的字段，此处得不到返回值
+         * @return
+         */
+        // void execute(String esQuery)
+    }
+
+    @Test
+    public void getResults() {
+        /**
+         * 返回检索结果，返回的检索字段以及字段顺序由{@link #execute(String[])} 方法中的参数fields指定
+         *
+         * @return 检索的结果列表
+         */
+        // List<String[]> getResults()
+    }
+
+    @Test
+    public void getTotal() {
+        /**
+         * 获取搜索结果（非聚合）总长度
+         *
+         * @return 检索结果的总长度
+         */
+        // long getTotal()
+    }
+
+    @Test
+    public void getCountTotal() {
+        /**
+         * 获取搜索聚合分组结果总长度
+         *
+         * @return 聚合分组结果的总长度
+         */
+        // long getCountTotal()
+    }
+
+    @Test
+    public void facetCountQueryOrderByCount1() {
+        /**
+         * 单字段一次聚合
+         * 此方法可以针对索引中某项数据进行统计（类似于数据库的count(*) 与 group by结合）并返回统计结果<br>
+         * 该方法返回的列表中按照统计数由大到小排序<br>
+         * 统计的字段包括pubdate、pubtime、eid、ip、user_id、group_id 等。 假设针对user_id进行统计，<br>
+         * 会针对索引中每个不同user_id进行统计<br>
+         * ，分别得到匹配的文档数，按照每个website_id统计得到的文档数排序，返回前topN个website_id 和对应的文档数<br>
+         * <p>
+         * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回100000,以便增加精确度。
+         *
+         * @param field 统计的字段
+         * @param topN  要求返回的结果数 ,topN 等于 0 时，将返回所有的统计结果 。topN 小于0时，不返回结果。
+         * @return 前topN个结果的list ， 每一项为一个数组， 第一项为统计字段，第二项为字段等于该值的文档数 。
+         * 注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
+         * 执行 getCountTotal()方法               为条件过滤后执行聚合总量；
+         */
+        // List<String[]> facetCountQueryOrderByCount(String field, int topN, SortOrder sort)
+
+
+        /**
+         * 单字段一次聚合 并且有限制返回聚合字段的详细数据
+         * 此方法可以针对索引中某项数据进行统计（类似于数据库的count(*),详细信息  与 group by结合）并返回统计结果<br>
+         * 该方法返回的列表中按照统计数由大到小排序<br>
+         * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回100000,以便增加精确度。
+         *
+         * @param field          统计的字段
+         * @param topN           要求返回的结果数 ,topN 等于 0 时，将返回所有的统计结果 。topN 小于0时，不返回结果。
+         * @param sort           聚合字段的排序方式
+         * @param returnFields   聚合返回详细字段,为null时返回全部字段
+         * @param childSortField 聚合返回详细数据的排序字段，为null时将以相关性自动排序
+         * @param childSortOrder 聚合返回详细数据排序方式
+         * @param childSize      聚合返回详细数据条数
+         * @return 前topN个结果的list ， 每一项为一个数组， 第一项为统计字段，第二项为字段等于该值的文档数，第三项为字段为详细数据  。facetCountQueryOrderByCount
+         * 注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
+         * 执行 getCountTotal()方法               为条件过滤后执行聚合总量；
+         */
+        // List<String[]> facetCountQueryOrderByCount(String field, int topN, SortOrder sort, String[] returnFields, String childSortField, SortOrder childSortOrder, int childSize)
+    }
+
+    @Test
+    public void facetTwoCountQueryOrderByCount() {
+        /**
+         * 二次聚合(返回结果较慢，不建议用)
+         * 此方法可以针对索引中某项数据分组后 ,再对子项数据进行分组统计（类似于数据库两个字段的count(*) 与 group by结合）并返回统计结果<br>
+         * 类似sql：select a.eid,COUNT(0)  FROM (  SELECT eid,qid FROM `content`  GROUP BY eid,qid) a GROUP BY a.eid  ;<br>
+         * 该方法返回的列表中按照统计数由大到小排序<br>
+         * 统计的字段包括pubdate、pubtime、eid、ip、user_id、group_id 等。 假设针对不同eid下的user_id进行统计，<br>
+         * 会针对索引中每个不同eid，不同user_id进行统计<br>
+         * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回1000000000,以便增加精确度。
+         *
+         * @param field      统计分组的父字段
+         * @param childField 统计分组的子字段
+         * @param topN       要求返回的结果数 ,topN 等于0 时，将返回所有的统计结果
+         * @param childbool  结果是否返回子字段详情，true or false
+         * @param sort       子字段统计排序
+         * @return 前topN个结果的list ， 每一项为一个数组，数组 【0】为统计父字段，【1】为父字段检索文档数，,【2】为父字段下子字段聚合的统计数，【3】子字段统计返回结果详情
+         */
+        //@Deprecated
+        // List<String[]> facetTwoCountQueryOrderByCount(String field, String childField, int topN, boolean childbool, SortOrder sort)
+    }
+
+    @Test
+    public void facetTwoCountQueryOrderByCount1() {
+        /**
+         * 二次聚合
+         * 此方法可以针对索引中某项数据分组后 ,再对子项数据进行分组统计（类似于数据库两个字段的count(*) 与 group by结合）并返回统计结果<br>
+         * 类似sql：select a.eid,COUNT(0)  FROM (  SELECT eid,qid FROM `content`  GROUP BY eid,qid) a GROUP BY a.eid  ;<br>
+         * 该方法返回的列表中按照统计数由大到小排序<br>
+         * 统计的字段包括pubdate、pubtime、eid、ip、user_id、group_id 等。 假设针对不同eid下的user_id进行统计，<br>
+         * 会针对索引中每个不同eid，不同user_id进行统计<br>
+         * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回1000000000,以便增加精确度。
+         *
+         * @param field      统计分组的父字段
+         * @param childField 统计分组的子字段
+         * @param topN       要求返回的结果数 ,topN 等于0 时，将返回所有的统计结果
+         * @param sort       子字段统计排序
+         * @return 前topN个结果的list ， 每一项为一个数组，数组 【0】为统计父字段，【1】为父子段所查询文档的数量，【2】为子字段聚合的统计数
+         * * 	注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
+         * 执行 getCountTotal()方法               为条件过滤后执行聚合总量；
+         */
+        // List<String[]> facetTwoCountQueryOrderByCount(String field, String childField, int topN, SortOrder sort)
+    }
+
+    @Test
+    public void facetMultipleCountQueryOrderByCount1() {
+        /**
+         * 多次聚合
+         * 此方法可以针对索引中某项数据分组后 ,再对子项数据进行分组统计（类似于数据库两个字段的count(*) 与 group by结合）并返回统计结果<br>
+         * 类似sql：select a.eid,COUNT(0)  FROM (  SELECT eid,qid FROM `content`  GROUP BY eid,qid) a GROUP BY a.eid  ;<br>
+         * 该方法返回的列表中按照统计数由大到小排序<br>
+         * 统计的字段包括pubdate、pubtime、eid、ip、user_id、group_id 等。 假设针对不同eid下的user_id进行统计，<br>
+         * 会针对索引中每个不同eid，不同user_id进行统计<br>
+         * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回1000000000,以便增加精确度。
+         *
+         * @param field       统计分组的父字段
+         * @param childFields 统计分组的子字段,数组
+         * @param topN        要求返回的结果数 ,topN 等于0 时，将返回所有的统计结果
+         * @return 前topN个结果的list ， 每一项为一个数组，数组 【0】为统计父字段，【1】为父子段所查询文档的数量，【N】为子字段聚合的统计数
+         * 默认排序为父字段的文档数
+         * * 	注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
+         * 执行 getCountTotal()方法               为条件过滤后执行聚合总量；
+         */
+        // List<String[]> facetMultipleCountQueryOrderByCount(String field, String[] childFields, int topN)
+
+        /**
+         * 多次聚合
+         * 此方法可以针对索引中某项数据分组后 ,再对子项数据进行分组统计（类似于数据库两个字段的count(*) 与 group by结合）并返回统计结果<br>
+         * 类似sql：select a.eid,COUNT(0)  FROM (  SELECT eid,qid FROM `content`  GROUP BY eid,qid) a GROUP BY a.eid  ;<br>
+         * 该方法返回的列表中按照统计数由大到小排序<br>
+         * 统计的字段包括pubdate、pubtime、eid、ip、user_id、group_id 等。 假设针对不同eid下的user_id进行统计，<br>
+         * 会针对索引中每个不同eid，不同user_id进行统计<br>
+         * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回1000000000,以便增加精确度。
+         *
+         * @param field       统计分组的父字段
+         * @param childFields 统计分组的子字段,数组
+         * @param topN        要求返回的结果数 ,topN 等于0 时，将返回所有的统计结果
+         * @param orderFiled  排序的字段，为空时， 默认排序为父字段的文档数
+         * @param sort        排序
+         * @return 前topN个结果的list ， 每一项为一个数组，数组 【0】为统计父字段，【1】为父子段所查询文档的数量，【N】为子字段聚合的统计数
+         * * 	注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
+         * 执行 getCountTotal()方法               为条件过滤后执行聚合总量；
+         */
+        // List<String[]> facetMultipleCountQueryOrderByCount(String field, String[] childFields, int topN, String orderFiled, SortOrder sort)
+    }
+
+    @Test
+    public void facetDate() {
+        /**
+         * 根据时间粒度统计数量
+         *
+         * @param field         查询的时间字段
+         * @param format        时间格式 例如：yyyy-MM-dd
+         * @param interval      粒度 (1M代表每月，1d代表每日，1h代表每小时)
+         * @param startTime     开始时间
+         * @param endTime       结束时间
+         * @param min_doc_count 最小返回值
+         * @return
+         */
+        // List<String[]> facetDate(String field, String format, String interval, String startTime, String endTime, int min_doc_count)
+    }
+
+    @Test
+    public void facetDate1() {
+        /**
+         * 根据时间粒度统计数量
+         *
+         * @param field     查询的时间字段
+         * @param format    时间格式 例如：yyyy-MM-dd
+         * @param interval  粒度 (1M代表每月，1d代表每日，1h代表每小时)
+         * @param startTime 开始时间
+         * @param endTime   结束时间
+         * @return
+         */
+        // List<String[]> facetDate(String field, String format, String interval, String startTime, String endTime)
+    }
+
+    @Test
+    public void facetDate2() {
+        /**
+         * 根据时间粒度统计数量
+         *
+         * @param field  查询的时间字段
+         * @param format 时间格式 例如：yyyy-MM-dd HH
+         * @param size   返回数量，小于等于0时返回10000条
+         * @return
+         */
+        // List<String[]> facetDate(String field, String format, int size)
+    }
+
+    @Test
+    public void facetDate3() {
+        /**
+         * 根据时间粒度统计数量
+         *
+         * @param field    查询的时间字段
+         * @param format   时间格式 例如：yyyy-MM-dd
+         * @param interval 粒度 (1M代表每月，1d代表每日，1h代表每小时)
+         * @return
+         */
+        // List<String[]> facetDate(String field, String format, String interval)
+    }
+
+    @Test
+    public void facetDateByCount1() {
+        /**
+         * 根据时间粒度统计 聚合数量
+         * 类似统计每一天有多少个用户；
+         *
+         * @param TimeField  查询的时间字段
+         * @param format     时间格式 例如：yyyy-MM-dd
+         * @param interval   粒度 (1M代表每月，1d代表每日，1H代表每小时)
+         * @param CountField 要聚合的字段
+         * @return
+         */
+        // List<String[]> facetDateByCount(String TimeField, String format, String interval, String startTime, String endTime, String CountField)
+    }
+
+    @Test
+    public void facetDateByTypeCount() {
+        /**
+         * 根据时间粒度统计 聚合不同类型数量
+         * 类似统计每一天有多少个用户；
+         *
+         * @param TimeField  查询的时间字段
+         * @param format     时间格式 例如：yyyy-MM-dd
+         * @param interval   粒度 (1M代表每月，1d代表每日，1H代表每小时)
+         * @param CountField 要聚合的字段
+         * @return
+         */
+        // List<String[]> facetDateByTypeCount(String TimeField, String format, String interval, String CountField)
+    }
+
+    @Test
+    public void facetDateByTypeCount1() {
+        /**
+         * 根据时间粒度统计 聚合不同类型数量
+         * 类似统计每一天有多少个用户；
+         *
+         * @param TimeField  查询的时间字段
+         * @param format     时间格式 例如：yyyy-MM-dd
+         * @param interval   粒度 (1M代表每月，1d代表每日，1H代表每小时)
+         * @param CountField 要聚合的字段
+         * @return
+         */
+        // List<String[]> facetDateByTypeCount(String TimeField, String format, String interval, String startTime, String endTime, String CountField)
+    }
+
+    @Test
+    public void facetDateAggsTophits() {
+
+        /**
+         * 根据时间粒度，根据排序 筛选返回每个时间段内前N条数据
+         *
+         * @param TimeField 查询的时间字段
+         * @param format    时间格式 例如：yyyy-MM-dd
+         * @param interval  粒度 (1M代表每月，1d代表每日，1H代表每小时)
+         * @param startTime 起始时间
+         * @param endTime   结束时间
+         * @param size      时间段内返回数据条数
+         * @return
+         */
+        // List<String[]> facetDateAggsTophits(String TimeField, String format, String interval, String startTime, String endTime, int size)
+    }
+
+    @Test
+    public void facetDateAggsTophits1() {
+        /**
+         * 根据时间粒度，根据排序 筛选返回每个时间段内前N条数据
+         *
+         * @param TimeField    查询的时间字段
+         * @param format       时间格式 例如：yyyy-MM-dd
+         * @param interval     粒度 (1M代表每月，1d代表每日，1H代表每小时)
+         * @param startTime    起始时间
+         * @param endTime      结束时间
+         * @param sortField    时间段内数据排序字段，为null时将以相关性自动排序
+         * @param sortOrder    时间段内数据排序方式
+         * @param returnFields 时间段内数据返回字段，为null时字段全部返回
+         * @param size         时间段内返回数据条数
+         * @return
+         */
+        // List<String[]> facetDateAggsTophits(String TimeField, String format, String interval, String startTime, String endTime, String sortField, SortOrder sortOrder, String[] returnFields, int size)
+
+    }
+
+    @Test
+    public void addQueryCondition() {
+        /**
+         * 自定义查询
+         *
+         * @param QuerString 为 luncene语法，例如： +(content:"北京" AND "上海") OR +(title:"北京" AND "上海") 意思为：只要 content 包含 北京与上海  或者  title 包含 北京与上海   都会返回结果；
+         *                   其中 + 是必须存在， - 是必须不存在。 OR AND 都必须大写。
+         */
+        // void addQueryCondition(String QuerString)
+    }
+
+    @Test
+    public void addQueryConditionBylucene() {
+        /**
+         * 自定义查询
+         *
+         * @param QuerString 为 全部luncene语法，不与其它条件函数共用
+         * @param QuerString
+         * @return(结果json)
+         */
+        // String addQueryConditionBylucene(String QuerString)
+    }
+
+    @Test
+    public void facetDateBySecondFieldValueCount() {
+        /**
+         * 根据时间粒度统计 聚合数量
+         * 类似统计每一天it字段下各个类型数据量
+         *
+         * @param TimeField   查询的时间字段
+         * @param format      时间格式 例如：yyyy-MM-dd
+         * @param interval    粒度 (1M代表每月，1d代表每日，1H代表每小时)
+         * @param secondField 要聚合的字段s
+         * @return
+         * @Description: TODO(根据时间粒度统计)
+         */
+        // List<String[]> facetDateBySecondFieldValueCount(String TimeField, String format, String interval, String secondField)
     }
 
 }

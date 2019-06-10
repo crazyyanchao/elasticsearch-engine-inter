@@ -64,11 +64,11 @@ public class EsIndexDelete extends EsIndexDeleteImp {
     }
 
     /**
-     * @param bool：true表示刷新 false表示不刷新 不设置此条件默认不刷新
+     * @param bool：true表示:立即刷新主分片和副分片 false:表示不刷新 不设置此条件默认不刷新 wait_for:使用集群自动刷新机制（默认1s，在索引级自定义5s或者其它值根据业务决定）
      * @return
      * @Description: TODO(设置自动刷新 - 根据数据数据分片组ID删除数据之后是否刷新shards)
      */
-    public void setRefresh(boolean bool) {
+    public void setRefresh(String bool) {
         super.deleteParameters = super.deleteParameters + "?refresh=" + bool + "";
     }
 
