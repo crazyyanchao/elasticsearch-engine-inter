@@ -127,7 +127,7 @@ public class EsIndexUpdateImp {
 	/**
 	 * 添加修改一个id的信息
 	 * @param parameter map类型 ，字段名：值
-	 * @param id 要修改的主键
+	 * @param _id 要修改的主键
 	 */
 	public boolean UpdateParameterById (  Map< String, Object >  parameter , String _id ){
 		try {

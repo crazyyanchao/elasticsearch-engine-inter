@@ -51,8 +51,8 @@ public class EsIndexSearchImpTest {
 
     private static EsIndexSearch esWarningIndexSearch;
 
-//    private String ipPort = "192.168.12.109:9210";
-    private String ipPort = "localhost:9200";
+    private String ipPort = "192.168.12.109:9210";
+//    private String ipPort = "localhost:9200";
 
     private static HashMap<String, String> itMap = new HashMap<>();
 
@@ -485,8 +485,9 @@ public class EsIndexSearchImpTest {
         /**
          * 根据时间粒度对某字段的各项进行分组统计(例如：按天统计it各个数据量)
          * **/
-//        esSmallIndexSearch.addRangeTerms("pubtime", "2019-05-31 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
+//        esAllIndexSearch.addRangeTerms("pubtime", "2019-05-31 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
         esSmallIndexSearch.addRangeTerms("pubtime", "2019-05-27 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
+//        esAllIndexSearch.addRangeTerms("pubtime", "2019-05-27 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
 
 
         /**
@@ -501,7 +502,9 @@ public class EsIndexSearchImpTest {
          * @Description: TODO(根据时间粒度统计)
          */
 //        List<String[]> result = esSmallIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd", "1d", "it");
+//        List<String[]> result = esAllIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd", "1d", "it");
         List<String[]> result = esSmallIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd", "1d", "it");
+//        List<String[]> result = esAllIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd", "1d", "it");
 
 //        List<String[]> result = esSmallIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd hh:MM:ss", "1h", "it");
         // OUTPUT
@@ -1658,6 +1661,79 @@ public class EsIndexSearchImpTest {
          * @Description: TODO(根据时间粒度统计)
          */
         // List<String[]> facetDateBySecondFieldValueCount(String TimeField, String format, String interval, String secondField)
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(二次检索)
+     */
+    @Test
+    public void quadraticSearch() {
+        // 二次检索的实现参考万方数据：http://wanfangdata.com.cn/searchResult/getAdvancedSearch.do?searchType=all#a_001
+        // ---------------------------------------一次检索---------------------------------------
+//        esSmallIndexSearch.addKeywordsQuery("title", "中国", FieldOccurs.MUST);
+//        esSmallIndexSearch.setStart(0);
+//        esSmallIndexSearch.setRow(10);
+//        esSmallIndexSearch.execute(new String[]{"title"});
+//        List<String[]> result = esSmallIndexSearch.getResults();
+//        esSmallIndexSearch.outputResult(result);
+//        esSmallIndexSearch.reset();
+
+        // ---------------------------------------二次检索---------------------------------------
+//        esSmallIndexSearch.addKeywordsQuery("title", "中国", FieldOccurs.MUST);
+//        esSmallIndexSearch.addKeywordsQuery("title", "北京", FieldOccurs.MUST);
+//        esSmallIndexSearch.setStart(0);
+//        esSmallIndexSearch.setRow(1000);
+//        esSmallIndexSearch.execute(new String[]{"title"});
+//        List<String[]> result2 = esSmallIndexSearch.getResults();
+//        esSmallIndexSearch.outputResult(result2);
+//        esSmallIndexSearch.reset();
+
+//        // ---------------------------------------二次检索---------------------------------------
+//        esSmallIndexSearch.addKeywordsQuery("title", "中国", FieldOccurs.MUST);
+//        esSmallIndexSearch.addKeywordsQuery("title", "北京", FieldOccurs.MUST);
+//        esSmallIndexSearch.addKeywordsQuery("title", "海淀", FieldOccurs.MUST);
+//        esSmallIndexSearch.setStart(0);
+//        esSmallIndexSearch.setRow(1000);
+//        esSmallIndexSearch.execute(new String[]{"title"});
+//        List<String[]> result2 = esSmallIndexSearch.getResults();
+//        esSmallIndexSearch.outputResult(result2);
+//        esSmallIndexSearch.reset();
+
+//        // ---------------------------------------一次检索---------------------------------------
+//        String[] fields = new String[]{"title","content"};
+//        esSmallIndexSearch.addKeywordsQuery(fields,"中国",KeywordsCombine.OR);
+//        esSmallIndexSearch.setStart(0);
+//        esSmallIndexSearch.setRow(100);
+//        esSmallIndexSearch.execute(new String[]{"title","content"});
+//        List<String[]> result2 = esSmallIndexSearch.getResults();
+//        esSmallIndexSearch.outputResult(result2);
+//        esSmallIndexSearch.reset();
+
+//        // ---------------------------------------二次检索---------------------------------------
+//        String[] fields = new String[]{"title","content"};
+//        esSmallIndexSearch.addRangeTerms("pubtime","2019-06-13 01:01:01",FieldOccurs.MUST,RangeOccurs.GTE); // 大于某个时间
+//        esSmallIndexSearch.addKeywordsQuery(fields,"中国",KeywordsCombine.OR);
+//        esSmallIndexSearch.addKeywordsQuery(fields,"自动化所",KeywordsCombine.OR);
+//        esSmallIndexSearch.setStart(0);
+//        esSmallIndexSearch.setRow(100);
+//        esSmallIndexSearch.execute(new String[]{"title","content"});
+//        List<String[]> result2 = esSmallIndexSearch.getResults();
+//        esSmallIndexSearch.outputResult(result2);
+//        esSmallIndexSearch.reset();
+
+        // ---------------------------------------二次检索---------------------------------------
+        String[] fields = new String[]{"title","content"};
+        esSmallIndexSearch.addKeywordsQuery(fields,"中国",KeywordsCombine.OR);
+        esSmallIndexSearch.addKeywordsQuery(fields,"华为5G",KeywordsCombine.OR);
+        esSmallIndexSearch.setStart(0);
+        esSmallIndexSearch.setRow(100);
+        esSmallIndexSearch.execute(new String[]{"title","content"});
+        List<String[]> result2 = esSmallIndexSearch.getResults();
+        esSmallIndexSearch.outputResult(result2);
+        esSmallIndexSearch.reset();
+
     }
 
 }

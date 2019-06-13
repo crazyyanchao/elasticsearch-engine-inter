@@ -3,6 +3,8 @@ package casia.isi.elasticsearch.operation.update;
 import casia.isi.elasticsearch.common.SortOrder;
 import casia.isi.elasticsearch.operation.search.EsIndexSearch;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.log4j.PropertyConfigurator;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -42,6 +44,49 @@ import java.util.Map;
  *
  */
 public class EsIndexUpdateTest {
+
+    private static EsIndexUpdate esSmallIndexUpdate;
+
+    private String ipPort = "localhost:9200";
+
+    private static HashMap<String, String> itMap = new HashMap<>();
+
+    // 预警：
+    // http://192.168.12.109:9210/event_news_ref_monitor,event_blog_ref_monitor,event_threads_ref_monitor,
+    // event_mblog_ref_monitor,event_video_ref_monitor,event_weichat_ref_monitor,event_appdata_ref_monitor/monitor_data/_search
+
+    @Before
+    public void setUp() throws Exception {
+        itMap.put("c", "论坛");   // forum_threads
+        itMap.put("d", "微博");   // mblog_info
+        itMap.put("a", "新闻");   // news
+        itMap.put("h", "微信");   // wechat_message_xigua
+        itMap.put("i", "移动app");    // appdata
+        itMap.put("e", "视频");   // video_brief
+        itMap.put("b", "博客");   // blog
+        itMap.put("j", "电子报纸"); // newspaper_info
+    }
+
+    @Before
+    public void searchObject() {
+        PropertyConfigurator.configureAndWatch("config/log4j.properties");
+
+
+        String smallIndexName = "news_small,blog_small,forum_threads_small,mblog_info_small,video_brief_small," +
+                "wechat_message_xigua_small,appdata_small,newspaper_info_small";
+        esSmallIndexUpdate = new EsIndexUpdate(ipPort, smallIndexName, "monitor_caiji_small");
+
+    }
+
+    @Test
+    public void UpdateParameterById(){
+
+//        String gid = "i174324363";
+//
+//        Map<String, Object> map = new HashMap<String, Object>();
+//        map.put("title","榆林治沙: 一茬接着一茬干誓将沙海变绿洲-UPDATE");
+//        esSmallIndexUpdate.UpdateParameterById(map,gid);
+    }
 
     @Test
     public void update(){
@@ -91,4 +136,5 @@ public class EsIndexUpdateTest {
     }
 
 }
+
 
