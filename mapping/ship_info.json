@@ -1,0 +1,137 @@
+{
+  "settings": {
+    "number_of_replicas": 0,
+    "number_of_shards": 6,
+    "refresh_interval": "1s",
+    "translog": {
+      "flush_threshold_size": "1.6gb"
+    },
+    "merge": {
+      "scheduler": {
+        "max_thread_count": "1"
+      }
+    },
+    "index": {
+      "routing": {
+        "allocation": {
+          "total_shards_per_node": "2"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "graph": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "auto_id": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "name": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "lon": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "float"
+        },
+        "lat": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "float"
+        },
+        "mmsi": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "heading": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "speed": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "updatetime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "store": true,
+          "type": "date"
+        },
+        "eta": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "store": true,
+          "type": "date"
+        },
+        "draught": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "destination": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "width": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "length": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "type": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "minotype": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "callsign": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "imonumber": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "course": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "source": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "md5": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
+        "intime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "store": true,
+          "type": "date"
+        }
+      }
+    }
+  }
+}

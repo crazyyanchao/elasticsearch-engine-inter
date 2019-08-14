@@ -1,0 +1,9 @@
+===========================================EXECUTE DELETE TASK===========================================
+log4j:WARN No appenders could be found for logger (org.apache.http.impl.conn.BasicClientConnectionManager).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+Delay time:30m
+Delete data from 4d ago.Current system time:2019-06-10 10:29:56
+Query url:http://localhost:9200/news_small,blog_small,forum_threads_small,mblog_info_small,video_brief_small,wechat_message_xigua_small,appdata_small,newspaper_info_small/monitor_caiji_small/_delete_by_query?refresh=wait_for&scroll_size=1000&conflicts=proceed&wait_for_completion=false
+Query json:{"query":{"bool":{"filter":{"bool":{"must":[{"range":{"pubtime":{"lte":"2019-06-06 10:29:54"}}}]}}}}}
+Query result json:{"task":"ycL_D8SxTJyfUjME9ZKC-g:951"}

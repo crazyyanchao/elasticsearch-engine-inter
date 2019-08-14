@@ -1,0 +1,53 @@
+{
+  "mappings": {
+    "databases": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "type": "long"
+        },
+        "organization": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "cause": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "people_id": {
+          "index": "not_analyzed",
+          "type": "long"
+        },
+        "description": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "dateCreatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        },
+        "role": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "date": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "dateUpdatedTime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "type": "date"
+        }
+      }
+    }
+  },
+  "settings": {
+    "number_of_replicas": 1,
+    "number_of_shards": 5
+  },
+  "mappingName": "tb_linkedin_volunteers.json"
+}

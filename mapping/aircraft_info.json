@@ -1,0 +1,97 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "graph": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "id": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "long"
+        },
+        "flight_number": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "string"
+        },
+        "pubtime": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "store": true,
+          "type": "date"
+        },
+        "latitude": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "float"
+        },
+        "longitude": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "float"
+        },
+        "altitude": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "float"
+        },
+        "mode_s": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "string"
+        },
+        "speed": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "integer"
+        },
+        "heading": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "integer"
+        },
+        "source": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "string"
+        },
+        "aircraft": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "string"
+        },
+        "origin": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "string"
+        },
+        "destination": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "string"
+        },
+        "airline": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "string"
+        },
+        "caiji_time": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "store": true,
+          "type": "date"
+        },
+        "insert_time": {
+          "format": "yyyy-MM-dd HH:mm:ss",
+          "store": true,
+          "type": "date"
+        }
+      }
+    }
+  }
+}
+
