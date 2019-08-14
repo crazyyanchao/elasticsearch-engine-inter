@@ -1,9 +1,13 @@
 package casia.isi.elasticsearch.operation.search;
 
+import casia.isi.elasticsearch.common.FieldOccurs;
+import casia.isi.elasticsearch.operation.http.HttpDiscover;
 import org.apache.log4j.PropertyConfigurator;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +42,41 @@ import java.util.Set;
  * @date 2019/5/22 11:24
  */
 public class EsIndexSearchTest {
+
+    private static EsIndexSearch searcher;
+
+    private String ipPort = "" +
+            "192.168.12.107:9210,192.168.12.107:9211,localhost:9200,192.168.12.114:9210," +
+            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
+            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
+            "192.168.12.111:9210,192.168.122.111:9219";
+
+//    private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
+//            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
+
+//    private String ipPort = "" +
+//            "192.168.12.107:9210,localhost:9200";
+
+
+    @Before
+    public void setUp() throws Exception {
+        searcher = new EsIndexSearch(ipPort, "mblog_info_small,instagram_thread_small,twitter_info_small,youtube_info_small,facebook_info_small", "monitor_caiji_small");
+    }
+
+    @Test
+    public void verifySearch() {
+        /**
+         * elasticsearch交互的接口的构造函数使用
+         * 1、支持配置多个集群地址
+         * 2、支持多个索引名称
+         * 3、支持多个索引类型
+         *
+         * **/
+//        searcher = new EsIndexSearch(ipPort, "mblog_info_all", "monitor_caiji_all");
+//        searcher = new EsIndexSearch(ipPort, "mblog_info_all,mblog_info_all", "monitor_caiji_all");
+//        searcher = new EsIndexSearch(ipPort, "mblog_info_all,mblog_info_small", "monitor_caiji_all,monitor_caiji_small");
+        searcher = new EsIndexSearch(ipPort, "mblog_info_small,instagram_thread_small,twitter_info_small,youtube_info_small,facebook_info_small", "monitor_caiji_small");
+    }
 
     @Test
     public void search() {
@@ -271,13 +310,170 @@ public class EsIndexSearchTest {
     }
 
     @Test
-    public void analysis(){
+    public void analysis() {
         String text = "原标题形势严峻这个地方书记市长纪委书记为何连续空降市委书记市长市委副书记接连落马的广东江门市政治生态修复从补齐关键岗位开始在连续迎来空降市委书记市长候选人后江门新一任纪委书记近日也到岗了值得关注的是他也是从省里空降的还是纪检部门这位新纪委书记叫项天保任职省纪委年在案例管理派驻机构巡视部门等关键岗位都工作过经验十分丰富去年底江门成立市委巡察工作机构时任省委巡视办副主任的项天保亲赴江门参加了启动仪式长安街知事此前曾介绍过江门是腐败的重灾区市委书记毛荣楷市长邓伟根市委副书记政法委书记邹家军市委常委王积俊市人大常委会副主任聂党权曾任市委副书记落马班子塌方全国罕见中央派来了一个沙瑞金省委书记又派来了一个田国富纪委书记这是人民的名义里的一个情节以此说明推动从严治党的迫切性江门的情况与此类似市委书记林应武市长候选人刘毅都是从省委组织部副部长任上调来江门的补位落马前任如今新纪委书记又从省级纪检部门调来从一个侧面也反映出地方反腐形势的严峻性就在项天保就任的会议上前任纪委书记胡钛也以新身份亮相他已经出任市委副书记政法委书记也就是说现在江门市委常委班子中有两名来自纪检系统的领导胡钛是军转干部年底刚刚调任江门市纪委书记他有两次救火经历一次是梅州一次是江门年梅州市委书记朱泽君和纪委书记李纯德相继被调离此后又相继被查媒体对两人内斗多有报道胡钛正是接替了李的梅州纪委书记职务而去年赴江门履新正是该市市委书记毛荣楷和市委副书记邹家军落马之后胡钛之前的江门市纪委书记周伟万也是一名老纪检在纪检政法战线工作了年今年初当选市政协主席面对从严治党的新形势和班子塌方的旧局面接力反腐任重道远近日召开的江门全市领导干部大会上广东省委常委组织部长邹铭根据省委书记胡春华同志的指示对全市领导干部提出三点要求其中特别指出要进一步严明政治纪律和政治规矩营造良好的政治生态要保持干部队伍思想稳定和改革发展大局稳定积极引导广大干部群众把违纪违法的个人问题与江门整体工作区分开来不因人废事不因案划线不因此否定江门的工作影响江门的发展稳定营造良好的政治生态更好地推动发展无疑是江门工作当下的重中之重来源长安街知事责任编辑初晓慧文章关键词纪委书记市长纪检我要反馈保存网页";
-        Set<String> set = EsIndexSearch.analysis(text,true,2);
-        for (String word: set) {
+        Set<String> set = EsIndexSearch.analysis(text, true, 2);
+        for (String word : set) {
             System.out.println(word);
         }
     }
 
+    @Test
+    public void taobaoQuadraticSearchDemo() {
+
+        /**
+         * 渐进式检索方式（二次检索的功能实现可以参考淘宝和万方搜索）
+         * 二次检索测试：类似淘宝宝贝检索（1、一次检索检索存在的商品，2、二次检索将一次检索中的部分结果进行过滤（在结果中排除））
+         *
+         * **/
+
+        searcher = new EsIndexSearch(ipPort, "news_all", "monitor_caiji_all");
+
+        int count = 0;
+        while (true) {
+            count++;
+
+            /**
+             * 以下代码实现的功能，检索与中国相关的新闻（一次检索）
+             * 继续检索与中国相关但是和北京不相关的新闻（二次检索）- 实现效果就是在一次检索的结果中继续过滤
+             *
+             * 例如两个搜索框：第一个框一次检索到与中国相关的新闻，第二个框继续检索从结果中过滤哪些新闻
+             *
+             * **/
+
+            // 一次检索
+            searcher.addKeywordsQuery("content", "中国", FieldOccurs.MUST);
+            searcher.setStart(0);
+            searcher.setRow(10);
+            searcher.execute(new String[]{"gid"});
+            searcher.outputResult(searcher.getResults());
+            System.out.println(searcher.getTotal());
+            searcher.reset();
+
+            // 二次检索（上一次检索基础上进一步检索）（保留上一次检索条件并添加到下一次检索中）
+            searcher.addKeywordsQuery("content", "中国", FieldOccurs.MUST);
+            searcher.addKeywordsQuery("content", "北京", FieldOccurs.MUST_NOT);
+            searcher.setStart(0);
+            searcher.setRow(10);
+            searcher.execute(new String[]{"gid"});
+            searcher.outputResult(searcher.getResults());
+            System.out.println(searcher.getTotal());
+
+            searcher.reset();
+            System.out.println("======================执行检索测试次数：" + count);
+        }
+    }
+
+    @Test
+    public void searchConstructorOptimize() {
+
+        /**
+         * 查询对象的构造：尽可能的将查询限制在最小的索引和类型，这样减少搜索请求涉及的分片数量，加速搜索请求的响应
+         * **/
+
+        // 1、搜索整个集群
+//        searcher = new EsIndexSearch(ipPort, null, null);
+
+        // 2、搜索某个索引，不限定类型
+//        searcher = new EsIndexSearch(ipPort, "news_all", null);
+
+        // 3、搜索单个索引名索引类型
+//        searcher = new EsIndexSearch(ipPort, "news_all", "monitor_caiji_all");
+
+        // 4、搜索多个索引名单个索引类型
+//        searcher = new EsIndexSearch(ipPort, "news_all,newspaper_all", "monitor_caiji_all");
+
+        // 5、搜索多个索引名多个索引类型
+//        searcher = new EsIndexSearch(ipPort, "news_all,news_small,newspaper_all", "monitor_caiji_all,monitor_caiji_small");
+
+        // 6、搜索单个索引名多个索引类型
+//        searcher = new EsIndexSearch(ipPort, "news_all", "monitor_caiji_all,monitor_caiji_small");
+
+        // 7、模糊匹配索引名（搜索所有news开头的索引）
+        searcher = new EsIndexSearch(ipPort, "news*", null);
+
+        searcher.addKeywordsQuery("content", "中国", FieldOccurs.MUST);
+        searcher.addKeywordsQuery("content", "北京", FieldOccurs.MUST_NOT);
+        searcher.setStart(0);
+        searcher.setRow(10);
+        searcher.execute(new String[]{"content"});
+        List<String[]> result = searcher.getResults();
+        searcher.outputResult(result);
+        System.out.println(searcher.getTotal());
+        searcher.reset();
+    }
+
+    @Test
+    public void searcherConstructorDynaicAddHosts() {
+        EsIndexSearch searcher = new EsIndexSearch(ipPort, "event_news_ref_event,event_wechat_info_ref_event", "event_data,monitor_data");
+//        searcher.addQueryCondition("+(content:\"北京\")");
+//        searcher.setStart(0);//分页
+//        searcher.setRow(4);//分页
+//        searcher.execute(new String[]{"content"});
+//        System.out.println("Total data:" + searcher.getTotal());
+//        searcher.outputResult(searcher.getResults());
+//
+//        // 负载均衡器的自动检查机制：第一次调用都是可用的，在调用接口的时候才会检查是否可用
+//
+//        searcher.reset();
+
+        for (int i = 0; i < 100; i++) {
+            try {
+                searcher.addQueryCondition("+(content:\"北京\")");
+                searcher.setStart(0);//分页
+                searcher.setRow(4);//分页
+                searcher.execute(new String[]{"content"});
+                System.out.println("Total data:" + searcher.getTotal());
+                searcher.outputResult(searcher.getResults());
+
+//                if (i == 10) {
+                /**
+                 *  动态发布一个节点 - 模拟动态增加节点的过程
+                 *  线上使用中可以将ip:ports列表放置在配置文件中，使用守护进程扫描，实现动态增加
+                 *  节点地址增加之后，会默认添加到备选容灾节点列表，此操作有助于提升应用程序的容灾能力
+                 *
+                 * **/
+                HttpDiscover.discover("192.168.12.115:9210");
+//                }
+
+                searcher.reset();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Test
+    public void addPrimitiveTermsFilter() {
+
+        /**
+         * TERMS
+         *
+         * @param field:字段名（例如精确查询多个URL）
+         * @param terms:多值字段值
+         */
+//        String[] array = new String[]{"https://weibo.com/u/1477045392", "https://weibo.com/u/2218069571"};
+//        searcher.addPrimitiveTermsFilter("user_url", array, FieldOccurs.MUST);
+//        searcher.execute(new String[]{"user_url","author"});
+//        searcher.outputResult(searcher.getResults());
+//
+//        searcher.reset();
+
+//        Set<Object> set = new HashSet<>();
+//        set.add("https://weibo.com/u/1477045392");
+//        set.add("https://weibo.com/u/2218069571");
+//        searcher.addPrimitiveTermsFilter("user_url", set, FieldOccurs.MUST);
+//        searcher.execute(new String[]{"user_url","author"});
+//        searcher.outputResult(searcher.getResults());
+
+        Set<Object> set = new HashSet<>();
+        set.add(89727817);
+        set.add(89727384);
+        searcher.addPrimitiveTermsFilter("id", set, FieldOccurs.MUST);
+        searcher.execute(new String[]{"user_url", "author"});
+        searcher.outputResult(searcher.getResults());
+    }
+
 }
+
 

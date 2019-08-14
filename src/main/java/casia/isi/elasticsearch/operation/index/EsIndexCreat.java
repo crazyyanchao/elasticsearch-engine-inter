@@ -8,10 +8,12 @@ package casia.isi.elasticsearch.operation.index;
  */
 public class EsIndexCreat extends EsIndexCreatImp {
 
+    @Deprecated
     public EsIndexCreat() {
         super();
     }
 
+    @Deprecated
     public EsIndexCreat(String IP, int Port, String indexName, String typeName) {
         super(IP, Port, indexName, typeName);
     }

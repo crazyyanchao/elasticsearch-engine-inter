@@ -40,7 +40,10 @@ public class Message {
      */
     public static boolean indexMessage(String queryResultStr) {
         JSONObject queryResult = JSONObject.parseObject(queryResultStr);
-        return queryResult.getBoolean("errors");
+        if (queryResult.containsKey("errors")) {
+            return queryResult.getBoolean("errors");
+        }
+        return true;
     }
 
 }

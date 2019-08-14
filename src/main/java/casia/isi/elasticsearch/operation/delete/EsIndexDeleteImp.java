@@ -3,6 +3,8 @@ package casia.isi.elasticsearch.operation.delete;
 import java.util.List;
 import java.util.Random;
 
+import casia.isi.elasticsearch.operation.http.*;
+import casia.isi.elasticsearch.util.ClientUtils;
 import org.apache.log4j.Logger;
 import org.apache.lucene.queryparser.classic.QueryParser;
 
@@ -14,7 +16,6 @@ import casia.isi.elasticsearch.common.FieldCombine;
 import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.common.KeywordsCombine;
 import casia.isi.elasticsearch.common.Symbol;
-import casia.isi.elasticsearch.operation.http.HttpRequest;
 import casia.isi.elasticsearch.util.StringUtil;
 import casia.isi.elasticsearch.util.Validator;
 
@@ -62,10 +63,16 @@ public class EsIndexDeleteImp {
      * 接口地址
      **/
     public static String delete_url;
+
     /**
-     * http访问对象
+     * http访问对象 仅仅支持绝对地址接口访问
      */
-    public HttpRequest httpRequest;
+//    public HttpRequest httpRequest =  new HttpRequest();
+
+    /**
+     * http访问对象 支持绝对接口地址和相对接口地址
+     **/
+    public HttpProxyRequest httpRequest = new HttpProxyRequest(HttpPoolSym.DEFAULT.getSymbolValue());
 
     /**
      * 空格符
@@ -110,7 +117,7 @@ public class EsIndexDeleteImp {
     public static String deleteParameters = "";
 
     /**
-     * 构造函数
+     * 构造函数 - 支持配置多个地址
      *
      * @param ipAndport
      * @param indexName 索引块名
@@ -121,13 +128,14 @@ public class EsIndexDeleteImp {
     }
 
     /**
-     * 构造函数
+     * 构造函数 - 支持配置一个地址
      *
      * @param ip
      * @param port
      * @param indexName 索引块名
      * @param typeName  索引类型
      */
+    @Deprecated
     public EsIndexDeleteImp(String ip, String port, String indexName, String typeName) {
         IndexDelete(ip, port, indexName, typeName);
     }
@@ -143,13 +151,16 @@ public class EsIndexDeleteImp {
         if (indexName == null) {
             logger.error("indexName must not be null");
         }
-        String[] servers = IPADRESS.split(Symbol.SPACE_CHARACTER.toString());
+        String[] servers = IPADRESS.split(Symbol.COMMA_CHARACTER.getSymbolValue());
         //构造查询url
         this.deleteUrl = "http://" + servers[new Random().nextInt(servers.length)];
         this.IndexName = indexName;
         this.IndexType = typeName;
-        httpRequest = new HttpRequest();
         newObject();
+
+
+        // 新增HTTP负载均衡器
+        HttpProxyRegister.register(IPADRESS);
     }
 
     /**
@@ -169,8 +180,10 @@ public class EsIndexDeleteImp {
         this.deleteUrl = this.deleteUrl + ":" + port;
         this.IndexName = indexName;
         this.IndexType = typeName;
-        httpRequest = new HttpRequest();
         newObject();
+
+        // 新增HTTP负载均衡器
+        HttpProxyRegister.register(IP + ":" + Port);
     }
 
     private void newObject() {
@@ -219,7 +232,7 @@ public class EsIndexDeleteImp {
      */
     public boolean deleteById(String id) {
         String delete_url = this.deleteUrl + "/" + this.IndexName + "/" + this.IndexType + "/";
-        this.queryResult = httpRequest.postDeleteRequest(delete_url + id, null);
+        this.queryResult = httpRequest.postDeleteRequest(ClientUtils.referenceUrl(delete_url + id), null);
         try {
             if (this.queryResult != null) {
                 JSONObject json = new JSONObject().parseObject(this.queryResult);
@@ -261,7 +274,7 @@ public class EsIndexDeleteImp {
             logger.info("curl:" + delete_Url + " -d " + queryStr);
             System.out.println("curl:" + delete_Url + " -d " + queryStr);
         }
-        this.queryResult = httpRequest.postDeleteRequest(delete_Url, queryStr);
+        this.queryResult = httpRequest.postDeleteRequest(ClientUtils.referenceUrl(delete_Url), queryStr);
         return true;
     }
 
@@ -290,7 +303,7 @@ public class EsIndexDeleteImp {
                 logger.info("curl:" + delete_url + " -d " + queryStr);
                 System.out.println("curl:" + delete_url + " -d " + queryStr);
             }
-            this.queryResult = httpRequest.httpPost(delete_url, queryStr);
+            this.queryResult = httpRequest.httpPost(ClientUtils.referenceUrl(delete_url), queryStr);
         } catch (Exception e) {
             logger.error("delete fail, " + e.getMessage());
             return false;
@@ -332,7 +345,7 @@ public class EsIndexDeleteImp {
                 logger.info("curl:" + delete_url + " -d " + queryStr);
                 System.out.println("curl:" + delete_url + " -d " + queryStr);
             }
-            this.queryResult = httpRequest.httpPost(delete_url, queryStr);
+            this.queryResult = httpRequest.httpPost(ClientUtils.referenceUrl(delete_url), queryStr);
         } catch (Exception e) {
             logger.error("delete fail, " + e.getMessage());
             return false;
@@ -370,7 +383,7 @@ public class EsIndexDeleteImp {
                 logger.info("curl:" + delete_url + " -d " + queryStr);
                 System.out.println("curl:" + delete_url + " -d " + queryStr);
             }
-            this.queryResult = httpRequest.httpPost(delete_url, queryStr);
+            this.queryResult = httpRequest.httpPost(ClientUtils.referenceUrl(delete_url), queryStr);
         } catch (Exception e) {
             logger.error("delete fail, " + e.getMessage());
             return false;
@@ -417,7 +430,7 @@ public class EsIndexDeleteImp {
                 logger.info("curl:" + delete_url + " -d " + queryStr);
                 System.out.println("curl:" + delete_url + " -d " + queryStr);
             }
-            this.queryResult = httpRequest.httpPost(delete_url, queryStr);
+            this.queryResult = httpRequest.httpPost(ClientUtils.referenceUrl(delete_url), queryStr);
         } catch (Exception e) {
             logger.error("delete fail, " + e.getMessage());
             return false;
@@ -446,7 +459,7 @@ public class EsIndexDeleteImp {
                 logger.info("curl:" + delete_url + " -d " + queryStr);
                 System.out.println("curl:" + delete_url + " -d " + queryStr);
             }
-            this.queryResult = httpRequest.httpPost(delete_url, queryStr);
+            this.queryResult = httpRequest.httpPost(ClientUtils.referenceUrl(delete_url), queryStr);
         } catch (Exception e) {
             logger.error("delete fail, " + e.getMessage());
             return false;
@@ -465,7 +478,7 @@ public class EsIndexDeleteImp {
             logger.info("curl:" + delete_url + " -d " + null);
             System.out.println("curl:" + delete_url + " -d " + null);
         }
-        String queryResult = httpRequest.postDeleteRequest(delete_url, null);
+        String queryResult = httpRequest.postDeleteRequest(ClientUtils.referenceUrl(delete_url), null);
         JSONObject deleteJsonResult = JSONObject.parseObject(queryResult);
         if (deleteJsonResult.containsKey("acknowledged")) {
             return deleteJsonResult.getBoolean("acknowledged");
@@ -806,7 +819,7 @@ public class EsIndexDeleteImp {
             logger.info("curl:" + delete_url + " -d " + queryStr);
             System.out.println("curl:" + delete_url + " -d " + queryStr);
         }
-        this.queryResult = httpRequest.httpPost(delete_url, queryStr);
+        this.queryResult = httpRequest.httpPost(ClientUtils.referenceUrl(delete_url), queryStr);
         if (debug) {
             logger.info("queryResult: -d " + this.queryResult);
         }
@@ -818,7 +831,7 @@ public class EsIndexDeleteImp {
      */
     private String getDleteHttpUrl() {
         if (!"".equals(deleteParameters)) {
-            deleteParameters = "?" + deleteParameters.replace("?", "&").substring(1,deleteParameters.length());
+            deleteParameters = "?" + deleteParameters.replace("?", "&").substring(1, deleteParameters.length());
         }
         return this.deleteUrl + "/" + this.IndexName + "/" + this.IndexType + "/_delete_by_query" + deleteParameters;
 

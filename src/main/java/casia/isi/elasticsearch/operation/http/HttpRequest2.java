@@ -116,7 +116,7 @@ public class HttpRequest2 {
 	/**
 	 * 处理可能出现的压缩格式
 	 * 
-	 * @param method
+	 * @param response
 	 * @return byte[]
 	 */
 	public synchronized byte[] getResponseBody(HttpResponse response) {

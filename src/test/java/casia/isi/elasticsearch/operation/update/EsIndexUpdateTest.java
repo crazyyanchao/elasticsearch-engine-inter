@@ -1,6 +1,7 @@
 package casia.isi.elasticsearch.operation.update;
 
 import casia.isi.elasticsearch.common.SortOrder;
+import casia.isi.elasticsearch.operation.delete.EsIndexDelete;
 import casia.isi.elasticsearch.operation.search.EsIndexSearch;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.PropertyConfigurator;
@@ -52,8 +53,7 @@ public class EsIndexUpdateTest {
     private static HashMap<String, String> itMap = new HashMap<>();
 
     // 预警：
-    // http://192.168.12.109:9210/event_news_ref_monitor,event_blog_ref_monitor,event_threads_ref_monitor,
-    // event_mblog_ref_monitor,event_video_ref_monitor,event_weichat_ref_monitor,event_appdata_ref_monitor/monitor_data/_search
+    // http://192.168.12.109:9210/event_news_ref_monitor/monitor_data/_search
 
     @Before
     public void setUp() throws Exception {
@@ -71,9 +71,11 @@ public class EsIndexUpdateTest {
     public void searchObject() {
         PropertyConfigurator.configureAndWatch("config/log4j.properties");
 
+        // 更新时只能一个索引更新
 
-        String smallIndexName = "news_small,blog_small,forum_threads_small,mblog_info_small,video_brief_small," +
-                "wechat_message_xigua_small,appdata_small,newspaper_info_small";
+//        ,blog_small,forum_threads_small,mblog_info_small,video_brief_small," +
+//        "wechat_message_xigua_small,appdata_small,newspaper_info_small
+        String smallIndexName = "news_small";
         esSmallIndexUpdate = new EsIndexUpdate(ipPort, smallIndexName, "monitor_caiji_small");
 
     }
@@ -81,11 +83,15 @@ public class EsIndexUpdateTest {
     @Test
     public void UpdateParameterById(){
 
-//        String gid = "i174324363";
-//
-//        Map<String, Object> map = new HashMap<String, Object>();
-//        map.put("title","榆林治沙: 一茬接着一茬干誓将沙海变绿洲-UPDATE");
-//        esSmallIndexUpdate.UpdateParameterById(map,gid);
+        EsIndexUpdate esIndexUpdate = new EsIndexUpdate(ipPort, "aircraft_info", "graph");
+
+        String _id = "124";
+
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("id",_id);
+        map.put("test","榆林治沙: 一茬接着一茬干誓将沙海变绿洲-UPDATE");
+//        esIndexUpdate.updateParameterById(map,_id);
+        esIndexUpdate.upsertParameterById(map,_id,map);
     }
 
     @Test
@@ -116,7 +122,7 @@ public class EsIndexUpdateTest {
             for (String[] strings : list) {
                 Map<String, Object> map = new HashMap<String, Object>();
                 map.put("con_md5", DigestUtils.md5Hex(strings[2]) );
-                es.UpdateParameterById(map,strings[0]);
+                es.updateParameterById(map,strings[0]);
                 a = strings[1];
 //				System.out.println(a);
             }

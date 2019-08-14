@@ -23,6 +23,7 @@ package casia.isi.elasticsearch.util;
  * 　　　　　　　　　 ┗┻┛　 ┗┻┛+ + + +
  */
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -45,4 +46,39 @@ public class DateUtil {
         return sdf.format(d);
     }
 
+    public static String getCurrentIndexTime() {
+        Date d = new Date(System.currentTimeMillis());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return sdf.format(d);
+    }
+
+    public static String datePlus(String completeDate, long interval) {
+        String reDate = null;
+        long currentDateMillisecond = 0L;
+
+        try {
+            currentDateMillisecond = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).parse(completeDate).getTime();
+            long reMillisecond = currentDateMillisecond + interval;
+            reDate = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(reMillisecond));
+        } catch (ParseException var8) {
+            var8.printStackTrace();
+        }
+
+        return reDate;
+    }
+
+    public static String dateSub(String completeDate, long interval) {
+        String reDate = null;
+        long currentDateMillisecond = 0L;
+
+        try {
+            currentDateMillisecond = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).parse(completeDate).getTime();
+            long reMillisecond = currentDateMillisecond - interval;
+            reDate = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(reMillisecond));
+        } catch (ParseException var8) {
+            var8.printStackTrace();
+        }
+
+        return reDate;
+    }
 }

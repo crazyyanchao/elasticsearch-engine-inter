@@ -1,19 +1,16 @@
 package casia.isi.elasticsearch.operation.index;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import casia.isi.elasticsearch.common.Message;
+import casia.isi.elasticsearch.operation.http.*;
+import casia.isi.elasticsearch.util.ClientUtils;
 import casia.isi.elasticsearch.util.FileUtil;
 import com.alibaba.fastjson.JSONArray;
 import org.apache.log4j.Logger;
 
 import casia.isi.elasticsearch.common.Symbol;
-import casia.isi.elasticsearch.operation.http.HttpRequest;
 import casia.isi.elasticsearch.util.Validator;
 
 import com.alibaba.fastjson.JSONObject;
@@ -22,7 +19,7 @@ import com.alibaba.fastjson.JSONObject;
  * ElasticSearch的索引创建接口(Http方式)
  *
  * @author wzy
- * @version elasticsearch - 5.6.3
+ * @version elasticsearch
  */
 public class EsIndexCreatImp {
     private Logger logger = Logger.getLogger(EsIndexCreatImp.class);
@@ -50,11 +47,18 @@ public class EsIndexCreatImp {
      * 索引地址
      */
     private String IndexUrl;
-    /**
-     * http访问对象
-     */
-    private HttpRequest httpRequest;
 
+    /**
+     * http访问对象 仅仅支持绝对地址接口访问
+     */
+//    public HttpRequest httpRequest =  new HttpRequest();
+
+    /**
+     * http访问对象 支持绝对接口地址和相对接口地址
+     **/
+    public HttpProxyRequest httpRequest = new HttpProxyRequest(HttpPoolSym.DEFAULT.getSymbolValue());
+
+    @Deprecated
     public EsIndexCreatImp() {
     }
 
@@ -63,19 +67,20 @@ public class EsIndexCreatImp {
     }
 
     /**
-     * 构造函数，初始化配置
+     * 构造函数，初始化配置 - 支持配置一个地址
      *
      * @param IP
      * @param Port
      * @param indexName 索引块名称
      * @param typeName  索引类型
      */
+    @Deprecated
     public EsIndexCreatImp(String IP, int Port, String indexName, String typeName) {
         EsIndexCreate_imp(IP, Port, indexName, typeName);
     }
 
     /**
-     * 构造函数，初始化配置
+     * 构造函数，初始化配置 - 支持配置多个地址
      *
      * @param IPADRESS
      * @param indexName
@@ -93,7 +98,7 @@ public class EsIndexCreatImp {
      * @param typeName
      */
     private void EsIndexCreate_imp(String IPADRESS, String indexName, String typeName) {
-        String[] servers = IPADRESS.split(Symbol.SPACE_CHARACTER.toString());
+        String[] servers = IPADRESS.split(Symbol.COMMA_CHARACTER.getSymbolValue());
         //构造查询url
         this.IpPort = "http://" + servers[new Random().nextInt(servers.length)];
         this.IndexUrl = this.IpPort;
@@ -102,7 +107,9 @@ public class EsIndexCreatImp {
         this.IndexType = typeName;
         this.IndexUrl = typeName != null ? (this.IndexUrl + "/" + typeName) : this.IndexUrl;
         this.IndexUrl = this.IndexUrl + "/_bulk";
-        this.httpRequest = new HttpRequest();
+
+        // 新增HTTP负载均衡器
+        HttpProxyRegister.register(IPADRESS);
     }
 
     /**
@@ -123,7 +130,9 @@ public class EsIndexCreatImp {
         this.IndexUrl = indexName != null ? (this.IndexUrl + "/" + indexName) : this.IndexUrl;
         this.IndexType = typeName;
         this.IndexUrl = typeName != null ? (this.IndexUrl + "/" + typeName) : this.IndexUrl;
-        this.httpRequest = new HttpRequest();
+
+        // 新增HTTP负载均衡器
+        HttpProxyRegister.register(IP + ":" + Port);
     }
 
     /**
@@ -168,7 +177,8 @@ public class EsIndexCreatImp {
                 indexJson.clear();
             }
         }
-        String queryResultStr = httpRequest.httpPost(this.IndexUrl, indexStrBuffer.toString());
+        String queryResultStr = httpRequest.httpPost(ClientUtils.referenceUrl(this.IndexUrl), indexStrBuffer.toString());
+
         if (queryResultStr != null && !Message.indexMessage(queryResultStr)) {
             rt = true;
         } else {
@@ -184,7 +194,7 @@ public class EsIndexCreatImp {
      * @param map       类型参数
      */
     public boolean insertField(String fieldName, Map<String, String> map) {
-        this.IndexUrl = this.IndexUrl.contains("/_mapping?pretty") ? this.IndexUrl : this.IndexUrl + "/_mapping?pretty";
+        String referenceUrl = "/" + this.indexName + "/" + this.IndexType + "/_mapping?pretty";
         boolean rs = true;
         JSONObject json = new JSONObject();
         JSONObject jsonProperties = new JSONObject();
@@ -197,8 +207,8 @@ public class EsIndexCreatImp {
         jsonField.put(fieldName, jsonType);
         jsonProperties.put("properties", jsonField);
         json.put(this.IndexType, jsonProperties);
-        String creatResultStr = httpRequest.httpPost(this.IndexUrl, json.toString());
 
+        String creatResultStr = httpRequest.httpPost(ClientUtils.referenceUrl(this.IndexUrl), json.toString());
         try {
             JSONObject jsonResult = new JSONObject();
             jsonResult = jsonResult.parseObject(creatResultStr);
@@ -224,7 +234,8 @@ public class EsIndexCreatImp {
         if (!Validator.check(typeJson)) {
             return !rs;
         }
-        String ResultStr = httpRequest.httpPut(this.IpPort + "/" + this.indexName, typeJson);
+        String ResultStr = httpRequest.httpPut(ClientUtils.referenceUrl(this.IpPort + "/" + this.indexName), typeJson);
+
         try {
             JSONObject jsonResult = new JSONObject();
             jsonResult = jsonResult.parseObject(ResultStr);
@@ -247,7 +258,8 @@ public class EsIndexCreatImp {
      */
     public boolean isIndexName() {
         boolean rs = true;
-        String ResultStr = httpRequest.httpGet(this.IpPort + "/" + this.indexName);
+        String ResultStr = httpRequest.httpGet(ClientUtils.referenceUrl(this.IpPort + "/" + this.indexName));
+
         try {
             JSONObject jsonResult = new JSONObject();
             jsonResult = jsonResult.parseObject(ResultStr);
@@ -269,7 +281,8 @@ public class EsIndexCreatImp {
      */
     public List<String> searchIndexNames() {
         List<String> list = new ArrayList<String>();
-        String ResultStr = httpRequest.httpGet(this.IpPort + "/_cat/indices?h=index");
+        String ResultStr = httpRequest.httpGet(ClientUtils.referenceUrl(this.IpPort + "/_cat/indices?h=index"));
+
         try {
             if (Validator.check(ResultStr)) {
                 String[] indexnames = ResultStr.split("\n");
@@ -286,25 +299,28 @@ public class EsIndexCreatImp {
     }
 
     /**
-     * @param url:http://localhost:9200/tb_linkedin_projects
+     * @param url:http://localhost:9200/tb_linkedin_projects 接口的绝对路径
      * @param mappingFile:mapping/loading/tb_linkedin_projects.json
      * @return
      * @Description: TODO(当前mapping文件创建映射)
      */
     public String singleMapping(String url, String mappingFile) throws Exception {
-        HttpRequest httpExcutetor = new HttpRequest();
         String json = JSONObject.parseObject(FileUtil.readAllLine(mappingFile, "UTF-8")).toJSONString();
         System.out.println(json);
-        return httpExcutetor.httpPut(url, json);
+        return httpRequest.httpPut(url, json);
     }
 
     /**
-     * @param esIpPort:127.0.0.1:9200
+     * @param esIpPort:127.0.0.1:9200 多个地址使用逗号分隔
      * @param folder:mapping/loading/
      * @return
      * @Description: TODO(当前文件夹下mapping文件创建映射)
      */
     public String multiMapping(String esIpPort, String folder) throws Exception {
+
+        // 新增HTTP负载均衡器
+        HttpProxyRegister.register(esIpPort);
+
         JSONArray folderMappingMessage = new JSONArray();
         File file = new File(folder);
         String[] fileArray = file.list();
@@ -317,10 +333,9 @@ public class EsIndexCreatImp {
 
                 String url = "http://" + esIpPort + "/" + onlyName;
 
-                HttpRequest httpExcutetor = new HttpRequest();
                 String json = JSONObject.parseObject(FileUtil.readAllLine(fileName, "UTF-8")).toJSONString();
                 System.out.println(json);
-                folderMappingMessage.add(httpExcutetor.httpPut(url, json));
+                folderMappingMessage.add(httpRequest.httpPut(ClientUtils.referenceUrl(url), json));
             }
         }
         return folderMappingMessage.toJSONString();

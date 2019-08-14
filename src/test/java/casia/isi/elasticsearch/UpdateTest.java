@@ -18,7 +18,7 @@ public class UpdateTest {
         EsIndexUpdate es = new EsIndexUpdate("106.75.177.129", 61233, "event_data_extract_result_v-201808", "analysis_data");
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("zdr_clue", new String[]{"湘西", "公安局"});
-        boolean boo = es.UpdateParameterById(map, "26f989e085b3a53a9ae5e753952b76eb");
+        boolean boo = es.updateParameterById(map, "26f989e085b3a53a9ae5e753952b76eb");
         System.out.println(boo);
     }
 
@@ -50,7 +50,7 @@ public class UpdateTest {
             for (String[] strings : list) {
                 Map<String, Object> map = new HashMap<String, Object>();
                 map.put("con_md5", DigestUtils.md5Hex(strings[2]) );
-                es.UpdateParameterById(map,strings[0]);
+                es.updateParameterById(map,strings[0]);
                 a = strings[1];
 //				System.out.println(a);
             }

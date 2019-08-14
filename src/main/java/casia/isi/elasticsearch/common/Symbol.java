@@ -1,17 +1,23 @@
 package casia.isi.elasticsearch.common;
+
 /**
  * 枚举类型,符号
- * @author
  *
+ * @author
  */
 public enum Symbol {
-	SPACE_CHARACTER("&");
-	
-	private String symbol;
-	private Symbol(String symbol) {
-		this.symbol = symbol;
-	}
-	public String getSymbolValue() {
-		return this.symbol;
-	}
+
+//    SPACE_CHARACTER("&"),
+
+    COMMA_CHARACTER(",");
+
+    private String symbol;
+
+    Symbol(String symbol) {
+        this.symbol = symbol;
+    }
+
+    public String getSymbolValue() {
+        return this.symbol;
+    }
 }

@@ -10,6 +10,7 @@ public class EsIndexDelete extends EsIndexDeleteImp {
 
     private Logger logger = Logger.getLogger(EsIndexDelete.class);
 
+    @Deprecated
     public EsIndexDelete(String ip, String port, String indexName, String typeName) {
         super(ip, port, indexName, typeName);
     }

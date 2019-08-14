@@ -1,41 +1,25 @@
 package casia.isi.elasticsearch.operation.search;
 
 import casia.isi.elasticsearch.common.*;
+import casia.isi.elasticsearch.common.condition.Must;
+import casia.isi.elasticsearch.common.condition.MustNot;
+import casia.isi.elasticsearch.common.condition.Should;
+import casia.isi.elasticsearch.model.BoundBox;
+import casia.isi.elasticsearch.model.BoundPoint;
+import casia.isi.elasticsearch.model.Circle;
+import casia.isi.elasticsearch.operation.search.analyzer.AggsAnalyzer;
 import casia.isi.elasticsearch.util.DateUtil;
+import casia.isi.elasticsearch.util.FileUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-/**
- * 　　　　　　　 ┏┓       ┏┓+ +
- * 　　　　　　　┏┛┻━━━━━━━┛┻┓ + +
- * 　　　　　　　┃　　　　　　 ┃
- * 　　　　　　　┃　　　━　　　┃ ++ + + +
- * 　　　　　　 █████━█████  ┃+
- * 　　　　　　　┃　　　　　　 ┃ +
- * 　　　　　　　┃　　　┻　　　┃
- * 　　　　　　　┃　　　　　　 ┃ + +
- * 　　　　　　　┗━━┓　　　 ┏━┛
- * ┃　　  ┃
- * 　　　　　　　　　┃　　  ┃ + + + +
- * 　　　　　　　　　┃　　　┃　Code is far away from     bug with the animal protecting
- * 　　　　　　　　　┃　　　┃ +
- * 　　　　　　　　　┃　　　┃
- * 　　　　　　　　　┃　　　┃　　+
- * 　　　　　　　　　┃　 　 ┗━━━┓ + +
- * 　　　　　　　　　┃ 　　　　　┣┓
- * 　　　　　　　　　┃ 　　　　　┏┛
- * 　　　　　　　　　┗┓┓┏━━━┳┓┏┛ + + + +
- * 　　　　　　　　　 ┃┫┫　 ┃┫┫
- * 　　　　　　　　　 ┗┻┛　 ┗┻┛+ + + +
- */
+import java.util.*;
 
 /**
  * @author YanchaoMa yanchaoma@foxmail.com
@@ -45,13 +29,24 @@ import java.util.Set;
  */
 public class EsIndexSearchImpTest {
 
-    private static EsIndexSearch esSmallIndexSearch;
+    private EsIndexSearch esSmallIndexSearch;
 
-    private static EsIndexSearch esAllIndexSearch;
+    private EsIndexSearch esAllIndexSearch;
 
-    private static EsIndexSearch esWarningIndexSearch;
+    private EsIndexSearch esWarningIndexSearch;
 
-    private String ipPort = "192.168.12.109:9210";
+    private EsIndexSearch aircraftSearch;
+    private EsIndexSearch statelliteSearch;
+
+    private String ipPort = "" +
+            "192.168.12.107:9210,192.168.12.107:9211,192.168.12.114:9210," +
+            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
+            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
+            "192.168.12.111:9210,192.168.122.111:9219";
+
+//    private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
+//            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
+
 //    private String ipPort = "localhost:9200";
 
     private static HashMap<String, String> itMap = new HashMap<>();
@@ -61,7 +56,9 @@ public class EsIndexSearchImpTest {
     // event_mblog_ref_monitor,event_video_ref_monitor,event_weichat_ref_monitor,event_appdata_ref_monitor/monitor_data/_search
 
     @Before
-    public void setUp() throws Exception {
+    public void searchObject() {
+        PropertyConfigurator.configureAndWatch("config/log4j.properties");
+
         itMap.put("c", "论坛");   // forum_threads
         itMap.put("d", "微博");   // mblog_info
         itMap.put("a", "新闻");   // news
@@ -70,25 +67,29 @@ public class EsIndexSearchImpTest {
         itMap.put("e", "视频");   // video_brief
         itMap.put("b", "博客");   // blog
         itMap.put("j", "电子报纸"); // newspaper_info
-    }
 
-    @Before
-    public void searchObject() {
-        PropertyConfigurator.configureAndWatch("config/log4j.properties");
-
-
-        String smallIndexName = "news_small,blog_small,forum_threads_small,mblog_info_small,video_brief_small," +
-                "wechat_message_xigua_small,appdata_small,newspaper_info_small";
+        String smallIndexName = "news_small,blog_small,forum_threads_small,mblog_info_small,video_info_small," +
+                "wechat_info_small,appdata_small,newspaper_small";
         esSmallIndexSearch = new EsIndexSearch(ipPort, smallIndexName, "monitor_caiji_small");
 
-        String allIndexSearch = "news_all,blog_all,forum_threads_all,mblog_info_all,video_brief_all," +
-                "wechat_message_xigua_all,appdata_all,newspaper_info_all";
+        String allIndexSearch = "news_all,blog_all,forum_threads_all,mblog_info_all,video_info_all," +
+                "wechat_info_all,appdata_all,newspaper_all";
         esAllIndexSearch = new EsIndexSearch(ipPort, allIndexSearch, "monitor_caiji_all");
 
         String waring = "event_news_ref_monitor,event_blog_ref_monitor,event_threads_ref_monitor,event_mblog_ref_monitor," +
                 "event_video_ref_monitor,event_weichat_ref_monitor,event_appdata_ref_monitor";
         esWarningIndexSearch = new EsIndexSearch(ipPort, waring, "monitor_data");
 
+        aircraftSearch = new EsIndexSearch(ipPort, "aircraft_info_latest_status,aircraft_info", "graph");
+
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        esSmallIndexSearch.reset();
+        esAllIndexSearch.reset();
+        esWarningIndexSearch.reset();
+        aircraftSearch.reset();
     }
 
     @Test
@@ -199,8 +200,8 @@ public class EsIndexSearchImpTest {
          *               client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST); 段对应的多值，值之间是或的关系
          * @param occurs 是否必须作为过滤条件
          */
-        esSmallIndexSearch.addPrimitiveTermFilter("area_list", new String[]{"长春"}, FieldOccurs.MUST);
-//        esSmallIndexSearch.addPhraseQuery("area_list", "长春", FieldOccurs.MUST);
+//        esSmallIndexSearch.addPrimitiveTermFilter("area_list", new String[]{"长春"}, FieldOccurs.MUST);
+        esSmallIndexSearch.addPhraseQuery("area_list", "长春 北京", FieldOccurs.MUST);
 //        esSmallIndexSearch.addPrimitiveTermQuery("area_list", new String[]{"长春","北京"}, FieldOccurs.MUST);
 
         esSmallIndexSearch.execute(new String[]{"area_list"});
@@ -275,21 +276,41 @@ public class EsIndexSearchImpTest {
 
     @Test
     public void addConditionQueryTest() {
-        esSmallIndexSearch.addRangeTerms("pubtime", "2019-05-21 18:39:54", "2019-05-28 18:39:54");
+//        esSmallIndexSearch.addRangeTerms("pubtime", "2019-05-21 18:39:54", "2019-05-28 18:39:54");
 
         /**
-         * @param arrayFieldName:数组字段名称
-         * @param terms:数组值-多值必须都满足才返回 - terms查询
-         * @param occur:定义此过滤条件与其它过滤条件的的组合方式
-         * @return
-         * @Description: TODO(添加过滤条件 - 过滤数组类型的字段)
+         * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
+         * 本方法也可以对分词的数据进行检索，但传入的内容不能有任何的标点符号以及空格，否则检索结果会出现异常<br>
+         * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+         *
+         * @param field  字段
+         * @param terms  字段对应的值，只能转入一个，且不能有有空格.如果传入的值为负值，请用双引号包起来，例如：<br>
+         *               client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST); 段对应的多值，值之间是或的关系
+         * @param combine:多值之间的查询关系，AND OR
+         * @param occurs 是否必须作为过滤条件
          */
-        esSmallIndexSearch.addArrayTypeTermsQuery("area_list", new String[]{"吉林"}, FieldOccurs.MUST);
-        esSmallIndexSearch.addQueryCondition("+((title:\"吉林\") OR (content:\"吉林\"))");
+
+        for (int i = 0; i < 100; i++) {
+            esSmallIndexSearch = new EsIndexSearch(ipPort, "blog_all", "monitor_caiji_small");
+
+            String allIndexSearch = "news_all,blog_all,forum_threads_all,mblog_info_all,video_info_all," +
+                    "wechat_info_all,appdata_all,newspaper_all";
+            esAllIndexSearch = new EsIndexSearch(ipPort, allIndexSearch, "monitor_caiji_all");
+
+            String waring = "event_news_ref_monitor,event_blog_ref_monitor,event_threads_ref_monitor,event_mblog_ref_monitor," +
+                    "event_video_ref_monitor,event_weichat_ref_monitor,event_appdata_ref_monitor";
+            esWarningIndexSearch = new EsIndexSearch(ipPort, waring, "monitor_data");
+        }
+
+//        esSmallIndexSearch.addPrimitiveTermFilter("area_list", new String[]{"吉林", "北京"}, KeywordsCombine.AND, FieldOccurs.MUST);
+
+//         查询需要同时包含与或关系，需要单独拼接lucene查询
+        esSmallIndexSearch.addQueryCondition("(+(area_list:\"吉林\") +(area_list:\"北京\") -(area_list:\"黑龙江\"))");
 
         esSmallIndexSearch.execute(new String[]{"area_list"});
         List<String[]> result = esSmallIndexSearch.getResults();
         esSmallIndexSearch.outputResult(result);
+        esSmallIndexSearch.reset();
     }
 
     @Test
@@ -384,8 +405,6 @@ public class EsIndexSearchImpTest {
          */
 //        List<String[]> result = esSmallIndexSearch.facetCountQueryOrderByCount("it", 100, SortOrder.DESC);
 
-        // it数据类型：新闻 a; 博客 b; 论坛 c; 微博 d; 视频 e; qq群 f; mblog_userinfo g;微信 h;移动app i
-
 
         /**
          * 二次聚合
@@ -411,8 +430,8 @@ public class EsIndexSearchImpTest {
 
 //        esSmallIndexSearch.facetDateAggsTophits()
 
-        System.out.println(esSmallIndexSearch.outputQueryJson());
-//        esSmallIndexSearch.outputResult(result);
+//        System.out.println(esSmallIndexSearch.outputQueryJson());
+        esSmallIndexSearch.outputResult(result);
     }
 
     @Test
@@ -486,7 +505,7 @@ public class EsIndexSearchImpTest {
          * 根据时间粒度对某字段的各项进行分组统计(例如：按天统计it各个数据量)
          * **/
 //        esAllIndexSearch.addRangeTerms("pubtime", "2019-05-31 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
-        esSmallIndexSearch.addRangeTerms("pubtime", "2019-05-27 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
+//        esSmallIndexSearch.addRangeTerms("pubtime", "2019-05-27 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
 //        esAllIndexSearch.addRangeTerms("pubtime", "2019-05-27 17:20:12", DateUtil.millToTimeStr(System.currentTimeMillis()));
 
 
@@ -501,10 +520,13 @@ public class EsIndexSearchImpTest {
          * @return
          * @Description: TODO(根据时间粒度统计)
          */
+        EsIndexSearch.debug = true;
 //        List<String[]> result = esSmallIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd", "1d", "it");
 //        List<String[]> result = esAllIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd", "1d", "it");
-        List<String[]> result = esSmallIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd", "1d", "it");
+//        List<String[]> result = esSmallIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd", "1d", "it");
 //        List<String[]> result = esAllIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd", "1d", "it");
+
+        List<String[]> result = esAllIndexSearch.facetDateBySecondFieldValueCount("index_time", "yyyy-MM-dd", "1d", "it");
 
 //        List<String[]> result = esSmallIndexSearch.facetDateBySecondFieldValueCount("pubtime", "yyyy-MM-dd hh:MM:ss", "1h", "it");
         // OUTPUT
@@ -653,7 +675,7 @@ public class EsIndexSearchImpTest {
 		List<String> list = new ArrayList<String>();
 		list.add("北京 深圳");
 		list.add("上海 深圳");
-		searchClient.addPhraseQuery("content",list, FieldOccurs.MUST,KeywordsCombine.OR,KeywordsCombine.AND);
+//		searchClient.addPhraseQuery("content",list, FieldOccurs.MUST,KeywordsCombine.OR,KeywordsCombine.AND);
 //		searchClient.addPhraseQuery("uid", "b966ac68db", FieldOccurs.MUST,KeywordsCombine.AND);//content必须包含完整的北京大学才能匹配到
 		searchClient.addPhraseQuery("province", "北京", FieldOccurs.MUST,KeywordsCombine.OR);
 		searchClient.addPhraseQuery("city", "北京市", FieldOccurs.MUST,KeywordsCombine.OR);
@@ -894,7 +916,12 @@ public class EsIndexSearchImpTest {
          *
          * @param query_string
          */
-        // addQueryString(String query_string, FieldOccurs occurs)
+
+//        aircraftSearch. addQueryString("(airline:IndiGo Airlines)", FieldOccurs.MUST);
+        aircraftSearch.addQueryCondition("(airline:IndiGo Airlines)");
+
+        aircraftSearch.execute(new String[]{"airline"});
+        aircraftSearch.outputResult(aircraftSearch.getResults());
     }
 
     @Test
@@ -1049,7 +1076,7 @@ public class EsIndexSearchImpTest {
          * @param occurs   字段出现情况
          * @param combine  关键词组合情况
          */
-        // void addPhraseQuery(String[] fields, String keywords, FieldOccurs occurs, KeywordsCombine combine, FieldCombine filedCombine)
+//         void addPhraseQuery(String[] fields, String keywords, FieldOccurs occurs, KeywordsCombine combine, FieldCombine filedCombine)
     }
 
     @Test
@@ -1622,6 +1649,10 @@ public class EsIndexSearchImpTest {
          */
         // List<String[]> facetDateAggsTophits(String TimeField, String format, String interval, String startTime, String endTime, String sortField, SortOrder sortOrder, String[] returnFields, int size)
 
+        String startTime = "2019-07-02 00:00:00";
+        String stopTime = "2019-07-03 00:00:00";
+        List<String[]> result = esSmallIndexSearch.facetDateAggsTophits("pubtime", "yyyy-MM-dd HH:mm:ss", "30s", startTime, stopTime,
+                "pubtime", SortOrder.ASC, null, 1);
     }
 
     @Test
@@ -1670,7 +1701,7 @@ public class EsIndexSearchImpTest {
      */
     @Test
     public void quadraticSearch() {
-        // 二次检索的实现参考万方数据：http://wanfangdata.com.cn/searchResult/getAdvancedSearch.do?searchType=all#a_001
+        // 二次检索的实现参考万方数据的高级检索：http://wanfangdata.com.cn/searchResult/getAdvancedSearch.do?searchType=all#a_001
         // ---------------------------------------一次检索---------------------------------------
 //        esSmallIndexSearch.addKeywordsQuery("title", "中国", FieldOccurs.MUST);
 //        esSmallIndexSearch.setStart(0);
@@ -1724,19 +1755,563 @@ public class EsIndexSearchImpTest {
 //        esSmallIndexSearch.reset();
 
         // ---------------------------------------二次检索---------------------------------------
-        String[] fields = new String[]{"title","content"};
-        esSmallIndexSearch.addKeywordsQuery(fields,"中国",KeywordsCombine.OR);
-        esSmallIndexSearch.addKeywordsQuery(fields,"华为5G",KeywordsCombine.OR);
+        String[] fields = new String[]{"title", "content"};
+        esSmallIndexSearch.addKeywordsQuery(fields, "中国", KeywordsCombine.OR);
+        esSmallIndexSearch.addKeywordsQuery(fields, "华为5G", KeywordsCombine.OR);
         esSmallIndexSearch.setStart(0);
         esSmallIndexSearch.setRow(100);
-        esSmallIndexSearch.execute(new String[]{"title","content"});
+        esSmallIndexSearch.execute(new String[]{"title", "content"});
         List<String[]> result2 = esSmallIndexSearch.getResults();
         esSmallIndexSearch.outputResult(result2);
         esSmallIndexSearch.reset();
 
     }
 
-}
 
+    @Test
+    public void fuzzy() {
+        // 模糊
+        aircraftSearch.addQueryCondition("+aircraft:(*KL*)");
+        aircraftSearch.addQueryCondition("+aircraft:(*bL*)");
+        aircraftSearch.setStart(0);
+        aircraftSearch.setRow(100);
+        aircraftSearch.execute(new String[]{"flight_number", "aircraft"});
+        List<String[]> result = aircraftSearch.getResults();
+        aircraftSearch.outputResult(result);
+        aircraftSearch.reset();
+    }
+
+    @Test
+    public void addGeoDistance() {
+        /**
+         * @param locPointField:字段名-geo类型数据的字段名
+         * @param lat:经度
+         * @param lon:维度
+         * @param distance:距离-传入NULL则默认单位是米
+         * @param distanceUnit:指定距离单位(1km/1mi/)
+         * @param occur:距离计算算法选择
+         * @return
+         * <p>
+         * The full list of units is listed below:
+         * Mile-mi or miles
+         * Yard - yd or yards
+         * Feet - ft or feet
+         * Inch - in or inch
+         * Kilometer - km or kilometers
+         * Meter - m or meters
+         * Centimeter - cm or centimeters
+         * Millimeter - mm or millimeters
+         */
+        // 距离当前飞机位置2000km以内的飞机
+        aircraftSearch.addGeoDistance("location_point", 55.47981, 13.67931, 2000, DistanceUnit.KILOMETER, GeoDistanceOccurs.PLANE);
+        aircraftSearch.addPrimitiveTermFilter("flight_number", "SU2658", FieldOccurs.MUST_NOT);
+        aircraftSearch.setStart(0);
+        aircraftSearch.setRow(5);
+        aircraftSearch.execute(new String[]{"flight_number"});
+        List<String[]> result = aircraftSearch.getResults();
+        aircraftSearch.outputResult(result);
+        aircraftSearch.reset();
+    }
+
+    @Test
+    public void addSortFieldGeo() {
+
+        aircraftSearch.addRangeTerms("pubtime", "2019-06-01 00:00:00", "2019-06-24 00:00:00");
+
+        // 距离当前飞机位置200km以内的飞机
+        aircraftSearch.addGeoDistance("location_point", 55.47981, 13.67931, 20, DistanceUnit.KILOMETER, GeoDistanceOccurs.SLOPPY_ARC);
+
+        aircraftSearch.addPrimitiveTermFilter("flight_number", "SU2658", FieldOccurs.MUST_NOT);
+        /**
+         * @param locPointField:字段名-geo类型数据的字段名
+         * @param lat:维度
+         * @param lon:经度
+         * @param distanceUnit:指定距离单位(km/mi/...) - 将距离以...为单位写入到每个返回结果的 sort 键中
+         * @param occur:距离计算算法选择
+         * @return
+         * @Description: TODO(geo - 按照距离排序的接口 - 扩展addSortField接口)
+         */
+        aircraftSearch.addSortField("location_point", 55.47981, 13.67931, DistanceUnit.KILOMETER, GeoDistanceOccurs.SLOPPY_ARC, SortOrder.DESC);
+        aircraftSearch.setStart(0);
+        aircraftSearch.setRow(200);
+        /**
+         * sort字段是es内置的距离排序字段 - 索引在建设mapping时字段最好不要和es内置字段重复
+         * **/
+        aircraftSearch.execute(new String[]{"flight_number", "location_point", "sort"});
+        List<String[]> result = aircraftSearch.getResults();
+        aircraftSearch.outputResult(result);
+        aircraftSearch.reset();
+    }
+
+    @Test
+    public void addGeoBoundingBox() {
+
+        /**
+         * @param locPointField:字段名-geo类型数据的字段名
+         * @param firstBoundPoint:设置矩形框第一个点
+         * @param nextBoundPoint:设置矩形框第二个点
+         * @param occurs:必须满足/必须不满足
+         * @return
+         * @Description: TODO(geo - 盒模型过滤器 - 指定矩形框的两个对角)
+         */
+//        aircraftSearch.addGeoBoundingBox("location_point",
+//                new BoundPoint(55.47981, 13.67931, GeoBoundOccurs.TOP_LEFT),
+//                new BoundPoint(45.47981, 15.67931, GeoBoundOccurs.BOTTOM_RIGHT), FieldOccurs.MUST);
+        aircraftSearch.addGeoBoundingBox("location_point",
+                new BoundPoint(55.47981, 13.67931, GeoBoundOccurs.TOP_LEFT),
+                new BoundPoint(45.47981, 15.67931, GeoBoundOccurs.BOTTOM_RIGHT), FieldOccurs.MUST_NOT);
+
+        aircraftSearch.setStart(0);
+        aircraftSearch.setRow(200);
+        /**
+         * @param locPointField:字段名-geo类型数据的字段名
+         * @param lat:维度
+         * @param lon:经度
+         * @param distanceUnit:指定距离单位(km/mi/...) - 将距离以...为单位写入到每个返回结果的 sort 键中
+         * @param occur:距离计算算法选择
+         * @return
+         * @Description: TODO(geo - 按照距离排序的接口 - 扩展addSortField接口)
+         */
+        aircraftSearch.addSortField("location_point", 55.47981, 13.67931, DistanceUnit.KILOMETER, GeoDistanceOccurs.SLOPPY_ARC, SortOrder.DESC);
+        /**
+         * sort字段是es内置的距离排序字段 - 索引在建设mapping时字段最好不要和es内置字段重复
+         * **/
+        aircraftSearch.execute(new String[]{"flight_number", "location_point", "sort"});
+        List<String[]> result = aircraftSearch.getResults();
+        System.out.println("Total data:" + aircraftSearch.getTotal());
+        aircraftSearch.outputResult(result);
+        aircraftSearch.reset();
+    }
+
+    @Test
+    public void addGeoBoundingMultiBox() {
+
+        /**
+         * @param locPointField:字段名-geo类型数据的字段名
+         * @param List<BoundBox> boundBoxList:设多个矩形框
+         * @param occurs:必须满足/必须不满足/OR条件
+         * @return
+         * @Description: TODO(geo - 盒模型过滤器 - 指定多个矩形框)
+         * <p>【百度经纬度拾取器】http://api.map.baidu.com/lbsapi/getpoint/index.html</>
+         */
+        List<BoundBox> boundBoxList = new ArrayList<>();
+        // 设置多个不相交的矩形，测试MUST，结果为空则正常 （测试SHOULD有一个满足即可）（测试MUST_NOT查询此区域列表以外的点）
+        BoundBox boundBox1 = new BoundBox();
+        boundBox1.setFirstBoundPoint(new BoundPoint(41.114763, 113.855668, GeoBoundOccurs.TOP_LEFT));
+        boundBox1.setNextBoundPoint(new BoundPoint(37.103182, 120.809846, GeoBoundOccurs.BOTTOM_RIGHT));
+        boundBoxList.add(boundBox1);
+
+        BoundBox boundBox2 = new BoundBox();
+        boundBox2.setFirstBoundPoint(new BoundPoint(31.897413, 86.922026, GeoBoundOccurs.TOP_LEFT));
+        boundBox2.setNextBoundPoint(new BoundPoint(19.672306, 111.206457, GeoBoundOccurs.BOTTOM_RIGHT));
+        boundBoxList.add(boundBox2);
+
+        aircraftSearch.addGeoBoundingMultiBox("location_point", boundBoxList, FieldOccurs.SHOULD);
+        aircraftSearch.setStart(0);
+        aircraftSearch.setRow(200);
+        aircraftSearch.execute(new String[]{"flight_number", "location_point", "sort"});
+        List<String[]> result = aircraftSearch.getResults();
+        System.out.println("Total data:" + aircraftSearch.getTotal());
+        aircraftSearch.outputResult(result);
+        aircraftSearch.reset();
+    }
+
+    @Test
+    public void statisticsOriginDestination() {
+        FileUtil.saveFile("data/aircraft/targetLoc.txt", "LOCATION" + "  " + "COUNT\n", true);
+        String[] loc = new String[]{"origin", "destination"};
+
+        int count = 0;
+        for (int j = 0; j < loc.length; j++) {
+            String location = loc[j];
+            List<String[]> resultOrigin = aircraftSearch.facetCountQueryOrderByCount(location, 0, SortOrder.DESC);
+
+            // 写入文件
+            // OUTPUT
+            int i = 0;
+            for (String[] infos : resultOrigin) {
+                count++;
+                FileUtil.saveFile("data/aircraft/targetLoc.txt", infos[0] + "  " + infos[1] + "\n", true);
+            }
+
+            aircraftSearch.reset();
+        }
+        System.out.println("Count:" + count);
+    }
+
+    @Test
+    public void facetDateAggsTophitsTest() {
+        aircraftSearch = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+
+        /**
+         * 根据时间粒度，根据排序 筛选返回每个时间段内前N条数据
+         *
+         * @param TimeField    查询的时间字段
+         * @param format       时间格式 例如：yyyy-MM-dd
+         * @param interval     粒度 (1M代表每月，1d代表每日，1H代表每小时)
+         * @param startTime    起始时间
+         * @param endTime      结束时间
+         * @param sortField    时间段内数据排序字段，为null时将以相关性自动排序
+         * @param sortOrder    时间段内数据排序方式
+         * @param returnFields 时间段内数据返回字段，为null时字段全部返回
+         * @param size         时间段内返回数据条数
+         * @return
+         * */
+        // 区间内时间排序拿出第一条数据排序方式（降序或者升序），不同的排序方式拿取数据的规则不一样
+        String startTime = "2019-07-19 18:00:30";
+        String stopTime = "2019-07-19 18:10:00";
+        aircraftSearch.addRangeTerms("pubtime", startTime, stopTime);
+        List<String[]> result = aircraftSearch.facetDateAggsTophits("pubtime", "yyyy-MM-dd HH:mm:ss", "30s", startTime, stopTime,
+                "pubtime", SortOrder.ASC, new String[]{"site", "aircraft", "pubtime"}, 1);
+
+        aircraftSearch.outputResult(result);
+
+        // DESC
+        // 序号 时间 数据量统计值 返回的字段数据
+//        8878:2019-07-22 18:55:30	229	[{"pubtime":"2019-07-22 18:55:59","site":"adsbexchange.com","aircraft":"VT-ALJ"}]
+//        8879:2019-07-22 18:56:00	258	[{"pubtime":"2019-07-22 18:56:29","site":"adsbexchange.com","aircraft":"HP-1536CMP"}]
+//        8880:2019-07-22 18:56:30	206	[{"pubtime":"2019-07-22 18:56:59","site":"radarbox24.com","aircraft":"TC-NBL"}]
+//        8881:2019-07-22 18:57:00	225	[{"pubtime":"2019-07-22 18:57:29","site":"adsbexchange.com","aircraft":"N339JB"}]
+//        8882:2019-07-22 18:57:30	276	[{"pubtime":"2019-07-22 18:57:59","site":"radarbox24.com","aircraft":"PH-EZX"}]
+
+        // ASC
+//        0:2019-07-19 18:00:30	15	[{"pubtime":"2019-07-19 18:00:30","site":"radarbox24.com","aircraft":"N647UA"}]
+//        1:2019-07-19 18:01:00	27	[{"pubtime":"2019-07-19 18:01:00","site":"radarbox24.com","aircraft":"VT-IHT"}]
+//        2:2019-07-19 18:01:30	22	[{"pubtime":"2019-07-19 18:01:36","site":"radarbox24.com","aircraft":""}]
+//        3:2019-07-19 18:02:00	10	[{"pubtime":"2019-07-19 18:02:04","site":"radarbox24.com","aircraft":""}]
+//        4:2019-07-19 18:02:30	11	[{"pubtime":"2019-07-19 18:02:31","site":"radarbox24.com","aircraft":"HL7717"}]
+//        5:2019-07-19 18:03:00	6	[{"pubtime":"2019-07-19 18:03:06","site":"radarbox24.com","aircraft":"9V-SKS"}]
+//        6:2019-07-19 18:03:30	17	[{"pubtime":"2019-07-19 18:03:30","site":"flightradar24.com","aircraft":"N949FD"}]
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(飞机航线加载 - 加载一架航班的实时航线)
+     */
+    @Test
+    public void facetDateAggsTophitsFlightCourse() {
+
+        aircraftSearch = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+
+        // 设置唯一航班
+        aircraftSearch.addPrimitiveTermFilter("aircraft", "B-KPI", FieldOccurs.MUST);
+        aircraftSearch.addPrimitiveTermFilter("mode_s", "780220", FieldOccurs.MUST);
+        aircraftSearch.addPrimitiveTermFilter("site", "adsbexchange.com", FieldOccurs.MUST);
+
+        // 设置时间范围（10小时内的航线数据）
+        String startTime = DateUtil.dateSub(DateUtil.getCurrentIndexTime(), 3600_000 * 12);
+        String stopTime = DateUtil.getCurrentIndexTime();
+        aircraftSearch.addRangeTerms("pubtime", startTime, stopTime);
+
+        // 聚合航线 30s 5m 1h 1d （五分钟范围聚合）
+        List<String[]> result = aircraftSearch.facetDateAggsTophits("pubtime", "yyyy-MM-dd HH:mm:ss", "1m", startTime, stopTime,
+                "pubtime", SortOrder.DESC, new String[]{"flight_number", "pubtime", "latitude", "longitude", "altitude",
+                        "speed", "aircraft", "origin", "destination", "airline", "insert_time", "site", "callsign", "type", "mode_s",
+                        "country", "heading", "op", "sqk", "manufacturer", "random_code", "is_am", "source", "location_point"
+                }, 1);
+        //"site", "aircraft", "mode_s", "location_point", "destination", "origin"
+
+        // 添加出点（没有出发点则初始化为NULL即可）
+        BoundPoint startPoint = null;
+        // 获取出发点经纬度构造点对象
+        startPoint = new BoundPoint(33.94250, -118.40800);
+
+        aircraftSearch.outputResult(result);
+
+        // 没有获取到出发点
+        if (startPoint == null) {
+
+            // 分析航段数据
+            /**
+             * @param result:航线数据聚合结果
+             * @param countBlankThreshold:航段分隔时允许中间间隔多少个点
+             * @return
+             * @Description: TODO(分析航线航段数据)
+             */
+            List<List<Map<String, Object>>> mapList = AggsAnalyzer.flightCourseSegment(result, 20);
+
+            JSONArray allSegment = JSONArray.parseArray(JSON.toJSONString(mapList));
+            System.out.println("所有航段：" + allSegment.toJSONString());
+            System.out.println("最近的一个航段：" + allSegment.getJSONArray(allSegment.size() - 1).toJSONString());
+
+            aircraftSearch.outputResult(result);
+
+        } else {
+
+            // 分析航段数据
+            /**
+             * @param result:航线数据聚合结果
+             * @param startPoint:出发地
+             * @return
+             * @Description: TODO(分析航线航段数据)
+             */
+            // 计算较快
+//            List<Map<String, Object>> mapList = AggsAnalyzer.flightCourseSegment(result, startPoint);
+
+            // 计算较慢
+            List<Map<String, Object>> mapList = AggsAnalyzer.flightCourseSegmentByAirport(result, startPoint, 20);
+
+            JSONArray segment = JSONArray.parseArray(JSON.toJSONString(mapList));
+            System.out.println("包含出发点的航段：" + segment.toJSONString());
+        }
+        aircraftSearch.reset();
+
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(飞机航线加载 - 根据航班的当前状态加载航线)
+     */
+    @Test
+    public void facetDateAggsTophitsFlightHistoryCourse() {
+
+        aircraftSearch = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+
+        // 设置唯一航班
+        aircraftSearch.addPrimitiveTermFilter("aircraft", "B-KPI", FieldOccurs.MUST);
+        aircraftSearch.addPrimitiveTermFilter("mode_s", "780220", FieldOccurs.MUST);
+        aircraftSearch.addPrimitiveTermFilter("site", "adsbexchange.com", FieldOccurs.MUST);
+
+        // 设置时间范围（10小时内的航线数据）（当前航班状态的发布时间前后十个小时）
+        String pubtime = "2019-08-03 16:14:32";
+        String startTime = DateUtil.dateSub(pubtime, 3600_000 * 10);
+        String stopTime = DateUtil.datePlus(pubtime, 3600_000 * 10);
+
+        aircraftSearch.addRangeTerms("pubtime", startTime, stopTime);
+
+        // 聚合航线 30s 5m 1h 1d （五分钟范围聚合）
+        List<String[]> result = aircraftSearch.facetDateAggsTophits("pubtime", "yyyy-MM-dd HH:mm:ss", "1m", startTime, stopTime,
+                "pubtime", SortOrder.DESC, new String[]{"site", "aircraft", "mode_s", "location_point", "destination", "origin", "pubtime"}, 1);
+
+        aircraftSearch.outputResult(result);
+
+        // 添加出发点（没有出发点则初始化为NULL即可）
+        // origin:COU
+//        BoundPoint startPoint = new BoundPoint(33.94250, -118.40800);
+        BoundPoint startPoint = null;
+
+        // 添加目的地点
+        // destination:MKC
+//        BoundPoint endPoint = new BoundPoint(22.30890, 113.91500);
+        BoundPoint endPoint = null;
+
+        // 当前飞机的位置
+        //
+        BoundPoint currentFlightLoc = new BoundPoint(31.00449, 129.54083);
+
+        List<Map<String, Object>> mapList = AggsAnalyzer.flightHistoryCourseSegment(startPoint, endPoint, currentFlightLoc, result, 30);
+        JSONArray segment = JSONArray.parseArray(JSON.toJSONString(mapList));
+        System.out.println("历史航段：" + segment.toJSONString());
+        aircraftSearch.reset();
+    }
+
+    @Test
+    public void aircraftSearcherTest() {
+        aircraftSearch = new EsIndexSearch(ipPort, "aircraft_info_latest_status", "graph");
+        aircraftSearch.addRangeTerms("pubtime", "2019-07-27 11:43:20", "2019-07-27 12:03:20");
+//        aircraftSearch.addPrimitiveTermFilter("destination", new String[]{},FieldOccurs.MUST);
+        aircraftSearch.addQueryCondition("+destination:(*NAY*sdsada*)");
+//        aircraftSearch.addQueryCondition("+destination:(*P*)");
+
+        aircraftSearch.execute(new String[]{"destination", "site", "pubtime"});
+        aircraftSearch.outputResult(aircraftSearch.getResults());
+        System.out.println(aircraftSearch.getTotal());
+    }
+
+    @Test
+    public void aircraftSearcherTest2() {
+        // 排除某些航班
+        aircraftSearch = new EsIndexSearch(ipPort, "aircraft_info_latest_status", "graph");
+        aircraftSearch.addRangeTerms("pubtime", "2019-07-23 11:23:14", "2019-07-23 11:23:16");
+        // "-(mode_s:\"71C237\" AND aircraft:\"HL8228\")"
+        aircraftSearch.addQueryCondition("-(mode_s:\"71C237\" AND aircraft:\"HL8228\")");
+        aircraftSearch.execute(new String[]{"mode_s", "aircraft"});
+        aircraftSearch.outputResult(aircraftSearch.getResults());
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(统计事件的评论量)
+     */
+    @Test
+    public void statsEventComment() {
+        EsIndexSearch eventSearch = new EsIndexSearch(ipPort, "event_mblog_info_ref_event", "event_data");
+        int eid = 705;
+        String commentField = "commtcount";
+        Map<String, Double> map = eventSearch.facetStatsCount(String.valueOf(eid), commentField);
+        System.out.println("总评论量：" + map.get("sum"));
+        System.out.println("平均评论量：" + map.get("avg"));
+        System.out.println("最大评论量：" + map.get("max"));
+        System.out.println("最小评论量：" + map.get("min"));
+        System.out.println("总帖数：" + map.get("count"));
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(嵌套聚集获得结果分组排序过滤)
+     */
+    @Test
+    public void facetStatsTermsAggsTophits() {
+        esSmallIndexSearch = new EsIndexSearch(ipPort, "blog_small", "monitor_caiji_small");
+        /**
+         * @param field:用来统计的字段
+         * @param sortStatsField:父聚集桶的排序方式
+         * @param _source:需要返回的字段
+         * @param size:父聚聚集桶内返回的数据量（例如返回前十个统计量的站点等）(-1返回全部)
+         * @param childSortTimeField:子聚集桶内时间字段
+         * @param childSortTimeOrder:子聚集桶内时间字段的排序方式
+         * @param childSize:子聚集桶内返回的数据量
+         * @return
+         * @Description: TODO(嵌套聚集获得结果分组排序过滤)(查所有订阅卫星的最新一条数据)
+         */
+        List<String[]> result = esSmallIndexSearch.facetStatsTermsAggsTophits("site", SortOrder.DESC, new String[]{"site", "pubtime", "title"}, -1,
+                "pubtime", SortOrder.DESC, 1);
+        esSmallIndexSearch.outputResult(result);
+        esSmallIndexSearch.reset();
+        /**
+         * 返回每个站点最新的一条数据：
+         * 0:新浪微博	19067756	[{"pubtime":"2019-08-03 17:19:02","site":"新浪微博"}]
+         * 1:微信	2711996	[{"pubtime":"2019-08-03 17:11:01","site":"微信","title":"中国传统文化中的四大思想智慧"}]
+         * 2:百度贴吧	2335119	[{"pubtime":"2019-08-03 17:08:00","site":"百度贴吧","title":"请教大佬"}]
+         * 3:百度	346460	[{"pubtime":"2019-08-03 20:18:00","site":"百度","title":"大连一方全取三分，故治大国若烹小鲜"}]
+         * 4:今日头条	289304	[{"pubtime":"2019-08-03 17:15:57","site":"今日头条","title":"大众途岳优惠幅度大 你该怎么选？"}]
+         * 5:知乎	206665	[{"pubtime":"2019-08-03 23:59:00","site":"知乎","title":"好律师网：保险纠纷解决的途径有哪些？"}]
+         * **/
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(嵌套聚集获得结果分组排序过滤)
+     */
+    @Test
+    public void facetStatsTermsAggsTophitsTest() {
+        statelliteSearch = new EsIndexSearch(ipPort, "statellite_info", "graph");
+        /**
+         * @param field:用来统计的字段
+         * @param sortStatsField:父聚集桶的排序方式
+         * @param _source:需要返回的字段
+         * @param size:父聚聚集桶内返回的数据量（例如返回前十个统计量的站点等）(-1返回全部)
+         * @param childSortTimeField:子聚集桶内时间字段
+         * @param childSortTimeOrder:子聚集桶内时间字段的排序方式
+         * @param childSize:子聚集桶内返回的数据量
+         * @return
+         * @Description: TODO(嵌套聚集获得结果分组排序过滤)(查所有订阅卫星的最新一条数据)
+         */
+        statelliteSearch.addRangeTerms("pubtime", "2019-08-07 01:01:00", "2019-08-07 11:12:00");
+        List<String[]> result = statelliteSearch.facetStatsTermsAggsTophits("NORADID", SortOrder.DESC, new String[]{"site", "pubtime", "title", "NORADID"}, -1,
+                "pubtime", SortOrder.DESC, 1);
+        statelliteSearch.outputResult(result);
+        statelliteSearch.reset();
+    }
+
+
+    @Test
+    public void addGeoShape() {
+        // 设置一些矩形框
+        // 北京
+        BoundBox boundBox1 = new BoundBox(new BoundPoint(41.114763, 113.855668, GeoBoundOccurs.TOP_LEFT),
+                new BoundPoint(37.103182, 120.809846, GeoBoundOccurs.BOTTOM_RIGHT));
+        // 沈阳
+        BoundBox boundBox2 = new BoundBox(new BoundPoint(31.897413, 86.922026, GeoBoundOccurs.TOP_LEFT),
+                new BoundPoint(19.672306, 111.206457, GeoBoundOccurs.BOTTOM_RIGHT));
+        // 京津冀地区
+        BoundBox boundBox3 = new BoundBox(new BoundPoint(31.897413, 86.922026, GeoBoundOccurs.TOP_LEFT),
+                new BoundPoint(19.672306, 111.206457, GeoBoundOccurs.BOTTOM_RIGHT));
+        BoundBox boundBox4 = new BoundBox(new BoundPoint(31.897413, 86.922026, GeoBoundOccurs.TOP_LEFT),
+                new BoundPoint(19.672306, 111.206457, GeoBoundOccurs.BOTTOM_RIGHT));
+
+        // 设置一些圆形
+        Circle circle1 = new Circle();
+        circle1.setDistance(10, DistanceUnit.METER);
+        circle1.setCentre(123.1231, 2312.23);
+
+        /**
+         * @param locPointField:GEO类型的字段名
+         * @param occur:距离计算算法选择
+         * @param _conditions:多形状条件组合
+         * @return
+         * @Description: TODO(多形状组合查询)-支持(MUST/MUST_NOT/SHOULD)任意组合
+         */
+        // 设置多个形状，（测试MUST一定在这个形状中） （测试SHOULD在一个形状中即可）（测试MUST_NOT不在这些形状中）
+        // 如下测试含义：一定在circle1中，并且一定不在boundBox1与boundBox2中，并且在boundBox3或者boundBox4都可以
+        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE,
+                Must.init().add(circle1),
+                MustNot.init().addMulti(boundBox1, boundBox2),
+                Should.init().addMulti(boundBox3, boundBox4));
+
+        aircraftSearch.setStart(0);
+        aircraftSearch.setRow(100);
+        aircraftSearch.execute(new String[]{"mode_s"});
+        aircraftSearch.outputResult(aircraftSearch.getResults());
+    }
+
+    @Test
+    public void addGeoShapeTest2() {
+        // 设置一些矩形框
+        // 北京
+        BoundBox beijing = new BoundBox(new BoundPoint(40.333563, 115.919615, GeoBoundOccurs.TOP_LEFT),
+                new BoundPoint(39.782209, 116.83948, GeoBoundOccurs.BOTTOM_RIGHT));
+        // 沈阳
+        BoundBox shenyang = new BoundBox(new BoundPoint(42.302922, 122.248285, GeoBoundOccurs.TOP_LEFT),
+                new BoundPoint(41.671531, 124.106412, GeoBoundOccurs.BOTTOM_RIGHT));
+        // 保定
+        BoundBox baoding = new BoundBox(new BoundPoint(38.997033, 115.27341, GeoBoundOccurs.TOP_LEFT),
+                new BoundPoint(38.799349, 115.61376, GeoBoundOccurs.BOTTOM_RIGHT));
+        // 设置一些圆形
+        // 京津冀地区（北京为中心的300KM内的区域）
+        Circle jjjCircle = new Circle();
+        jjjCircle.setDistance(300, DistanceUnit.KILOMETER);
+        jjjCircle.setCentre(40.008949, 116.416342);
+
+        // 以天津为中心附近50KM的区域
+        Circle tianjinCircle = new Circle();
+        tianjinCircle.setDistance(50, DistanceUnit.KILOMETER);
+        tianjinCircle.setCentre(39.000622, 117.218924);
+
+        /**
+         * @param locPointField:GEO类型的字段名
+         * @param occur:距离计算算法选择
+         * @param... conditions:（泛型参数）多形状条件组合
+         * @return
+         * @Description: TODO(addGeoShape多形状组合查询)-支持(MUST/MUST_NOT/SHOULD)任意组合-(目前支持两个形状圆形和矩形)
+         */
+        // 北京与沈阳无交汇测试MUST查询结果为空
+//        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().addMulti(beijing,shenyang));
+
+        // 北京与沈阳无交汇测试OR-SHOULD条件（任意一个区域满足即可）
+//        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Should.init().addMulti(beijing,shenyang));
+
+        // 一定在京津冀地区但是不在北京地区
+//        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(jjjCircle), MustNot.init().add(beijing));
+
+        // 一定在京津冀地区但是不在北京地区，另外在保定或者天津
+        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(jjjCircle), MustNot.init().add(beijing),
+                Should.init().addMulti(baoding, shenyang));
+
+        aircraftSearch.setStart(0);
+        aircraftSearch.setRow(100);
+        aircraftSearch.execute(new String[]{"mode_s", "location_point", "site", "pubtime"});
+        aircraftSearch.outputResult(aircraftSearch.getResults());
+        aircraftSearch.reset();
+    }
+
+    @Test
+    public void zdrFacetTwoCountQueryOrderByCount() {
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "user_mblog_info_ref_zdr,user_facebook_info_ref_zdr,user_wechat_info_ref_zdr,user_forum_threads_ref_zdr,user_blog_ref_zdr,user_instagram_thread_ref_zdr,user_youtube_info_ref_zdr,user_twitter_info_ref_zdr,user_linkedin_thread_ref_zdr" +
+                ",blog_comment_zdr,mblog_comment_zdr,forum_replys_zdr,facebook_comment_zdr,wechat_comment_zdr,instagram_comment_zdr,twitter_comment_zdr,youtube_comment_zdr", "zdr_data,zdr_caiji");
+//        EsIndexSearch esc = SearchIndexer.getSearchClient("user_mblog_info_ref_zdr,user_facebook_info_ref_zdr,user_wechat_info_ref_zdr,user_forum_threads_ref_zdr,user_blog_ref_zdr,user_instagram_thread_ref_zdr,user_youtube_info_ref_zdr,user_twitter_info_ref_zdr,user_linkedin_thread_ref_zdr", "zdr_data");
+        esc.addRangeTerms("pubtime", "2019-08-06 00:00:00", "2019-08-06 15:03:38", FieldOccurs.MUST);
+        //List<String[]> resList = esc.facetCountQueryOrderByCount("blogger_id", 0, SortOrder.DESC);
+        // 二次分组统计-多个child字段
+        List<String[]> resList = esc.facetTwoCountQueryOrderByCount("it", new String[]{"blogger_id", "user_md5"}, 0, true, SortOrder.DESC);
+        esc.outputResult(resList);
+    }
+
+}
 
 

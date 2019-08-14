@@ -5,10 +5,16 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
 
-import casia.isi.elasticsearch.common.FieldOccurs;
-import casia.isi.elasticsearch.common.KeywordsCombine;
-import casia.isi.elasticsearch.common.RangeOccurs;
-import casia.isi.elasticsearch.common.SortOrder;
+import casia.isi.elasticsearch.common.*;
+import casia.isi.elasticsearch.common.condition.Condition;
+import casia.isi.elasticsearch.common.condition.Must;
+import casia.isi.elasticsearch.common.condition.MustNot;
+import casia.isi.elasticsearch.common.condition.Should;
+import casia.isi.elasticsearch.model.BoundBox;
+import casia.isi.elasticsearch.model.BoundPoint;
+import casia.isi.elasticsearch.model.Circle;
+import casia.isi.elasticsearch.model.Shape;
+import casia.isi.elasticsearch.util.ClientUtils;
 import casia.isi.elasticsearch.util.Validator;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -19,7 +25,6 @@ import com.alibaba.fastjson.JSONArray;
 
 import casia.isi.elasticsearch.util.RegexUtil;
 import casia.isi.elasticsearch.util.StringUtil;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.wltea.analyzer.core.IKSegmenter;
 import org.wltea.analyzer.core.Lexeme;
 
@@ -27,10 +32,11 @@ import org.wltea.analyzer.core.Lexeme;
  * ElasticSearch的索引查询接口(Http方式)
  *
  * @author
- * @version elasticsearch - 5.6.3
+ * @version elasticsearch
  */
 public class EsIndexSearch extends EsIndexSearchImp {
 
+    @Deprecated
     public EsIndexSearch() {
         super();
     }
@@ -39,6 +45,7 @@ public class EsIndexSearch extends EsIndexSearchImp {
         super(IPADRESS, indexName, typeName);
     }
 
+    @Deprecated
     public EsIndexSearch(String IP, int Port, String indexName, String typeName) {
         super(IP, Port, indexName, typeName);
     }
@@ -134,28 +141,27 @@ public class EsIndexSearch extends EsIndexSearchImp {
         return sb.toString();
     }
 
-    /**
-     * 添加查询条件，查询条件必须满足lucene的查询语法
-     *
-     * @param query_string
-     */
-    public void addQueryString(String query_string, FieldOccurs occurs) {
-
-
-        if (query_string == null || "".equals(query_string))
-            return;
-
-        String queryCondition = null;
-
-        if (this.queryJson.containsKey("query")) {
-            queryCondition = this.queryJson.getString("query") + BLANK + occurs.getSymbolValue() + "(" + query_string + ")";
-        } else {
-            queryCondition = occurs.getSymbolValue() + "(" + query_string + ")";
-        }
-
-        this.queryJson.put("query", queryCondition);
-
-    }
+//    /**
+//     * 添加查询条件，查询条件必须满足lucene的查询语法
+//     *
+//     * @param query_string
+//     */
+//    public void addQueryString(String query_string, FieldOccurs occurs) {
+//
+//
+//        if (query_string == null || "".equals(query_string))
+//            return;
+//
+//        String queryCondition = null;
+//
+//        if (this.queryJson.containsKey("query")) {
+//            queryCondition = this.queryJson.getString("query") + BLANK + occurs.getSymbolValue() + "(" + query_string + ")";
+//        } else {
+//            queryCondition = occurs.getSymbolValue() + "(" + query_string + ")";
+//        }
+//
+//        this.queryJson.put("query", queryCondition);
+//    }
 
     /**
      * 分词
@@ -185,34 +191,36 @@ public class EsIndexSearch extends EsIndexSearchImp {
     }
 
     /**
-     * @param arrayFieldName:数组字段名称
-     * @param terms:数组值-多值必须都满足才返回
-     * @param occur:定义此过滤条件与其它过滤条件的的组合方式
-     * @return
-     * @Description: TODO(添加过滤条件 - 过滤数组类型的字段)
+     * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
+     * 本方法也可以对分词的数据进行检索，但传入的内容不能有任何的标点符号以及空格，否则检索结果会出现异常<br>
+     * 该方法用于int,long,string等类型的匹配，对于string类型，支持通配符(*)<br>
+     *
+     * @param field                 字段
+     * @param terms                 字段对应的值，只能转入一个，且不能有有空格.如果传入的值为负值，请用双引号包起来，例如：<br>
+     *                              client.addPrimitveTermQuery("eid", "\"-1\"",FieldOccurs.MUST); 段对应的多值，值之间是或的关系
+     * @param combine:多值之间的查询关系，AND OR
+     * @param occurs                是否必须作为过滤条件
      */
-    public void addArrayTypeTermsQuery(String arrayFieldName, String[] terms, FieldOccurs occur) {
+    public void addPrimitiveTermFilter(String field, String[] terms, KeywordsCombine combine, FieldOccurs occurs) {
         if (terms == null || terms.length == 0)
             return;
-
-        if (occur.getSymbolValue().equals("-")) {
-            addArrayTypeTerms(super.queryMustNotJarr, arrayFieldName, terms);
-        } else if (occur.getSymbolValue().equals("+")) {
-            addArrayTypeTerms(super.queryMustJarr, arrayFieldName, terms);
+        super.keywordString = super.keywordString + BLANK + occurs.getSymbolValue() + field
+                + ":(";
+        for (int i = 0; i < terms.length; i++) {
+            String term = terms[i];
+            if (term == null || term.trim().equals("")) {
+                continue;
+            }
+            if (ZH_Converter) {
+                term = converter.convert(term);
+            }
+            term = StringUtil.escapeSolrQueryChars(term);
+            if (i > 0) {
+                super.keywordString = super.keywordString + " " + combine + " ";
+            }
+            super.keywordString = super.keywordString + term;
         }
-    }
-
-    /**
-     * @param queryMustOrNotJarr:boolean查询数组
-     * @return
-     * @Description: TODO(添加数组的过滤条件)
-     */
-    private void addArrayTypeTerms(JSONArray queryMustOrNotJarr, String arrayFieldName, String[] terms) {
-        JSONObject termValues = new JSONObject();
-        termValues.put(arrayFieldName, JSONArray.parseArray(JSON.toJSONString(terms)));
-        JSONObject termsObject = new JSONObject();
-        termsObject.put("terms", termValues);
-        queryMustOrNotJarr.add(termsObject);
+        super.keywordString = super.keywordString + ")";
     }
 
     /**
@@ -422,6 +430,7 @@ public class EsIndexSearch extends EsIndexSearchImp {
             super.logger.info(super.queryUrl + " -d " + queryStr);
         }
         String queryResult = super.request.httpPost(super.queryUrl, queryStr);
+//        String queryResult = HttpProxyRequest.httpProxySendJsonBody(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             super.queryJsonResult = JSONObject.parseObject(queryResult);
         if (super.debug) {
@@ -457,6 +466,536 @@ public class EsIndexSearch extends EsIndexSearchImp {
         return list;
     }
 
+    /**
+     * @param
+     * @return
+     * @Description: TODO(统计事件的评论数 - 度量聚合从不同文档的分组中提取统计数据 ， 这些统计数据通常来自数值型字段)
+     */
+    public Map<String, Double> facetStatsCount(String eid, String commentField) {
+        String result = super.executeDSL(new StringBuilder()
+                .append("{")
+                .append("\"query\": {\n" +
+                        "        \"term\": {\n" +
+                        "            \"eid\": \"" + eid + "\"\n" +
+                        "        }\n" +
+                        "    },")
+                .append("\"aggs\": {\n" +
+                        "        \"commtcount_event\": {\n" +
+                        "            \"stats\": {\n" +
+                        "                    \"field\": \"" + commentField + "\"\n" +
+                        "                \n" +
+                        "            }\n" +
+                        "        }\n" +
+                        "    },")
+                .append("\"size\":0")
+                .append("}").toString());
+        JSONObject object = JSONObject.parseObject(result);
+        JSONObject queryResult = object.getJSONObject("aggregations");
+        JSONObject stats = queryResult.getJSONObject("commtcount_event");
+        Map<String, Double> map = new HashMap<>();
+        map.put("sum", stats.getDouble("sum"));
+        map.put("avg", stats.getDouble("avg"));
+        map.put("max", stats.getDouble("max"));
+        map.put("min", stats.getDouble("min"));
+        map.put("count", stats.getDouble("count"));
+        return map;
+    }
+
+    /**
+     * @param field:字段名（例如精确查询多个URL）
+     * @param terms:多值字段值
+     * @return
+     * @Description: TODO(多值精确查询)
+     */
+    public void addPrimitiveTermsFilter(String field, String[] terms, FieldOccurs occur) {
+        if (terms == null || terms.length == 0) {
+            return;
+        }
+        if (occur.getSymbolValue().equals("-")) {
+            this.addPrimitiveTermsFilter(super.queryMustNotJarr, field, terms);
+        } else if (occur.getSymbolValue().equals("+")) {
+            this.addPrimitiveTermsFilter(super.queryMustJarr, field, terms);
+        }
+    }
+
+    private void addPrimitiveTermsFilter(JSONArray queryMustOrNotJarr, String arrayFieldName, String[] terms) {
+        JSONObject termValues = new JSONObject();
+        termValues.put(arrayFieldName, JSONArray.parseArray(JSON.toJSONString(terms)));
+        JSONObject termsObject = new JSONObject();
+        termsObject.put("terms", termValues);
+        queryMustOrNotJarr.add(termsObject);
+    }
+
+    /**
+     * @param field:字段名（例如精确查询多个URL）
+     * @param terms:多值字段值
+     * @return
+     * @Description: TODO(多值精确查询)
+     */
+    public void addPrimitiveTermsFilter(String field, Set<Object> terms, FieldOccurs occur) {
+        if (terms == null || terms.size() == 0) {
+            return;
+        }
+        if (occur.getSymbolValue().equals("-")) {
+            this.addPrimitiveTermsFilter(super.queryMustNotJarr, field, terms);
+        } else if (occur.getSymbolValue().equals("+")) {
+            this.addPrimitiveTermsFilter(super.queryMustJarr, field, terms);
+        }
+    }
+
+    private void addPrimitiveTermsFilter(JSONArray queryMustOrNotJarr, String arrayFieldName, Set<Object> terms) {
+        JSONObject termValues = new JSONObject();
+        termValues.put(arrayFieldName, JSONArray.parseArray(JSON.toJSONString(terms)));
+        JSONObject termsObject = new JSONObject();
+        termsObject.put("terms", termValues);
+        queryMustOrNotJarr.add(termsObject);
+    }
+
+    /**
+     * @param locPointField:字段名-geo类型数据的字段名
+     * @param firstBoundPoint:设置矩形框第一个点
+     * @param nextBoundPoint:设置矩形框第二个点
+     * @param occurs:必须满足/必须不满足
+     * @return
+     * @Description: TODO(geo - 盒模型过滤器 - 指定矩形框的两个对角)
+     */
+    public void addGeoBoundingBox(String locPointField, BoundPoint firstBoundPoint, BoundPoint nextBoundPoint, FieldOccurs occurs) {
+
+        if (firstBoundPoint.getLocBoundMark() == null || nextBoundPoint.getLocBoundMark() == null) {
+            super.logger.info("Set geo bounding box parameter error!", new IllegalArgumentException());
+        }
+
+        JSONObject geoBoundCondition = new JSONObject();
+
+        JSONObject firstPoint = JSONObject.parseObject(JSON.toJSONString(firstBoundPoint));
+        firstPoint.remove("locBoundMark");
+        geoBoundCondition.put(firstBoundPoint.getLocBoundMark().getSymbolValue(), firstPoint);
+
+        JSONObject nextPoint = JSONObject.parseObject(JSON.toJSONString(nextBoundPoint));
+        nextPoint.remove("locBoundMark");
+        geoBoundCondition.put(nextBoundPoint.getLocBoundMark().getSymbolValue(), nextPoint);
+
+        JSONObject location = new JSONObject();
+        location.put(locPointField, geoBoundCondition);
+
+        JSONObject geo_bounding = new JSONObject();
+        location.put("type", "indexed");
+        geo_bounding.put("geo_bounding_box", location);
+
+        if (FieldOccurs.MUST.equals(occurs) && !super.queryFilterMustJarr.contains(geo_bounding)) {
+            super.queryFilterMustJarr.add(geo_bounding);
+        } else if (FieldOccurs.MUST_NOT.equals(occurs) && !super.queryFilterMustNotJarr.contains(geo_bounding)) {
+            super.queryFilterMustNotJarr.add(geo_bounding);
+        } else if (FieldOccurs.SHOULD.equals(occurs)) {
+            JSONObject boolShould = packBoolShould(geo_bounding);
+            if (!super.queryFilterMustJarr.contains(boolShould)) {
+                super.queryFilterMustJarr.add(boolShould);
+            }
+        }
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(DSL实现OR查询 - 嵌套BOOL查询)
+     */
+    private JSONObject packBoolShould(JSONObject condition) {
+        JSONObject bool = new JSONObject();
+        JSONObject should = new JSONObject();
+        JSONArray conditions = new JSONArray();
+        conditions.add(condition);
+        should.put("should", conditions);
+        bool.put("bool", should);
+        return bool;
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(DSL实现OR查询 - 嵌套BOOL查询)
+     */
+    private JSONObject packBoolShould(JSONArray conditions) {
+        if (conditions != null && !conditions.isEmpty()) {
+            JSONObject bool = new JSONObject();
+            JSONObject should = new JSONObject();
+            should.put("should", conditions);
+            bool.put("bool", should);
+            return bool;
+        } else {
+            return new JSONObject();
+        }
+    }
+
+    /**
+     * @param locPointField:字段名-geo类型数据的字段名
+     * @param boundBoxList:设多个矩形框
+     * @param occurs:必须满足/必须不满足
+     * @return
+     * @Description: TODO(geo - 盒模型过滤器 - 指定多个矩形框)
+     */
+    @Deprecated
+    public void addGeoBoundingMultiBox(String locPointField, List<BoundBox> boundBoxList, FieldOccurs occurs) {
+
+        if (boundBoxList == null || boundBoxList.isEmpty()) {
+            super.logger.info("Set geo bounding box parameter error!", new IllegalArgumentException());
+        }
+        JSONArray conditions = new JSONArray();
+        for (int i = 0; i < boundBoxList.size(); i++) {
+            BoundBox boundBox = boundBoxList.get(i);
+            JSONObject geo_bounding = packBoundBoxCondition(boundBox, locPointField);
+            if (FieldOccurs.MUST.equals(occurs) && !super.queryFilterMustJarr.contains(geo_bounding)) {
+                super.queryFilterMustJarr.add(geo_bounding);
+            } else if (FieldOccurs.MUST_NOT.equals(occurs) && !super.queryFilterMustNotJarr.contains(geo_bounding)) {
+                super.queryFilterMustNotJarr.add(geo_bounding);
+            } else if (FieldOccurs.SHOULD.equals(occurs)) {
+                conditions.add(geo_bounding);
+            }
+        }
+        JSONObject boolShould = packBoolShould(conditions);
+        if (!super.queryFilterMustJarr.contains(boolShould)) {
+            super.queryFilterMustJarr.add(boolShould);
+        }
+    }
+
+    /**
+     * @param locPointField:字段名-geo类型数据的字段名
+     * @param lat:维度
+     * @param lon:经度
+     * @param distance:距离
+     * @param distanceUnit:指定距离单位(1km/1mi/)-传入NULL则默认单位是米
+     * @param occur:距离计算算法选择
+     * @return
+     * @Description: TODO(geo - 地理距离过滤器接口 - 查找指定距离范围内的数据)
+     * <p>
+     * The full list of units is listed below:
+     * Mile-mi or miles
+     * Yard - yd or yards
+     * Feet - ft or feet
+     * Inch - in or inch
+     * Kilometer - km or kilometers
+     * Meter - m or meters
+     * Centimeter - cm or centimeters
+     * Millimeter - mm or millimeters
+     */
+    public void addGeoDistance(String locPointField, double lat, double lon, int distance, DistanceUnit distanceUnit, GeoDistanceOccurs occur) {
+
+        JSONObject location = packLocation(lat, lon);
+        JSONObject geoDisConditon = new JSONObject();
+        geoDisConditon.put("distance", distance + distanceUnit.getSymbolValue());
+        geoDisConditon.put("distance_type", occur.getSymbolValue());
+        geoDisConditon.put(locPointField, location);
+
+        JSONObject geo_distance = new JSONObject();
+        geo_distance.put("geo_distance", geoDisConditon);
+
+        if (!super.queryFilterMustJarr.contains(geo_distance)) {
+            super.queryFilterMustJarr.add(geo_distance);
+        }
+    }
+
+    /**
+     * @param locPointField:GEO类型的字段名
+     * @param occur:距离计算算法选择
+     * @param _conditions:（泛型参数）多形状条件组合
+     * @return
+     * @Description: TODO(多形状组合查询)-支持(MUST/MUST_NOT/SHOULD)任意组合-(目前支持两个形状圆形和矩形)
+     */
+    public void addGeoShape(String locPointField, GeoDistanceOccurs occur, Condition... _conditions) {
+        if (_conditions == null || _conditions.length == 0)
+            super.logger.info("Set geo _conditions parameter error!", new IllegalArgumentException());
+        JSONObject bool = new JSONObject();
+        for (int i = 0; i < _conditions.length; i++) {
+            Condition condition = _conditions[i];
+            JSONArray cond = wrapGeo(condition, locPointField, occur);
+            if (condition instanceof Must) {
+                putGeoBool("must", cond, bool);
+            } else if (condition instanceof MustNot) {
+                putGeoBool("must_not", cond, bool);
+            } else if (condition instanceof Should) {
+                putGeoBool("should", cond, bool);
+            } else {
+                super.logger.info("Set parameter error!Abstract classes cannot be instantiated!" + condition.getClass(), new IllegalArgumentException());
+            }
+        }
+        JSONObject boolShould = packBoolShould(bool.getJSONArray("should"));
+        JSONArray boolMust = bool.getJSONArray("must");
+        JSONArray boolMustNot = bool.getJSONArray("must_not");
+
+        if (boolShould != null && !boolShould.isEmpty() && !super.queryFilterMustJarr.contains(boolShould)) {
+            super.queryFilterMustJarr.add(boolShould);
+        }
+        if (boolMust != null && !boolMust.isEmpty() && !super.queryFilterMustJarr.contains(boolMust)) {
+            super.queryFilterMustJarr.add(boolMust);
+        }
+        if (boolMustNot != null && !boolMustNot.isEmpty() && !super.queryFilterMustNotJarr.contains(boolMustNot)) {
+            super.queryFilterMustNotJarr.add(boolMustNot);
+        }
+    }
+
+    private void putGeoBool(String markBoolConditionField, JSONArray condition, JSONObject bool) {
+        if (bool.containsKey(markBoolConditionField)) {
+            JSONArray oldCondition = bool.getJSONArray(markBoolConditionField);
+            oldCondition.addAll(condition);
+            bool.put(markBoolConditionField, oldCondition);
+        } else {
+            bool.put(markBoolConditionField, condition);
+        }
+    }
+
+    private JSONArray wrapGeo(Condition condition, String locPointField, GeoDistanceOccurs occur) {
+        List<Shape> shapeList = condition.getList();
+        JSONArray cond = new JSONArray();
+        for (int i = 0; i < shapeList.size(); i++) {
+            Object object = shapeList.get(i);
+            if (object instanceof BoundBox) {
+                cond.add(packBoundBoxCondition((BoundBox) object, locPointField));
+            } else if (object instanceof Circle) {
+                cond.add(packCircleCondition((Circle) object, locPointField, occur));
+            }
+        }
+        condition.clear();
+        return cond;
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(封装圆查询条件)
+     */
+    private JSONObject packCircleCondition(Circle circle, String locPointField, GeoDistanceOccurs occur) {
+        JSONObject location = packLocation(circle.getCentre().getLat(), circle.getCentre().getLon());
+        JSONObject geoDisConditon = new JSONObject();
+        geoDisConditon.put("distance", circle.getDistance());
+        geoDisConditon.put("distance_type", occur.getSymbolValue());
+        geoDisConditon.put(locPointField, location);
+        JSONObject geo_distance = new JSONObject();
+        geo_distance.put("geo_distance", geoDisConditon);
+        return geo_distance;
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(封装矩形查询条件)
+     */
+    private JSONObject packBoundBoxCondition(BoundBox boundBox, String locPointField) {
+        BoundPoint first = boundBox.getFirstBoundPoint();
+        BoundPoint next = boundBox.getNextBoundPoint();
+        JSONObject geoBoundCondition = new JSONObject();
+        JSONObject firstPoint = JSONObject.parseObject(JSON.toJSONString(first));
+        firstPoint.remove("locBoundMark");
+        geoBoundCondition.put(first.getLocBoundMark().getSymbolValue(), firstPoint);
+        JSONObject nextPoint = JSONObject.parseObject(JSON.toJSONString(next));
+        nextPoint.remove("locBoundMark");
+        geoBoundCondition.put(next.getLocBoundMark().getSymbolValue(), nextPoint);
+        JSONObject location = new JSONObject();
+        location.put(locPointField, geoBoundCondition);
+        JSONObject geo_bounding = new JSONObject();
+        location.put("type", "indexed");
+        geo_bounding.put("geo_bounding_box", location);
+        return geo_bounding;
+    }
+
+
+    /**
+     * @param lat:维度
+     * @param lon:经度
+     * @return
+     * @Description: TODO(封装经纬度数据)
+     */
+    private JSONObject packLocation(double lat, double lon) {
+        JSONObject location = new JSONObject();
+        location.put("lat", lat);
+        location.put("lon", lon);
+        return location;
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(geo - 多边形过滤器接口 - 根据给定的多个点组成的多边形 ， 查询范围内的点)
+     */
+    public void addGeoPolygon() {
+//        {
+//            "query": {
+//            "geo_polygon": {
+//                "location": {
+//                    "points": [
+//                    {
+//                        "lat": 118.296963,
+//                            "lon": 32.818034
+//                    },
+//                    {
+//                        "lat": 117.296963,
+//                            "lon": 31.818034
+//                    },
+//                    {
+//                        "lat": 116.296963,
+//                            "lon": 30.818034
+//                    },
+//                    {
+//                        "lat": 115.296963,
+//                            "lon": 29.818034
+//                    }
+//        ]
+//                }
+//            }
+//        }
+//        }
+    }
+
+    /**
+     * @param locPointField:字段名-geo类型数据的字段名
+     * @param lat:维度
+     * @param lon:经度
+     * @param distanceUnit:指定距离单位(km/mi/...) - 将距离以...为单位写入到每个返回结果的 sort 键中
+     * @param occur:距离计算算法选择
+     * @return
+     * @Description: TODO(geo - 按照距离排序的接口 - 扩展addSortField接口)
+     * <p>
+     * The full list of units is listed below:
+     * Mile-mi or miles
+     * Yard - yd or yards
+     * Feet - ft or feet
+     * Inch - in or inch
+     * Kilometer - km or kilometers
+     * Meter - m or meters
+     * Centimeter - cm or centimeters
+     * Millimeter - mm or millimeters
+     */
+    public void addSortField(String locPointField, double lat, double lon, DistanceUnit distanceUnit, GeoDistanceOccurs occur, SortOrder order) {
+        if (Validator.check(locPointField)) {
+
+            if (!super.queryJson.containsKey("sort")) {
+                super.queryJson.put("sort", new JSONArray());
+            }
+            JSONObject geoCondition = new JSONObject();
+            geoCondition.put("order", order.getSymbolValue());
+            geoCondition.put("unit", distanceUnit.getSymbolValue());
+            geoCondition.put("distance_type", occur.getSymbolValue());
+            geoCondition.put(locPointField, packLocation(lat, lon));
+            JSONObject sortJson = new JSONObject();
+            sortJson.put("_geo_distance", geoCondition);
+            super.queryJson.getJSONArray("sort").add(sortJson);
+        }
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(距离范围区间内统计接口 - 查询距离范围区间内的点的数量)
+     */
+    public List<String[]> facetGeoDistanceRange() {
+//        {
+//            "size": 0,
+//                "aggs": {
+//            "myaggs": {
+//                "geo_distance": {
+//                    "field": "location",
+//                            "origin": {
+//                        "lat": 65.4144,
+//                                "lon": -26.5334
+//                    },
+//                    "unit": "km",
+//                            "ranges": [
+//                    {
+//                        "from": 50,
+//                            "to": 500
+//                    }
+//        ]
+//                }
+//            }
+//        }
+//        }
+        return null;
+    }
+
+    /**
+     * @param field:用来统计的字段
+     * @param sortStatsField:父聚集桶的排序方式
+     * @param _source:需要返回的字段
+     * @param size:每个子聚集桶内返回的数据量(-1返回全部)
+     * @param childSortTimeField:子聚集桶内时间字段
+     * @param childSortTimeOrder:子聚集桶内时间字段的排序方式
+     * @param childSize:子聚集桶内返回的数据量
+     * @return
+     * @Description: TODO(嵌套聚集获得结果分组排序过滤)
+     */
+    public List<String[]> facetStatsTermsAggsTophits(String field, SortOrder sortStatsField, String[] _source, int size, String childSortTimeField, SortOrder childSortTimeOrder, int childSize) {
+        StringBuilder builder = new StringBuilder();
+        if (size == -1) size = 1000_000;
+        // track_aggs recent_track
+        builder.append("{\n" +
+                "    \"aggs\": {\n" +
+                "        \"track_aggs\": {\n" +
+                "            \"terms\": {\n" +
+                "                \"field\": \"" + field + "\",\n" +
+                "                \"order\": {\n" +
+                "                    \"_count\": \"" + sortStatsField.getSymbolValue() + "\"\n" +
+                "                },\n" +
+                "                \"size\": " + size + "\n" +
+                "            },\n" +
+                "            \"aggs\": {\n" +
+                "                \"recent_track\": {\n" +
+                "                    \"top_hits\": {\n" +
+                "                        \"sort\": [\n" +
+                "                            {\n" +
+                "                                \"" + childSortTimeField + "\": {\n" +
+                "                                    \"order\": \"" + childSortTimeOrder.getSymbolValue() + "\"\n" +
+                "                                }\n" +
+                "                            }\n" +
+                "                        ],\n" +
+                "                        \"_source\": {\n" +
+                "                            \"includes\": " + JSONArray.parseArray(JSON.toJSONString(_source)).toJSONString() + "\n" +
+                "                        },\n" +
+                "                        \"size\": " + childSize + "\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            }\n" +
+                "        }\n" +
+                "    },\n" +
+                "    \"size\": 0\n" +
+                "}");
+        String queryStr = getQueryString(_source);
+
+        JSONObject queryStrObj = JSONObject.parseObject(queryStr);
+        JSONObject builderObj = JSONObject.parseObject(builder.toString());
+        builderObj.putAll(queryStrObj);
+
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), builderObj.toJSONString());
+        if (queryResult != null)
+            this.queryJsonResult = JSONObject.parseObject(queryResult);
+        if (this.debug) {
+            logger.info(this.queryJsonResult);
+        }
+        //解析结果
+        List<String[]> list = new LinkedList<>();
+        if (this.queryJsonResult == null || this.queryJsonResult.size() == 0 || !this.queryJsonResult.containsKey("hits")) {
+            return list;
+        }
+        JSONArray bucketJsons = this.queryJsonResult.getJSONObject("aggregations").getJSONObject("track_aggs").getJSONArray("buckets");
+        this.countTotle = bucketJsons.size();
+        for (int index = 0; index < bucketJsons.size(); index++) {
+            JSONObject bucketJson = bucketJsons.getJSONObject(index);
+            String date = bucketJson.getString("key");
+            String doc_count = bucketJson.getString("doc_count");
+            JSONArray hitss = bucketJson.getJSONObject("recent_track").getJSONObject("hits").getJSONArray("hits");
+
+            JSONArray rs = new JSONArray();
+            if (Validator.check(hitss)) {
+                for (int j = 0; j < hitss.size(); j++) {
+                    JSONObject jsonObject = hitss.getJSONObject(j).getJSONObject("_source");
+                    if (Validator.check(jsonObject)) {
+                        rs.add(jsonObject);
+                    }
+                }
+            }
+            list.add(new String[]{date, doc_count, rs.toJSONString()});
+        }
+        return list;
+    }
+
 }
+
 
 

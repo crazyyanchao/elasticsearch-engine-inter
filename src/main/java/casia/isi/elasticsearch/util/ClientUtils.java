@@ -1,26 +1,4 @@
-package casia.isi.elasticsearch.util;/**
- * 　　　　　　　 ┏┓       ┏┓+ +
- * 　　　　　　　┏┛┻━━━━━━━┛┻┓ + +
- * 　　　　　　　┃　　　　　　 ┃
- * 　　　　　　　┃　　　━　　　┃ ++ + + +
- * 　　　　　　 █████━█████  ┃+
- * 　　　　　　　┃　　　　　　 ┃ +
- * 　　　　　　　┃　　　┻　　　┃
- * 　　　　　　　┃　　　　　　 ┃ + +
- * 　　　　　　　┗━━┓　　　 ┏━┛
- * ┃　　  ┃
- * 　　　　　　　　　┃　　  ┃ + + + +
- * 　　　　　　　　　┃　　　┃　Code is far away from     bug with the animal protecting
- * 　　　　　　　　　┃　　　┃ +
- * 　　　　　　　　　┃　　　┃
- * 　　　　　　　　　┃　　　┃　　+
- * 　　　　　　　　　┃　 　 ┗━━━┓ + +
- * 　　　　　　　　　┃ 　　　　　┣┓
- * 　　　　　　　　　┃ 　　　　　┏┛
- * 　　　　　　　　　┗┓┓┏━━━┳┓┏┛ + + + +
- * 　　　　　　　　　 ┃┫┫　 ┃┫┫
- * 　　　　　　　　　 ┗┻┛　 ┗┻┛+ + + +
- */
+package casia.isi.elasticsearch.util;
 
 /**
  * @author YanchaoMa yanchaoma@foxmail.com
@@ -83,6 +61,18 @@ public class ClientUtils {
         }
         sb.append('\'');
         return sb.toString();
+    }
+
+    /**
+     * @param url:完整接口地址 http://ip:port,ip:port,ip:port/event_news_ref_event,event_wechat_info_ref_event/event_data,monitor_data/_search
+     * @return
+     * @Description: TODO(提取相对接口地址)
+     */
+    public static String referenceUrl(String url) {
+        String[] colons = url.split(":");
+        String tempUrl = colons[colons.length-1];
+        String temPort = tempUrl.split("/")[0];
+        return tempUrl.replace(temPort, "");
     }
 
 }

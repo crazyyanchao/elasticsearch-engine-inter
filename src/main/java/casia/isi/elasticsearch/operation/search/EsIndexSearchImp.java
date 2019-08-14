@@ -9,12 +9,14 @@ import java.util.Random;
 import java.util.Set;
 
 import casia.isi.elasticsearch.common.*;
+import casia.isi.elasticsearch.operation.http.HttpPoolSym;
+import casia.isi.elasticsearch.operation.http.HttpProxyRegister;
+import casia.isi.elasticsearch.operation.http.HttpProxyRequest;
 import casia.isi.elasticsearch.util.ClientUtils;
 import org.apache.log4j.Logger;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
-import casia.isi.elasticsearch.operation.http.HttpRequest;
 import casia.isi.elasticsearch.util.StringUtil;
 import casia.isi.elasticsearch.util.Validator;
 
@@ -27,7 +29,7 @@ import com.spreada.utils.chinese.ZHConverter;
  * ElasticSearch
  *
  * @author
- * @version elasticsearch - 5.6.3
+ * @version elasticsearch
  */
 public class EsIndexSearchImp {
 
@@ -52,10 +54,17 @@ public class EsIndexSearchImp {
      * 查询索引的url
      */
     public String queryUrl;
+
+
     /**
-     * http访问对象
+     * http访问对象 仅仅支持绝对地址接口访问
      */
-    public HttpRequest request;
+//    public HttpRequest request =  new HttpRequest();
+
+    /**
+     * http访问对象 支持绝对接口地址和相对接口地址
+     **/
+    public HttpProxyRequest request = new HttpProxyRequest(HttpPoolSym.DEFAULT.getSymbolValue());
 
     /**
      * 查询的字段
@@ -87,6 +96,7 @@ public class EsIndexSearchImp {
      * 构造过滤必须条件的json串
      */
     public JSONArray queryFilterMustJarr;
+
     /**
      * 构造过滤否定条件的json串
      */
@@ -94,7 +104,7 @@ public class EsIndexSearchImp {
     /**
      * 记录关键词，以及关键词出现情况
      */
-    private String keywordString = "";
+    public String keywordString = "";
 
     /**
      * 构建聚合结果数量
@@ -114,13 +124,14 @@ public class EsIndexSearchImp {
         EsIndexSearchImp.logger = logger;
     }
 
+    @Deprecated
     public EsIndexSearchImp() {
     }
 
     /**
-     * 构造函数，传入索引地址，索引名和类型名
+     * 构造函数，传入索引地址，索引名和类型名 - 此构造函数支持传入多个地址
      *
-     * @param IPADRESS  索引的ip和端口，格式 ip:port 多个以&隔开
+     * @param IPADRESS  索引的ip和端口，格式 ip:port 多个逗号隔开
      * @param indexName 索引名称，允许多个索引，索引间用逗号隔开，格式 indexName1,indexName2
      * @param typeName  索引下的类型名称，允许多个类型，用逗号隔开,格式typeName1,typeName2
      */
@@ -131,7 +142,7 @@ public class EsIndexSearchImp {
         if (indexName == null && typeName == null) {
             logger.error("prefix must not be null");
         }
-        String[] servers = IPADRESS.split(Symbol.SPACE_CHARACTER.toString());
+        String[] servers = IPADRESS.split(Symbol.COMMA_CHARACTER.getSymbolValue());
         //构造查询url
         this.queryUrl = "http://" + servers[new Random().nextInt(servers.length)];
         if (indexName != null)
@@ -141,23 +152,26 @@ public class EsIndexSearchImp {
             this.queryUrl = this.queryUrl + "/" + typeName;
 
         this.queryUrl = this.queryUrl + "/_search";
-        this.request = new HttpRequest();
         this.queryJson = new JSONObject();
         this.queryJsonResult = new JSONObject();
         this.queryMustJarr = new JSONArray();
         this.queryMustNotJarr = new JSONArray();
         this.queryFilterMustJarr = new JSONArray();
         this.queryFilterMustNotJarr = new JSONArray();
+
+        // 新增HTTP负载均衡器
+        HttpProxyRegister.register(IPADRESS);
     }
 
     /**
-     * 构造函数，传入索引地址，索引名和类型名
+     * 构造函数，传入索引地址，索引名和类型名 - 此构造函数只支持传入一个地址
      *
      * @param IP        索引的ip
      * @param Port      索引的ip端口
      * @param indexName 索引名称，允许多个索引，索引间用逗号隔开，格式 indexName1,indexName2
      * @param typeName  索引下的类型名称，允许多个类型，用逗号隔开,格式typeName1,typeName2
      */
+    @Deprecated
     public EsIndexSearchImp(String IP, int Port, String indexName, String typeName) {
         if (IP == null || Port == 0) {
             logger.error("ip must not be null");
@@ -174,13 +188,15 @@ public class EsIndexSearchImp {
             this.queryUrl = this.queryUrl + "/" + typeName;
 
         this.queryUrl = this.queryUrl + "/_search";
-        this.request = new HttpRequest();
         this.queryJson = new JSONObject();
         this.queryJsonResult = new JSONObject();
         this.queryMustJarr = new JSONArray();
         this.queryMustNotJarr = new JSONArray();
         this.queryFilterMustJarr = new JSONArray();
         this.queryFilterMustNotJarr = new JSONArray();
+
+        // 新增HTTP负载均衡器
+        HttpProxyRegister.register(IP + ":" + Port);
     }
 
     /**
@@ -628,25 +644,29 @@ public class EsIndexSearchImp {
      * @param occurs 是否必须作为过滤条件
      */
     public void addPrimitiveTermFilter(String field, String[] terms, FieldOccurs occurs) {
-        if (terms == null || terms.length == 0)
-            return;
-        keywordString = keywordString + BLANK + occurs.getSymbolValue() + field
-                + ":(";
-        for (int i = 0; i < terms.length; i++) {
-            String term = terms[i];
-            if (term == null || term.trim().equals("")) {
-                continue;
+        if (terms.length <= 500) {
+            if (terms == null || terms.length == 0)
+                return;
+            keywordString = keywordString + BLANK + occurs.getSymbolValue() + field
+                    + ":(";
+            for (int i = 0; i < terms.length; i++) {
+                String term = terms[i];
+                if (term == null || term.trim().equals("")) {
+                    continue;
+                }
+                if (ZH_Converter) {
+                    term = converter.convert(term);
+                }
+                term = StringUtil.escapeSolrQueryChars(term);
+                if (i > 0) {
+                    keywordString = keywordString + " OR ";
+                }
+                keywordString = keywordString + term;
             }
-            if (ZH_Converter) {
-                term = converter.convert(term);
-            }
-            term = StringUtil.escapeSolrQueryChars(term);
-            if (i > 0) {
-                keywordString = keywordString + " OR ";
-            }
-            keywordString = keywordString + term;
+            keywordString = keywordString + ")";
+        } else {
+            logger.error("Set parameter error!Array is too large!",new IllegalArgumentException());
         }
-        keywordString = keywordString + ")";
     }
 
     /**
@@ -801,6 +821,7 @@ public class EsIndexSearchImp {
 
         try {
             this.keywordString = "";
+
             this.queryJson.clear();
             this.queryJsonResult.clear();
             this.queryJson.clear();
@@ -809,6 +830,7 @@ public class EsIndexSearchImp {
             this.queryMustNotJarr.clear();
             this.queryFilterMustJarr.clear();
             this.queryFilterMustNotJarr.clear();
+
             countTotle = 0;
             fields = null;
         } catch (Exception e) {
@@ -869,7 +891,6 @@ public class EsIndexSearchImp {
             queryStringJson.put("query_string", queryJson);
             this.queryMustJarr.add(queryStringJson);
         }
-
         if (this.queryFilterMustJarr.size() > 0) {
             //添加过滤必须区间
             queryFilterBoolJson.put("must", this.queryFilterMustJarr);
@@ -959,7 +980,7 @@ public class EsIndexSearchImp {
             logger.info("curl:" + this.queryUrl + " -d " + queryStr);
             System.out.println("curl:" + this.queryUrl + " -d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (debug) {
@@ -987,6 +1008,24 @@ public class EsIndexSearchImp {
     }
 
     /**
+     * 提交请求
+     *
+     * @param esQuery 索引查询后要返回值的字段，只有建索引时，有存储的字段此处才可能有返回值，对于只索引不存储的字段，此处得不到返回值
+     * @return
+     */
+    public String executeDSL(String esQuery) {
+        if (debug) {
+            logger.info("curl:" + this.queryUrl + " -d " + esQuery);
+            System.out.println("curl:" + this.queryUrl + " -d " + esQuery);
+        }
+        String queryResult = request.httpPost(this.queryUrl, esQuery);
+        if (debug) {
+            logger.info("queryResult: -d " + queryResult);
+        }
+        return queryResult;
+    }
+
+    /**
      * 返回检索结果，返回的检索字段以及字段顺序由{@link #execute(String[])} 方法中的参数fields指定
      *
      * @return 检索的结果列表
@@ -1003,7 +1042,8 @@ public class EsIndexSearchImp {
             for (int i = 0; i < this.fields.length; i++) {
                 if (json.containsKey(this.fields[i])) {
                     values[i] = json.getString(this.fields[i]);
-                } else if (this.fields[i].equals("_id") || this.fields[i].equals("_score") || this.fields[i].equals("_index") || this.fields[i].equals("_type")) {
+                } else if (this.fields[i].equals("_id") || this.fields[i].equals("_score") ||
+                        this.fields[i].equals("_index") || this.fields[i].equals("_type") || this.fields[i].equals("sort")) {
                     //_id,_score字段存储位置在hits下，而非在fields下
                     values[i] = hitJson.getString(this.fields[i]);
                 }
@@ -1096,7 +1136,7 @@ public class EsIndexSearchImp {
             logger.info("url -d " + this.queryUrl);
             logger.info("-d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (this.debug) {
             logger.info(queryResult);
         }
@@ -1197,7 +1237,7 @@ public class EsIndexSearchImp {
             logger.info("url -d " + this.queryUrl);
             logger.info("-d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (this.debug) {
             logger.info(queryResult);
         }
@@ -1273,7 +1313,7 @@ public class EsIndexSearchImp {
         if (this.debug) {
             logger.info("url:" + this.queryUrl + " -d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (this.debug) {
             logger.info(queryResult);
         }
@@ -1354,7 +1394,7 @@ public class EsIndexSearchImp {
         this.queryJson.put("aggs", aggregationJsonObject);
 
         String queryStr = this.queryJson.toString();
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
 
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
@@ -1377,6 +1417,97 @@ public class EsIndexSearchImp {
             JSONObject bucketJson = bucketJsons.getJSONObject(index);
             JSONArray childbucketJsons = bucketJson.getJSONObject(childField).getJSONArray("buckets");
             list.add(new String[]{bucketJson.getString("key"), bucketJson.getString("doc_count"), childbucketJsons.size() + "", childbool ? childbucketJsons.toString() : null});
+        }
+        return list;
+    }
+
+    /**
+     * 二次聚合(返回结果较慢，不建议用)
+     * 此方法可以针对索引中某项数据分组后 ,再对子项数据进行分组统计（类似于数据库两个字段的count(*) 与 group by结合）并返回统计结果<br>
+     * 类似sql：select a.eid,COUNT(0)  FROM (  SELECT eid,qid FROM `content`  GROUP BY eid,qid) a GROUP BY a.eid  ;<br>
+     * 该方法返回的列表中按照统计数由大到小排序<br>
+     * 统计的字段包括pubdate、pubtime、eid、ip、user_id、group_id 等。 假设针对不同eid下的user_id进行统计，<br>
+     * 会针对索引中每个不同eid，不同user_id进行统计<br>
+     * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回1000000000,以便增加精确度。
+     *
+     * @param field       统计分组的父字段
+     * @param childFields 统计分组的子字段
+     * @param topN        要求返回的结果数 ,topN 等于0 时，将返回所有的统计结果
+     * @param childbool   结果是否返回子字段详情，true or false
+     * @param sort        子字段统计排序
+     * @return 前topN个结果的list ， 每一项为一个数组，数组 【0】为统计父字段，【1】为父字段检索文档数，,【2】为父字段下子字段聚合的统计数，【3】子字段统计返回结果详情
+     */
+    @Deprecated
+    public List<String[]> facetTwoCountQueryOrderByCount(String field, String[] childFields, int topN, boolean childbool, SortOrder sort) {
+        if (!childbool) {
+            List<String[]> rs = facetTwoCountQueryOrderByCount(field, childFields, topN, sort);
+            return rs;
+        }
+        //添加查询
+        setRow(0);
+        getQueryString(null);
+
+        //添加分组字段（第一个字段）
+        JSONObject aggregationJsonObject = new JSONObject();
+        JSONObject facetJsonObject = new JSONObject();
+
+        JSONObject termsJson = new JSONObject();
+        termsJson.put("shard_size", this.shard_size);
+        termsJson.put("field", field);
+        termsJson.put("size", topN <= 0 ? 100000 : topN);
+        JSONObject order = new JSONObject();
+        order.put("_count", sort);
+        termsJson.put("order", order);
+        facetJsonObject.put("terms", termsJson);
+
+        //添加分组字段（第二个字段）
+        JSONObject childFieldJsonObject = new JSONObject();
+        for (int i = 0; i < childFields.length; i++) {
+            String childField = childFields[i];
+            JSONObject childfacetJsonObject = new JSONObject();
+            JSONObject childtermsJson = new JSONObject();
+            childtermsJson.put("shard_size", this.shard_size);
+            childtermsJson.put("field", childField);
+            childtermsJson.put("size", 100000);
+            JSONObject order_ = new JSONObject();
+            order_.put("_count", sort);
+            childtermsJson.put("order", order_);
+            childfacetJsonObject.put("terms", childtermsJson);
+            childFieldJsonObject.put(childField, childfacetJsonObject);
+        }
+        facetJsonObject.put("aggs", childFieldJsonObject);
+
+        aggregationJsonObject.put(field, facetJsonObject);
+
+        this.queryJson.put("aggs", aggregationJsonObject);
+
+        String queryStr = this.queryJson.toString();
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
+
+        if (queryResult != null)
+            this.queryJsonResult = JSONObject.parseObject(queryResult);
+
+        if (this.debug) {
+            logger.info(this.queryUrl + " -d " + queryStr);
+            logger.info(this.queryJsonResult);
+        }
+        //解析结果
+        List<String[]> list = new LinkedList<String[]>();
+
+        if (this.queryJsonResult == null || this.queryJsonResult.size() == 0 || !this.queryJsonResult.containsKey("hits")) {
+            this.countTotle = 0;
+            return list;
+        }
+
+        JSONArray bucketJsons = this.queryJsonResult.getJSONObject("aggregations").getJSONObject(field).getJSONArray("buckets");
+
+        for (int index = 0; index < bucketJsons.size(); index++) {
+            JSONObject bucketJson = bucketJsons.getJSONObject(index);
+            for (int i = 0; i < childFields.length; i++) {
+                String childFieldSplit = childFields[i];
+                JSONArray childbucketJsons = bucketJson.getJSONObject(childFieldSplit).getJSONArray("buckets");
+                list.add(new String[]{bucketJson.getString("key"), bucketJson.getString("doc_count"), childbucketJsons.size() + "", childbool ? childbucketJsons.toString() : null});
+            }
         }
         return list;
     }
@@ -1439,7 +1570,7 @@ public class EsIndexSearchImp {
         this.queryJson.put("aggs", aggregationJsonObject);
 
         String queryStr = this.queryJson.toString();
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
 
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
@@ -1458,6 +1589,93 @@ public class EsIndexSearchImp {
         for (int index = 0; index < bucketJsons.size(); index++) {
             JSONObject bucketJson = bucketJsons.getJSONObject(index);
             list.add(new String[]{bucketJson.getString("key"), bucketJson.getString("doc_count"), bucketJson.getJSONObject(childField).getString("value")});
+        }
+
+        return list;
+    }
+
+    /**
+     * 二次聚合
+     * 此方法可以针对索引中某项数据分组后 ,再对子项数据进行分组统计（类似于数据库两个字段的count(*) 与 group by结合）并返回统计结果<br>
+     * 类似sql：select a.eid,COUNT(0)  FROM (  SELECT eid,qid FROM `content`  GROUP BY eid,qid) a GROUP BY a.eid  ;<br>
+     * 该方法返回的列表中按照统计数由大到小排序<br>
+     * 统计的字段包括pubdate、pubtime、eid、ip、user_id、group_id 等。 假设针对不同eid下的user_id进行统计，<br>
+     * 会针对索引中每个不同eid，不同user_id进行统计<br>
+     * ElasticSearch 利用Buketing 中的 terms aggregation 方式 默认分别返回1000000000,以便增加精确度。
+     *
+     * @param field       统计分组的父字段
+     * @param childFields 统计分组的子字段
+     * @param topN        要求返回的结果数 ,topN 等于0 时，将返回所有的统计结果
+     * @param sort        子字段统计排序
+     * @return 前topN个结果的list ， 每一项为一个数组，数组 【0】为统计父字段，【1】为父子段所查询文档的数量，【2】为子字段聚合的统计数
+     * * 	注意 ： 执行 getTotal()方法               为条件过滤后未执行聚合分组的文档总量；
+     * 执行 getCountTotal()方法               为条件过滤后执行聚合总量；
+     */
+    public List<String[]> facetTwoCountQueryOrderByCount(String field, String[] childFields, int topN, SortOrder sort) {
+
+        //添加查询
+        setRow(0);
+        getQueryString(null);
+
+        //添加分组字段（第一个字段）
+        JSONObject aggregationJsonObject = new JSONObject();
+        JSONObject facetJsonObject = new JSONObject();
+
+        JSONObject termsJson = new JSONObject();
+        termsJson.put("shard_size", this.shard_size);
+        termsJson.put("field", field);
+        termsJson.put("size", topN <= 0 ? 100000 : topN);
+        JSONObject order = new JSONObject();
+        order.put(childFields[0] + ".value", sort);
+        termsJson.put("order", order);
+        facetJsonObject.put("terms", termsJson);
+
+        //添加分组字段（第二个字段）
+        JSONObject childFieldJsonObject = new JSONObject();
+        for (int i = 0; i < childFields.length; i++) {
+            String childField = childFields[i];
+            JSONObject childfacetJsonObject = new JSONObject();
+            JSONObject childCardinalityJson = new JSONObject();
+            childCardinalityJson.put("field", childField);
+            childfacetJsonObject.put("cardinality", childCardinalityJson);
+            childFieldJsonObject.put(childField, childfacetJsonObject);
+        }
+        facetJsonObject.put("aggs", childFieldJsonObject);
+        aggregationJsonObject.put(field, facetJsonObject);
+
+        //count
+        JSONObject cardinalityJsonObject = new JSONObject();
+        cardinalityJsonObject.put("field", field);
+        cardinalityJsonObject.put("precision_threshold", "100000");
+        JSONObject countJsonObject = new JSONObject();
+        countJsonObject.put("cardinality", cardinalityJsonObject);
+        aggregationJsonObject.put("field_count", countJsonObject);
+
+        this.queryJson.put("aggs", aggregationJsonObject);
+
+        String queryStr = this.queryJson.toString();
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
+
+        if (queryResult != null)
+            this.queryJsonResult = JSONObject.parseObject(queryResult);
+
+        if (this.debug) {
+            logger.info(this.queryUrl + " -d " + queryStr);
+            logger.info(this.queryJsonResult);
+        }
+        //解析结果
+        List<String[]> list = new LinkedList<String[]>();
+
+        if (this.queryJsonResult == null || this.queryJsonResult.size() == 0 || !this.queryJsonResult.containsKey("hits")) {
+            return list;
+        }
+        JSONArray bucketJsons = this.queryJsonResult.getJSONObject("aggregations").getJSONObject(field).getJSONArray("buckets");
+        for (int index = 0; index < bucketJsons.size(); index++) {
+            JSONObject bucketJson = bucketJsons.getJSONObject(index);
+            for (int i = 0; i < childFields.length; i++) {
+                String childFieldSplit = childFields[i];
+                list.add(new String[]{bucketJson.getString("key"), bucketJson.getString("doc_count"), bucketJson.getJSONObject(childFieldSplit).getString("value")});
+            }
         }
 
         return list;
@@ -1551,7 +1769,7 @@ public class EsIndexSearchImp {
 
         this.queryJson.put("aggs", aggregationJsonObject);
         String queryStr = this.queryJson.toString();
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (this.debug) {
@@ -1626,7 +1844,7 @@ public class EsIndexSearchImp {
         if (this.debug) {
             logger.info(this.queryUrl + " -d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (this.debug) {
@@ -1700,7 +1918,7 @@ public class EsIndexSearchImp {
         if (this.debug) {
             logger.info(this.queryUrl + " -d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (this.debug) {
@@ -1756,7 +1974,7 @@ public class EsIndexSearchImp {
         if (this.debug) {
             logger.info(this.queryUrl + " -d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (this.debug) {
@@ -1835,7 +2053,7 @@ public class EsIndexSearchImp {
         if (this.debug) {
             logger.info(this.queryUrl + " -d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (this.debug) {
@@ -1906,7 +2124,7 @@ public class EsIndexSearchImp {
         if (this.debug) {
             logger.info(this.queryUrl + " -d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (this.debug) {
@@ -2005,7 +2223,7 @@ public class EsIndexSearchImp {
         if (this.debug) {
             logger.info(this.queryUrl + " -d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (this.debug) {
@@ -2123,7 +2341,7 @@ public class EsIndexSearchImp {
         if (this.debug) {
             logger.info(this.queryUrl + " -d " + queryStr);
         }
-        String queryResult = request.httpPost(this.queryUrl, queryStr);
+        String queryResult = request.httpPost(ClientUtils.referenceUrl(this.queryUrl), queryStr);
         if (queryResult != null)
             this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (this.debug) {
