@@ -59,7 +59,7 @@ public class EsIndexDeleteTest {
 
     @Test
     public void deleteByIndexName() {
-        String[] strings = new String[]{"aircraft_info","tb_linkedin_volunteers", "tb_linkedin_summary_attachements", "tb_linkedin_skills",
+        String[] strings = new String[]{"aircraft_info", "tb_linkedin_volunteers", "tb_linkedin_summary_attachements", "tb_linkedin_skills",
                 "tb_linkedin_similiars", "tb_linkedin_recommenders", "tb_linkedin_recommendationreceived", "tb_linkedin_recommendationgiven",
                 "tb_linkedin_publications", "tb_linkedin_people", "tb_linkedin_patents", "tb_linkedin_overviewwebsites", "tb_linkedin_overview",
                 "tb_linkedin_organizations", "tb_linkedin_operation", "tb_linkedin_languages", "tb_linkedin_inventors", "tb_linkedin_interests",
@@ -121,6 +121,17 @@ public class EsIndexDeleteTest {
     public void deleteById() {
         EsIndexDelete esIndexDelete = new EsIndexDelete(ipPort, "aircraft_info", "graph");
         System.out.println(esIndexDelete.deleteById("123"));
+    }
+
+    /**
+     * 通过索引名称删除索引
+     *
+     * @return
+     */
+    @Test
+    public void deleteIndexNameRun() {
+        EsIndexDelete esIndexDelete = new EsIndexDelete("localhost:9200", "ship_info", "graph");
+        System.out.println(esIndexDelete.deleteIndexNameRun());
     }
 
 }

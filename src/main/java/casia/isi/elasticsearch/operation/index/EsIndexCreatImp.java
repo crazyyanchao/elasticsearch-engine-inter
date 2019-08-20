@@ -194,7 +194,7 @@ public class EsIndexCreatImp {
      * @param map       类型参数
      */
     public boolean insertField(String fieldName, Map<String, String> map) {
-        String referenceUrl = "/" + this.indexName + "/" + this.IndexType + "/_mapping?pretty";
+        this.IndexUrl = "/" + this.indexName + "/" + this.IndexType + "/_mapping?pretty";
         boolean rs = true;
         JSONObject json = new JSONObject();
         JSONObject jsonProperties = new JSONObject();

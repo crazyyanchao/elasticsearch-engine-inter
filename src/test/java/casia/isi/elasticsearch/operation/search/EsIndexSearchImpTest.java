@@ -2070,12 +2070,12 @@ public class EsIndexSearchImpTest {
         aircraftSearch = new EsIndexSearch(ipPort, "aircraft_info", "graph");
 
         // 设置唯一航班
-        aircraftSearch.addPrimitiveTermFilter("aircraft", "B-KPI", FieldOccurs.MUST);
-        aircraftSearch.addPrimitiveTermFilter("mode_s", "780220", FieldOccurs.MUST);
+        aircraftSearch.addPrimitiveTermFilter("aircraft", "G-MGPS", FieldOccurs.MUST);
+        aircraftSearch.addPrimitiveTermFilter("mode_s", "407734", FieldOccurs.MUST);
         aircraftSearch.addPrimitiveTermFilter("site", "adsbexchange.com", FieldOccurs.MUST);
 
         // 设置时间范围（10小时内的航线数据）（当前航班状态的发布时间前后十个小时）
-        String pubtime = "2019-08-03 16:14:32";
+        String pubtime = "2019-08-17 15:22:32";
         String startTime = DateUtil.dateSub(pubtime, 3600_000 * 10);
         String stopTime = DateUtil.datePlus(pubtime, 3600_000 * 10);
 
@@ -2099,9 +2099,9 @@ public class EsIndexSearchImpTest {
 
         // 当前飞机的位置
         //
-        BoundPoint currentFlightLoc = new BoundPoint(31.00449, 129.54083);
+        BoundPoint currentFlightLoc = new BoundPoint(52.35926, -0.11818);
 
-        List<Map<String, Object>> mapList = AggsAnalyzer.flightHistoryCourseSegment(startPoint, endPoint, currentFlightLoc, result, 30);
+        List<Map<String, Object>> mapList = AggsAnalyzer.flightHistoryCourseSegment(startPoint, endPoint, currentFlightLoc, result, 40);
         JSONArray segment = JSONArray.parseArray(JSON.toJSONString(mapList));
         System.out.println("历史航段：" + segment.toJSONString());
         aircraftSearch.reset();

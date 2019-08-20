@@ -53,14 +53,14 @@ public class EsIndexCreatTest {
             "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
             "192.168.12.111:9210,192.168.122.111:9219";
 
-    private String dxEsIpPorts = "" +
-            "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
-            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
+//    private String dxEsIpPorts = "" +
+//            "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
+//            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
 
 
     @Before
     public void setUp() throws Exception {
-        esIndexCreat = new EsIndexCreat(dxEsIpPorts, "aircraft_info", "graph");
+        esIndexCreat = new EsIndexCreat(ipPort, "ship_info", "graph");
     }
 
     /**
@@ -72,7 +72,7 @@ public class EsIndexCreatTest {
     public void mapping() {
         // TODO Auto-generated method stub
         PropertyConfigurator.configureAndWatch("config" + File.separator + "log4j.properties");
-        String fileName = "mapping/aircraft_info.json";
+        String fileName = "mapping/ship_info.json";
         String json = JSONObject.parseObject(FileUtil.readAllLine(fileName, "UTF-8")).toJSONString();
         try {
             System.out.println(json);

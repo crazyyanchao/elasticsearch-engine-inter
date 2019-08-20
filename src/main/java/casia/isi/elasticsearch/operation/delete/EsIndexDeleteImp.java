@@ -473,15 +473,17 @@ public class EsIndexDeleteImp {
      * @return
      */
     public boolean deleteIndexNameRun() {
-        String delete_url = this.deleteUrl + "/" + this.IndexName;
-        if (debug) {
-            logger.info("curl:" + delete_url + " -d " + null);
-            System.out.println("curl:" + delete_url + " -d " + null);
-        }
-        String queryResult = httpRequest.postDeleteRequest(ClientUtils.referenceUrl(delete_url), null);
-        JSONObject deleteJsonResult = JSONObject.parseObject(queryResult);
-        if (deleteJsonResult.containsKey("acknowledged")) {
-            return deleteJsonResult.getBoolean("acknowledged");
+        if (!this.IndexName.contains("_all")) {
+            String delete_url = this.deleteUrl + "/" + this.IndexName;
+            if (debug) {
+                logger.info("curl:" + delete_url + " -d " + null);
+                System.out.println("curl:" + delete_url + " -d " + null);
+            }
+            String queryResult = httpRequest.postDeleteRequest(ClientUtils.referenceUrl(delete_url), null);
+            JSONObject deleteJsonResult = JSONObject.parseObject(queryResult);
+            if (deleteJsonResult.containsKey("acknowledged")) {
+                return deleteJsonResult.getBoolean("acknowledged");
+            }
         }
         return false;
     }

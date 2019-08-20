@@ -266,7 +266,7 @@ public class AggsAnalyzer {
 
         // 没有获取到出发点
         if (startPoint == null) {
-            List<List<Map<String, Object>>> mapList = AggsAnalyzer.flightCourseSegment(result, 7);
+            List<List<Map<String, Object>>> mapList = AggsAnalyzer.flightCourseSegment(result, countBlankThreshold);
             return mapList.get(mapList.size() - 1);
         }
 
@@ -317,6 +317,8 @@ public class AggsAnalyzer {
                     }
                 }
 
+                // 空间隔被切断之后重新进行累加
+                countBlank = 0;
             } else {
                 countBlank++;
             }
@@ -441,7 +443,7 @@ public class AggsAnalyzer {
         segment.addAll(historyCourse);
 
         // 找到当前位置以后的航段（未来）
-        List<Map<String, Object>> futureCourse = flightCourseSegmentByAirportFuture(result.subList(splitLoc, result.size() - 1), endPoint, countBlankThreshold);
+        List<Map<String, Object>> futureCourse = flightCourseSegmentByAirportFuture(result.subList(splitLoc, result.size()), endPoint, countBlankThreshold);
         segment.addAll(0, futureCourse);
         return segment;
     }
@@ -451,7 +453,7 @@ public class AggsAnalyzer {
 
         // 没有获取到出发点
         if (startPoint == null) {
-            List<List<Map<String, Object>>> mapList = AggsAnalyzer.flightCourseSegment(result, 7);
+            List<List<Map<String, Object>>> mapList = AggsAnalyzer.flightCourseSegment(result, countBlankThreshold);
             return mapList.get(0);
         }
 
@@ -499,6 +501,9 @@ public class AggsAnalyzer {
                         segment.add(nextPoint);
                         lastPoint = nextPoint;
                     }
+
+                    // 空间隔被切断之后重新进行累加
+                    countBlank = 0;
                 }
 
             } else {
@@ -527,7 +532,11 @@ public class AggsAnalyzer {
             }
         }
         resultMap.put("splitLoc", splitLoc);
-        resultMap.put("segmentList", result.subList(0, splitLoc));
+        if (splitLoc != 0) {
+            resultMap.put("segmentList", result.subList(0, splitLoc));
+        } else {
+            resultMap.put("segmentList", result.subList(0, result.size()));
+        }
         return resultMap;
     }
 

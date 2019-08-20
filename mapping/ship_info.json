@@ -126,6 +126,11 @@
           "store": true,
           "type": "keyword"
         },
+        "site": {
+          "index": "not_analyzed",
+          "store": true,
+          "type": "keyword"
+        },
         "intime": {
           "format": "yyyy-MM-dd HH:mm:ss",
           "store": true,
