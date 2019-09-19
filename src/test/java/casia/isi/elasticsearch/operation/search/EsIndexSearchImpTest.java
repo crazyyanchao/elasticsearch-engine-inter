@@ -2314,4 +2314,3 @@ public class EsIndexSearchImpTest {
 
 }
 
-

@@ -46,6 +46,23 @@ public class DateUtil {
         return sdf.format(d);
     }
 
+    /**
+     * @param date:日期STRING格式:yyyy-MM-dd HH:mm:ss
+     * @return
+     * @Description: TODO(日期转为毫秒)
+     */
+    public static long dateToMillisecond(String date) {
+        long millisecond = 0;
+        try {
+            if (date != null && !"" .equals(date)) {
+                millisecond = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(date).getTime();
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return millisecond;
+    }
+
     public static String getCurrentIndexTime() {
         Date d = new Date(System.currentTimeMillis());
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
