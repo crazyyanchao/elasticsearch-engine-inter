@@ -6,7 +6,7 @@
 
     <groupId>casia.isi</groupId>
     <artifactId>elasticsearch-engine-inter</artifactId>
-    <version>1.7.3</version>
+    <version>1.7.4</version>
 
     <dependencies>
         <dependency>

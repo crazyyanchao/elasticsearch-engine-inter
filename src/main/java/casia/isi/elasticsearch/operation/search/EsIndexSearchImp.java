@@ -69,7 +69,7 @@ public class EsIndexSearchImp {
     /**
      * 查询的字段
      */
-    private String[] fields;
+    public String[] fields;
 
     /**
      * 查询的返回值
@@ -1019,6 +1019,8 @@ public class EsIndexSearchImp {
             System.out.println("curl:" + this.queryUrl + " -d " + esQuery);
         }
         String queryResult = request.httpPost(this.queryUrl, esQuery);
+        if (queryResult != null)
+            this.queryJsonResult = JSONObject.parseObject(queryResult);
         if (debug) {
             logger.info("queryResult: -d " + queryResult);
         }

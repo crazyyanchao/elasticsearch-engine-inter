@@ -59,5 +59,10 @@ public abstract class Condition {
     public void clear() {
         this.list.clear();
     }
+
+    public Condition addMulti(List<Shape> areas) {
+        this.list = areas;
+        return this;
+    }
 }
 

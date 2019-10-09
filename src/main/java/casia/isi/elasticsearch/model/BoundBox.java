@@ -1,4 +1,5 @@
-package casia.isi.elasticsearch.model;/**
+package casia.isi.elasticsearch.model;
+/**
  * 　　　　　　　 ┏┓       ┏┓+ +
  * 　　　　　　　┏┛┻━━━━━━━┛┻┓ + +
  * 　　　　　　　┃　　　　　　 ┃

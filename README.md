@@ -100,3 +100,6 @@ xxxer = new EsIndexXXX(ipPort, "indexName1,indexName2,...", "indexType1,indexTyp
 
 3、二次分组统计-多个child字段（调整统计接口的条件添加方式）
 
+# elasticsearch-engine-inter-1.7.4.jar接口包更新说明
+
+1、增加多任务合并查询

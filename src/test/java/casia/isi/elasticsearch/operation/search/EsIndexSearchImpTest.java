@@ -38,16 +38,16 @@ public class EsIndexSearchImpTest {
     private EsIndexSearch aircraftSearch;
     private EsIndexSearch statelliteSearch;
 
-    private String ipPort = "" +
-            "192.168.12.107:9210,192.168.12.107:9211,192.168.12.114:9210," +
-            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
-            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
-            "192.168.12.111:9210,192.168.122.111:9219";
+//    private String ipPort = "" +
+//            "192.168.12.107:9210,192.168.12.107:9211,192.168.12.114:9210," +
+//            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
+//            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
+//            "192.168.12.111:9210,192.168.122.111:9219";
 
 //    private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
 //            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
 
-//    private String ipPort = "localhost:9200";
+    private String ipPort = "localhost:9200";
 
     private static HashMap<String, String> itMap = new HashMap<>();
 
@@ -2290,7 +2290,13 @@ public class EsIndexSearchImpTest {
 //        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(jjjCircle), MustNot.init().add(beijing));
 
         // 一定在京津冀地区但是不在北京地区，另外在保定或者天津
-        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(jjjCircle), MustNot.init().add(beijing),
+//        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(jjjCircle), MustNot.init().add(beijing),
+//                Should.init().addMulti(baoding, shenyang));
+
+        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(beijing), MustNot.init().add(beijing),
+                Should.init().addMulti(baoding, shenyang));
+
+        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(beijing), MustNot.init().add(beijing),
                 Should.init().addMulti(baoding, shenyang));
 
         aircraftSearch.setStart(0);

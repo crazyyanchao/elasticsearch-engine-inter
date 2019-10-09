@@ -14,6 +14,7 @@ import casia.isi.elasticsearch.model.BoundBox;
 import casia.isi.elasticsearch.model.BoundPoint;
 import casia.isi.elasticsearch.model.Circle;
 import casia.isi.elasticsearch.model.Shape;
+import casia.isi.elasticsearch.operation.search.aircraft.ConfigTask;
 import casia.isi.elasticsearch.util.ClientUtils;
 import casia.isi.elasticsearch.util.Validator;
 import com.alibaba.fastjson.JSON;
@@ -993,6 +994,173 @@ public class EsIndexSearch extends EsIndexSearchImp {
             list.add(new String[]{date, doc_count, rs.toJSONString()});
         }
         return list;
+    }
+
+    /**
+     * @param configTasks:多个查询任务
+     * @param from:分页开始
+     * @param size:分页结束
+     * @param sort:排序方式-使用发布时间排序
+     * @param sortFieldName:排序字段
+     * @param _source:返回的字段名称
+     * @param mapField:字段映射-拼接查询时使用的字段名称
+     * @return
+     * @Description: TODO(多个查询任务拼接成查询条件)
+     */
+//    public JSONObject toQueryCraftDSL(List<ConfigTask> configTasks, int from, int size, SortOrder sort, String sortFieldName, String[] _source, Map<String, String> mapField) {
+//
+//        // 拼接查询条件
+//        // 区域
+//        List<Shape> areas = new ArrayList<>();
+//        // 国家
+//        List<String> countries = new ArrayList<>();
+//        // 种类
+//        List<String> species = new ArrayList<>();
+//        // 识别码
+//        List<String> identificationCodes = new ArrayList<>();
+//
+//        // --飞机--
+//        // s模式
+//        List<String> modeSs = new ArrayList<>();
+//        // 注册号
+//        List<String> registrationNums = new ArrayList<>();
+//
+//        for (ConfigTask configTask : configTasks) {
+//            areas.addAll(configTask.getAreas());
+//            countries.add(configTask.getCountry());
+//            species.add(configTask.getSpecies());
+//            identificationCodes.add(configTask.getIdentificationCode());
+//            modeSs.add(configTask.getModeS());
+//            registrationNums.add(configTask.getRegistrationNum());
+//        }
+//
+//        // 添加排序
+//        addSortField(sortFieldName, sort);
+//
+//        // 分页参数
+//        setStart(from);
+//        setRow(size);
+//
+//        // 多个任务字段条件过滤-字段内是或的关系
+//        addGeoShape(mapField.get("areas"), GeoDistanceOccurs.PLANE, Should.init().addMulti(areas));
+//        addQueryCondition(new StringBuilder()
+//                .append(packLuceneQuery(mapField.get("country"), countries, KeywordsCombine.OR))
+//                .append(" OR ")
+//                .append(packLuceneQuery(mapField.get("species"), species, KeywordsCombine.OR))
+//                .append(" OR ")
+//                .append(packLuceneQuery(mapField.get("identificationCode"), identificationCodes, KeywordsCombine.OR))
+//                .append(" OR ")
+//                .append(packLuceneQuery(mapField.get("modeS"), modeSs, KeywordsCombine.OR))
+//                .append(" OR ")
+//                .append(packLuceneQuery(mapField.get("registrationNum"), registrationNums, KeywordsCombine.OR))
+//                .toString());
+//
+//        JSONObject query = JSONObject.parseObject(getQueryString(_source));
+//        return query;
+//    }
+
+
+    /**
+     * @param configTasks:多个查询任务
+     * @param from:分页开始
+     * @param size:分页结束
+     * @param sort:排序方式-使用发布时间排序
+     * @param sortFieldName:排序字段
+     * @param _source:返回的字段名称
+     * @param mapField:字段映射-拼接查询时使用的字段名称
+     * @return
+     * @Description: TODO(多个查询任务拼接成查询条件)
+     */
+    public JSONObject toQueryCraftDSL(List<ConfigTask> configTasks, int from, int size, SortOrder sort, String sortFieldName, String[] _source, Map<String, String> mapField) {
+
+        JSONObject dsl = new JSONObject();
+        dsl.put("_source", JSONArray.parseArray(JSON.toJSONString(_source)));
+        JSONArray sortArray = new JSONArray();
+        JSONObject sortObj = new JSONObject();
+        sortObj.put(sortFieldName, sort.getSymbolValue());
+        sortArray.add(sortObj);
+        dsl.put("sort", sortArray);
+        dsl.put("from", from);
+        dsl.put("size", size);
+
+        // 拼接查询条件
+        JSONObject bool1 = new JSONObject();
+        JSONObject should1 = new JSONObject();
+        JSONArray taskArray = new JSONArray();
+
+        for (ConfigTask configTask : configTasks) {
+            taskArray.add(packLuceneQuery(configTask, mapField));
+        }
+
+        should1.put("should", taskArray);
+        bool1.put("bool", should1);
+        dsl.put("query", bool1);
+        return dsl;
+    }
+
+    public JSONObject packLuceneQuery(ConfigTask configTask, Map<String, String> mapField) {
+        JSONObject bool = new JSONObject();
+        JSONObject insert = new JSONObject();
+
+        JSONArray mustArray = new JSONArray();
+        JSONObject queryStr = new JSONObject();
+        JSONObject luceneQuery = new JSONObject();
+
+        luceneQuery.put("query", packLuceneQueryString(configTask, mapField));
+
+        queryStr.put("query_string", luceneQuery);
+        mustArray.add(queryStr);
+
+        List<Shape> shapeList = configTask.getAreas();
+        JSONArray shouldArray = wrapGeo(Should.init().addMulti(shapeList), mapField.get("areas"), GeoDistanceOccurs.PLANE);
+
+        insert.put("must", mustArray);
+        insert.put("should", shouldArray);
+        bool.put("bool", insert);
+
+        return bool;
+    }
+
+    // 字段之间是AND，字段内部是OR
+    private Object packLuceneQueryString(ConfigTask configTask, Map<String, String> mapField) {
+
+        String country = packLuceneQuery(mapField.get("country"), configTask.getCountry(), KeywordsCombine.OR);
+        String species = packLuceneQuery(mapField.get("species"), configTask.getSpecies(), KeywordsCombine.OR);
+        String identificationCode = packLuceneQuery(mapField.get("identificationCode"), configTask.getIdentificationCode(), KeywordsCombine.OR);
+        String modeS = packLuceneQuery(mapField.get("modeS"), configTask.getModeS(), KeywordsCombine.OR);
+        String registrationNum = packLuceneQuery(mapField.get("registrationNum"), configTask.getRegistrationNum(), KeywordsCombine.OR);
+        StringBuilder builder = new StringBuilder();
+        builder.append(!"".equals(country) ? country + " AND " : "")
+                .append(!"".equals(species) ? species + " AND " : "")
+                .append(!"".equals(identificationCode) ? identificationCode + " AND " : "")
+                .append(!"".equals(modeS) ? modeS + " AND " : "")
+                .append(!"".equals(registrationNum) ? registrationNum + " AND " : "");
+        return builder.substring(0, builder.length() - 4);
+
+    }
+
+
+    public String packLuceneQuery(String filed, List<String> values, KeywordsCombine combine) {
+        if (values == null || values.isEmpty()) return "";
+
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < values.size(); i++) {
+            String value = values.get(i);
+            if (value != null && !"".equals(value)) {
+                if (combine == KeywordsCombine.OR) {
+                    builder.append("\"");
+                    builder.append(value);
+                    builder.append("\"");
+                    builder.append(" OR  ");
+                } else {
+                    builder.append("\"");
+                    builder.append(value);
+                    builder.append("\"");
+                    builder.append(" AND ");
+                }
+            }
+        }
+        return builder.length() > 5 ? "+(" + filed + ":" + builder.substring(0, builder.length() - 5) + ")" : "";
     }
 
 }

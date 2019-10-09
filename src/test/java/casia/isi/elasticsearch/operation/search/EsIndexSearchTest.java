@@ -1,6 +1,7 @@
 package casia.isi.elasticsearch.operation.search;
 
 import casia.isi.elasticsearch.common.FieldOccurs;
+import casia.isi.elasticsearch.common.SortOrder;
 import casia.isi.elasticsearch.operation.http.HttpDiscover;
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.Before;
@@ -474,6 +475,13 @@ public class EsIndexSearchTest {
         searcher.outputResult(searcher.getResults());
     }
 
+    @Test
+    public void aircraftFacetcount() {
+        searcher = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+        searcher.addRangeTerms("pubtime","2019-09-22 09:20:54","2019-09-22 15:20:54");
+        List<String[]> result = searcher.facetCountQueryOrderByCount("site", 10, SortOrder.DESC );
+        searcher.outputResult(result);
+    }
 }
 
 
