@@ -2296,8 +2296,8 @@ public class EsIndexSearchImpTest {
         aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(beijing), MustNot.init().add(beijing),
                 Should.init().addMulti(baoding, shenyang));
 
-        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(beijing), MustNot.init().add(beijing),
-                Should.init().addMulti(baoding, shenyang));
+//        aircraftSearch.addGeoShape("location_point", GeoDistanceOccurs.PLANE, Must.init().add(beijing), MustNot.init().add(beijing),
+//                Should.init().addMulti(baoding, shenyang));
 
         aircraftSearch.setStart(0);
         aircraftSearch.setRow(100);

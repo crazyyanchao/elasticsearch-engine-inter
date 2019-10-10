@@ -2434,7 +2434,8 @@ public class EsIndexSearchImp {
     /**
      * 自定义查询
      *
-     * @param QuerString 为 luncene语法，例如： +(content:"北京" AND "上海") OR +(title:"北京" AND "上海") 意思为：只要 content 包含 北京与上海  或者  title 包含 北京与上海   都会返回结果；
+     * @param QuerString 为 luncene语法，例如： +(content:"北京" AND "上海") OR +(title:"北京" AND "上海")
+     *                   意思为：只要 content 包含 北京与上海  或者  title 包含 北京与上海   都会返回结果；
      *                   其中 + 是必须存在， - 是必须不存在。 OR AND 都必须大写。
      */
     public void addQueryCondition(String QuerString) {
