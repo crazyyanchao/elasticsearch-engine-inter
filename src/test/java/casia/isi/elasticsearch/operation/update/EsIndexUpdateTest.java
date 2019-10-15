@@ -74,8 +74,8 @@ public class EsIndexUpdateTest {
 
 //        ,blog_small,forum_threads_small,mblog_info_small,video_brief_small," +
 //        "wechat_message_xigua_small,appdata_small,newspaper_info_small
-        String smallIndexName = "news_small";
-        esSmallIndexUpdate = new EsIndexUpdate(ipPort, smallIndexName, "monitor_caiji_small");
+//        String smallIndexName = "news_small";
+//        esSmallIndexUpdate = new EsIndexUpdate(ipPort, smallIndexName, "monitor_caiji_small");
 
     }
 
@@ -144,12 +144,12 @@ public class EsIndexUpdateTest {
     public void update2() {
         // 新增字段
         // 修改字段 - lon字段从float修改为keyword   - ！！！！ 无法覆盖只能先删除再插入
-		EsIndexCreat indexer = new EsIndexCreat("localhost:9200","ship_info","graph");
-		Map<String, String> map = new HashMap<>();
-		map.put("type", "keyword");
-		map.put("index", "not_analyzed");
-		boolean a= indexer.insertField("lon", map);
-		System.out.println(a);
+        EsIndexCreat indexer = new EsIndexCreat("39.97.167.206:9210", "monitor_site_event_data", "monitor_data");
+        Map<String, String> map = new HashMap<>();
+        map.put("type", "keyword");
+        map.put("index", "not_analyzed");
+        boolean a= indexer.insertField("data_source", map);
+        System.out.println(a);
     }
 
 }
