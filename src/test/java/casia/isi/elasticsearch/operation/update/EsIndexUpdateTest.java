@@ -2,6 +2,7 @@ package casia.isi.elasticsearch.operation.update;
 
 import casia.isi.elasticsearch.common.SortOrder;
 import casia.isi.elasticsearch.operation.delete.EsIndexDelete;
+import casia.isi.elasticsearch.operation.index.EsIndexCreat;
 import casia.isi.elasticsearch.operation.search.EsIndexSearch;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.PropertyConfigurator;
@@ -37,12 +38,10 @@ import java.util.Map;
  */
 
 /**
+ * @author YanchaoMa yanchaoma@foxmail.com
  * @PACKAGE_NAME: casia.isi.elasticsearch.operation.update
  * @Description: TODO(索引更新测试)
- * @author YanchaoMa yanchaoma@foxmail.com
  * @date 2019/5/22 11:26
- *
- *
  */
 public class EsIndexUpdateTest {
 
@@ -81,21 +80,21 @@ public class EsIndexUpdateTest {
     }
 
     @Test
-    public void UpdateParameterById(){
+    public void UpdateParameterById() {
 
         EsIndexUpdate esIndexUpdate = new EsIndexUpdate(ipPort, "aircraft_info", "graph");
 
         String _id = "124";
 
         Map<String, Object> map = new HashMap<String, Object>();
-        map.put("id",_id);
-        map.put("test","榆林治沙: 一茬接着一茬干誓将沙海变绿洲-UPDATE");
+        map.put("id", _id);
+        map.put("test", "榆林治沙: 一茬接着一茬干誓将沙海变绿洲-UPDATE");
 //        esIndexUpdate.updateParameterById(map,_id);
-        esIndexUpdate.upsertParameterById(map,_id,map);
+        esIndexUpdate.upsertParameterById(map, _id, map);
     }
 
     @Test
-    public void update(){
+    public void update() {
         //新增字段
 //		EsIndexCreat indexer = new EsIndexCreat("106.75.177.129",61233,"event_data_extract_result_v-201808","analysis_data");
 //		Map<String, String> map = new HashMap<>();
@@ -104,25 +103,25 @@ public class EsIndexUpdateTest {
 //		boolean a= indexer.insertField("con_md5", map);
 //		System.out.println(a);
 
-        EsIndexSearch searchClient = new EsIndexSearch("106.75.177.129:61233","all_data_q-201808","analysis_data");
+        EsIndexSearch searchClient = new EsIndexSearch("106.75.177.129:61233", "all_data_q-201808", "analysis_data");
         EsIndexUpdate es = new EsIndexUpdate("106.75.177.129:61233", "all_data_q-201808", "analysis_data");
 
         String a = "0";
         while (true) {
             searchClient.reset();
-            searchClient.addRangeTerms("pid", a+"", null );
+            searchClient.addRangeTerms("pid", a + "", null);
             searchClient.addSortField("pid", SortOrder.ASC);
 //			searchClient.addPhraseQuery("eid","3", FieldOccurs.MUST);
             searchClient.setStart(0);
             searchClient.setRow(1000);
-            searchClient.execute(new String[]{"_id","pid","content","_index","_type"});
-            List<String[]> list= searchClient.getResults();
+            searchClient.execute(new String[]{"_id", "pid", "content", "_index", "_type"});
+            List<String[]> list = searchClient.getResults();
             System.out.println(searchClient.getTotal());
 //			if(list.size()==0 ||list.size()==1 ){break;}
             for (String[] strings : list) {
                 Map<String, Object> map = new HashMap<String, Object>();
-                map.put("con_md5", DigestUtils.md5Hex(strings[2]) );
-                es.updateParameterById(map,strings[0]);
+                map.put("con_md5", DigestUtils.md5Hex(strings[2]));
+                es.updateParameterById(map, strings[0]);
                 a = strings[1];
 //				System.out.println(a);
             }
@@ -139,6 +138,18 @@ public class EsIndexUpdateTest {
 //		boolean boo = es.UpdateParameterById(map, "103825");
 //		System.out.println(boo);
 
+    }
+
+    @Test
+    public void update2() {
+        // 新增字段
+        // 修改字段 - lon字段从float修改为keyword   - ！！！！ 无法覆盖只能先删除再插入
+		EsIndexCreat indexer = new EsIndexCreat("localhost:9200","ship_info","graph");
+		Map<String, String> map = new HashMap<>();
+		map.put("type", "keyword");
+		map.put("index", "not_analyzed");
+		boolean a= indexer.insertField("lon", map);
+		System.out.println(a);
     }
 
 }
