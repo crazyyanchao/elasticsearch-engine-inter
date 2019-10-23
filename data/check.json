@@ -1,8 +1,26 @@
 {
-  "TABLE_COMMENT": "facebook信息表",
-  "TABLE_NAME": "facebook_blog",
-  "COLUMN_NAME": "auto_id",
-  "COLUMN_COMMENT": "自增ID",
-  "COLUMN_KEY": "PRI",
-  "COLUMN_TYPE": "bigint(20)"
+  "index": {
+    "routing": {
+      "allocation": {
+        "total_shards_per_node": "1"
+      }
+    },
+    "refresh_interval": "5s",
+    "number_of_shards": "3",
+    "translog": {
+      "flush_threshold_size": "1.6gb"
+    },
+    "provided_name": "facebook_info_small",
+    "merge": {
+      "scheduler": {
+        "max_thread_count": "1"
+      }
+    },
+    "creation_date": "1564459882716",
+    "number_of_replicas": "0",
+    "uuid": "s66dKJX_RBuT2xs89kGQnQ",
+    "version": {
+      "created": "5060399"
+    }
+  }
 }

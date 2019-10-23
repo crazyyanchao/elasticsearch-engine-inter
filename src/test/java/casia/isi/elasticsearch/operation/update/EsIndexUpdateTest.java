@@ -144,7 +144,7 @@ public class EsIndexUpdateTest {
     public void update2() {
         // 新增字段
         // 修改字段 - lon字段从float修改为keyword   - ！！！！ 无法覆盖只能先删除再插入
-        EsIndexCreat indexer = new EsIndexCreat("39.97.167.206:9210", "monitor_site_event_data", "monitor_data");
+        EsIndexCreat indexer = new EsIndexCreat("localhost:9210", "monitor_site_event_data", "monitor_data");
         Map<String, String> map = new HashMap<>();
         map.put("type", "keyword");
         map.put("index", "not_analyzed");
