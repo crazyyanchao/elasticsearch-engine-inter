@@ -2316,6 +2316,7 @@ public class EsIndexSearchImpTest {
         // 二次分组统计-多个child字段
         List<String[]> resList = esc.facetTwoCountQueryOrderByCount("it", new String[]{"blogger_id", "user_md5"}, 0, true, SortOrder.DESC);
         esc.outputResult(resList);
+        System.out.println(esc.queryJson);
     }
 
 }
