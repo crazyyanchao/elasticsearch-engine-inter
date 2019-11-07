@@ -44,10 +44,10 @@ public class EsIndexSearchImpTest {
 //            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
 //            "192.168.12.111:9210,192.168.122.111:9219";
 
-//    private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
-//            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
+    private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
+            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
 
-    private String ipPort = "localhost:9200";
+//    private String ipPort = "localhost:9200";
 
     private static HashMap<String, String> itMap = new HashMap<>();
 
@@ -2319,5 +2319,59 @@ public class EsIndexSearchImpTest {
         System.out.println(esc.queryJson);
     }
 
+    @Test
+    public void searchByIdRange() {
+        EsIndexSearch.debug = true;
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "event_wechat_info_ref_monitor", "monitor_data");
+        esc.addPrimitiveTermFilter("eid", "630", FieldOccurs.MUST);
+        esc.addRangeTerms("id", "7331762", "7331770");
+        esc.execute(new String[]{"id", "eid"});
+        List<String[]> result = esc.getResults();
+        esc.outputResult(result);
+    }
+
+    @Test
+    public void searchByIdRange2() {
+        EsIndexSearch.debug = true;
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "event_wechat_info_ref_monitor", "monitor_data");
+        esc.addPrimitiveTermFilter("eid", "630", FieldOccurs.MUST);
+        esc.addRangeTerms("id", "7331762", FieldOccurs.MUST, RangeOccurs.GTE);
+        esc.addSortField("id", SortOrder.ASC);
+        esc.setRow(10);
+        esc.execute(new String[]{"id", "eid"});
+        List<String[]> result = esc.getResults();
+        esc.outputResult(result);
+    }
+
+    @Test
+    public void searchByIdRange3() {
+        EsIndexSearch.debug = true;
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "event_mblog_info_ref_monitor", "monitor_data");
+        esc.addPrimitiveTermFilter("eid", "630", FieldOccurs.MUST);
+        esc.addRangeTerms("id", "7331762", FieldOccurs.MUST, RangeOccurs.GTE);
+        esc.addSortField("id", SortOrder.ASC);
+        esc.setRow(10);
+        esc.execute(new String[]{"id", "eid"});
+        List<String[]> result = esc.getResults();
+        esc.outputResult(result);
+    }
+
+    @Test
+    public void searchByIdRange4() {
+        // _id没有映射的话不支持范围查询
+        EsIndexSearch.debug = true;
+        long auto_id = -1;
+        EsIndexSearch esIndexSearch = new EsIndexSearch(ipPort, "event_mblog_info_ref_monitor", "monitor_data");
+        esIndexSearch.addPrimitiveTermFilter("eid", String.valueOf(630), FieldOccurs.MUST);
+        esIndexSearch.addRangeTerms("_id", auto_id != -1 ? String.valueOf(auto_id) : "0", FieldOccurs.MUST, RangeOccurs.GTE);
+        esIndexSearch.addSortField("_id", SortOrder.ASC);
+        esIndexSearch.setRow(10);
+        esIndexSearch.execute(new String[]{"blogger_id", "blogger", "eid", "id"});
+        List<String[]> result = esIndexSearch.getResults();
+        // OUTPUT
+        esIndexSearch.outputResult(result);
+    }
+
 }
+
 
