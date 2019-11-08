@@ -2354,6 +2354,7 @@ public class EsIndexSearchImpTest {
         esc.execute(new String[]{"id", "eid"});
         List<String[]> result = esc.getResults();
         esc.outputResult(result);
+        esc.reset();
     }
 
     @Test
@@ -2370,6 +2371,40 @@ public class EsIndexSearchImpTest {
         List<String[]> result = esIndexSearch.getResults();
         // OUTPUT
         esIndexSearch.outputResult(result);
+        esIndexSearch.reset();
+    }
+
+    @Test
+    public void searchByEidCount4() {
+        // _id没有映射的话不支持范围查询
+        EsIndexSearch.debug = true;
+        EsIndexSearch esIndexSearch = new EsIndexSearch(ipPort, "event_mblog_info_ref_monitor", "monitor_data");
+        esIndexSearch.addPrimitiveTermFilter("eid", String.valueOf(654), FieldOccurs.MUST);
+
+        String[] bloggerIds = new String[]{"13c1657675ecdab03f6348af918a926f",
+                "ceea957a3bbfc0e99103cc9c30e02355",
+                "9fd632e68af4f97da8e14606c0a18320",
+                "a87ddf4c4424f8bfa83ec0a7a26ad82f",
+                "2770c5a892d789fe1146ebd3e11bccad",
+                "620df2e006b4b882a17ae345308e68a2",
+                "620df2e006b4b882a17ae345308e68a2",
+                "ad9f449cd78c575b80d1c1fec197926f",
+                "ad9f449cd78c575b80d1c1fec197926f",
+                "ad9f449cd78c575b80d1c1fec197926f",
+                "fe52f067501d9a7d62e1034f77ddb92b",
+                "60b4a3a6a15f6fe4d35e20b7b26bf2b7",
+                "60b4a3a6a15f6fe4d35e20b7b26bf2b7",
+                "60b4a3a6a15f6fe4d35e20b7b26bf2b7",
+                "013ea0da0f32641a24ea154cf653afef",
+                "634d1f08e40a7aabec21ecfe609a9610",
+                "b4a80fd7190a5d065fbcf2e01e6a5da6"};
+        esIndexSearch.addPrimitiveTermFilter("blogger_id", bloggerIds, KeywordsCombine.OR, FieldOccurs.MUST);
+        esIndexSearch.setRow(1000);
+        esIndexSearch.execute(new String[]{"eid","blogger_id","blogger"});
+        // OUTPUT
+        List<String[]> result = esIndexSearch.getResults();
+        esIndexSearch.outputResult(result);
+        esIndexSearch.reset();
     }
 
 }
