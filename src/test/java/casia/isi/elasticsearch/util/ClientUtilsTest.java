@@ -42,5 +42,10 @@ public class ClientUtilsTest {
         String url = "http://192.168.12.09:9210,192.168.12.107:9210,192.168.12.112:9210/event_news_ref_event,event_wechat_info_ref_event/event_data,monitor_data/_search";
         System.out.println(ClientUtils.referenceUrl(url));
     }
+    @Test
+    public void referenceUrl2() {
+        String url = "http://192.168.12.09:9210/_mapping";
+        System.out.println(ClientUtils.referenceUrl(url));
+    }
 
 }
