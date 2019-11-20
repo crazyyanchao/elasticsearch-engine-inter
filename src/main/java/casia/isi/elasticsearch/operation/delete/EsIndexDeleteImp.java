@@ -163,6 +163,14 @@ public class EsIndexDeleteImp {
         HttpProxyRegister.register(IPADRESS);
     }
 
+    public static boolean isDebug() {
+        return debug;
+    }
+
+    public static void setDebug(boolean debug) {
+        EsIndexDeleteImp.debug = debug;
+    }
+
     /**
      * 构造函数
      *

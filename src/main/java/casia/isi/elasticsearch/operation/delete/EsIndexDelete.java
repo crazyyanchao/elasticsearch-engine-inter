@@ -4,11 +4,8 @@ import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.common.RangeOccurs;
 import casia.isi.elasticsearch.util.Validator;
 import com.alibaba.fastjson.JSONObject;
-import org.apache.log4j.Logger;
 
 public class EsIndexDelete extends EsIndexDeleteImp {
-
-    private Logger logger = Logger.getLogger(EsIndexDelete.class);
 
     @Deprecated
     public EsIndexDelete(String ip, String port, String indexName, String typeName) {
@@ -99,7 +96,7 @@ public class EsIndexDelete extends EsIndexDeleteImp {
      */
     public String forceMerge() {
         String url = this.deleteUrl + "/" + this.IndexName + "/_forcemerge?only_expunge_deletes=true&max_num_segments=1&flush=true";
-        System.out.println("_forcemerge:" + url);
+        if (super.isDebug()) System.out.println("_forcemerge:" + url);
         return super.httpRequest.httpPost(url, "");
     }
 
@@ -119,7 +116,7 @@ public class EsIndexDelete extends EsIndexDeleteImp {
      */
     public String outputLastTaskInfo(String lastTaskId) {
         String url = this.deleteUrl + "/_tasks/" + lastTaskId + "";
-        System.out.println("_tasks:" + url);
+        if (super.isDebug()) System.out.println("_tasks:" + url);
         return super.httpRequest.httpGet(url);
     }
 

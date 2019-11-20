@@ -46,14 +46,14 @@ public class EsIndexSearchTest {
 
     private static EsIndexSearch searcher;
 
-    private String ipPort = "" +
-            "192.168.12.107:9210,192.168.12.107:9211,localhost:9200,192.168.12.114:9210," +
-            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
-            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
-            "192.168.12.111:9210,192.168.122.111:9219";
+//    private String ipPort = "" +
+//            "192.168.12.107:9210,192.168.12.107:9211,localhost:9200,192.168.12.114:9210," +
+//            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
+//            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
+//            "192.168.12.111:9210,192.168.122.111:9219";
 
-//    private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
-//            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
+    private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
+            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
 
 //    private String ipPort = "" +
 //            "192.168.12.107:9210,localhost:9200";
@@ -482,6 +482,14 @@ public class EsIndexSearchTest {
         List<String[]> result = searcher.facetCountQueryOrderByCount("site", 10, SortOrder.DESC );
         searcher.outputResult(result);
     }
+
+    @Test
+    public void taskStatistics() {
+        searcher = new EsIndexSearch(ipPort, ".tasks", "task");
+        List<String[]> result = searcher.facetCountQueryOrderByCount("task.type", 10, SortOrder.DESC );
+        searcher.outputResult(result);
+    }
+
 }
 
 

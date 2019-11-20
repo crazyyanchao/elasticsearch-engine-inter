@@ -111,6 +111,8 @@ public class EsIndexDeleteTest {
     @Test
     public void deleteDataByTimeRange() {
 
+        esSmallIndexDelete.setDebug(true);
+
         esSmallIndexDelete.addRangeTerms("pubtime", "2019-05-15 00:00:00", "2019-05-21 00:00:00", FieldOccurs.MUST);
         esSmallIndexDelete.execute();
         System.out.println(esSmallIndexDelete.getDeleteTotal());
