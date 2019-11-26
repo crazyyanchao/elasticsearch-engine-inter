@@ -54,7 +54,7 @@ public class HttpProxyRegister {
          * 设置服务发现组件 - 通过discoverService服务发现的地址都会加入到清单中
          *
          * **/
-//        configs.put("http.discoverService", new HttpDiscover());
+        configs.put("http.discoverService", new HttpDiscover());
 
         /**
          * health监控检查地址必须配置，否则将不会启动健康检查机制

@@ -9,9 +9,7 @@ import java.util.Random;
 import java.util.Set;
 
 import casia.isi.elasticsearch.common.*;
-import casia.isi.elasticsearch.operation.http.HttpPoolSym;
-import casia.isi.elasticsearch.operation.http.HttpProxyRegister;
-import casia.isi.elasticsearch.operation.http.HttpProxyRequest;
+import casia.isi.elasticsearch.operation.http.*;
 import casia.isi.elasticsearch.util.ClientUtils;
 import org.apache.log4j.Logger;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -665,7 +663,7 @@ public class EsIndexSearchImp {
             }
             keywordString = keywordString + ")";
         } else {
-            logger.error("Set parameter error!Array is too large!",new IllegalArgumentException());
+            logger.error("Set parameter error!Array is too large!", new IllegalArgumentException());
         }
     }
 
@@ -2454,6 +2452,18 @@ public class EsIndexSearchImp {
         return queryResult;
     }
 
+    /**
+     * @param
+     * @return
+     * @Description: TODO(重置HTTP模块 - 将上一次注册的地址移除 ， 并加入新的集群地址)
+     */
+    public void removeLastHttpsAddNewAddress(String ipPorts) {
+        boolean status;
+        do {
+            status = HttpDiscoverRegister.discover(ipPorts);
+        } while (!status);
+    }
 
 }
+
 

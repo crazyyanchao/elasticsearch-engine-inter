@@ -434,7 +434,7 @@ public class EsIndexSearchTest {
                  *  节点地址增加之后，会默认添加到备选容灾节点列表，此操作有助于提升应用程序的容灾能力
                  *
                  * **/
-                HttpDiscover.discover("192.168.12.115:9210");
+//                HttpDiscover.discover("192.168.12.115:9210");
 //                }
 
                 searcher.reset();
@@ -478,16 +478,34 @@ public class EsIndexSearchTest {
     @Test
     public void aircraftFacetcount() {
         searcher = new EsIndexSearch(ipPort, "aircraft_info", "graph");
-        searcher.addRangeTerms("pubtime","2019-09-22 09:20:54","2019-09-22 15:20:54");
-        List<String[]> result = searcher.facetCountQueryOrderByCount("site", 10, SortOrder.DESC );
+        searcher.addRangeTerms("pubtime", "2019-09-22 09:20:54", "2019-09-22 15:20:54");
+        List<String[]> result = searcher.facetCountQueryOrderByCount("site", 10, SortOrder.DESC);
         searcher.outputResult(result);
     }
 
     @Test
     public void taskStatistics() {
         searcher = new EsIndexSearch(ipPort, ".tasks", "task");
-        List<String[]> result = searcher.facetCountQueryOrderByCount("task.type", 10, SortOrder.DESC );
+        List<String[]> result = searcher.facetCountQueryOrderByCount("task.type", 10, SortOrder.DESC);
         searcher.outputResult(result);
+    }
+
+    @Test
+    public void httpDiscoverRemove() {
+
+        // 重置HTTP模块-将上一次注册的地址全部移除，并加入新的集群地址【传入新的集群地址即可】
+        searcher.removeLastHttpsAddNewAddress("localhost:9200");
+
+        // 数据查询
+        searcher.addKeywordsQuery("content", "北京电影学院", FieldOccurs.MUST);
+        searcher.setStart(0);
+        searcher.setRow(10);
+        searcher.execute(new String[]{"content"});
+        List<String[]> result = searcher.getResults();
+        searcher.outputResult(result);
+
+        // 检索对象内部重置
+        searcher.reset();
     }
 
 }

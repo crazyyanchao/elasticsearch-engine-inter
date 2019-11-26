@@ -101,5 +101,9 @@ xxxer = new EsIndexXXX(ipPort, "indexName1,indexName2,...", "indexType1,indexTyp
 3、二次分组统计-多个child字段（调整统计接口的条件添加方式）
 
 # elasticsearch-engine-inter-1.7.4.jar接口包更新说明
-
 1、增加多任务合并查询
+
+# elasticsearch-engine-inter-1.7.5.jar接口包更新说明
+1、重置HTTP模块-将上一次注册的地址全部移除，并加入新的集群地址【传入新的集群地址即可】
+2、两种使用方法：<1>使用检索对象直接调用；<2>使用发现模块直接重置
+
