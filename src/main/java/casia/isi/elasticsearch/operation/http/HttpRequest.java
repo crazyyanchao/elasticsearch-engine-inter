@@ -49,6 +49,37 @@ public class HttpRequest implements HttpInter {
         httpClient.getParams().setParameter("http.protocol.single-cookie-header", true);
     }
 
+    public boolean checkHttpGet(String url) {
+        HttpGet httpGet = new HttpGet(url);
+        try {
+            httpGet.setHeader("User-Agent", HttpHeader.User_Agent_Firefox);
+            HttpResponse httpResponse = this.httpClient.execute(httpGet);
+            int requestStatus = httpResponse.getStatusLine().getStatusCode();
+
+            if (requestStatus == HttpStatus.SC_OK) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (ClientProtocolException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            logger.error("error", e);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            logger.error("error", e);
+        } finally {
+            try {
+                httpGet.clone();
+            } catch (CloneNotSupportedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
     /**
      * @param url :支持绝对接口地址
      * @return
