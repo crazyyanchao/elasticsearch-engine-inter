@@ -62,6 +62,8 @@ public class EsAccessorTest {
 
         List<String[]> result = searcher.facetCountQueryOrderByCount("task.type", 10, SortOrder.DESC);
         searcher.outputResult(result);
-
     }
+
 }
+
+
