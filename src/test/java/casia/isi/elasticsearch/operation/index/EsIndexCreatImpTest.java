@@ -6,7 +6,6 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
 /**
  * 　　　　　　　 ┏┓       ┏┓+ +
  * 　　　　　　　┏┛┻━━━━━━━┛┻┓ + +
@@ -32,12 +31,10 @@ import static org.junit.Assert.*;
  */
 
 /**
+ * @author YanchaoMa yanchaoma@foxmail.com
  * @PACKAGE_NAME: casia.isi.elasticsearch.operation.index
  * @Description: TODO(Describe the role of this JAVA class)
- * @author YanchaoMa yanchaoma@foxmail.com
  * @date 2019/8/20 17:00
- *
- *
  */
 public class EsIndexCreatImpTest {
 
@@ -70,6 +67,7 @@ public class EsIndexCreatImpTest {
         boolean boo = indexCreat.insertField("intime", map);
         System.out.println(boo);
     }
+
     @Test
     public void insertField_site() {
         //创建新字段
@@ -79,5 +77,21 @@ public class EsIndexCreatImpTest {
         boolean boo = indexCreat.insertField("site", map);
         System.out.println(boo);
     }
+
+    @Test
+    public void insertFields() {
+        // 批量增加字段-使用模糊匹配索引
+//        indexCreat = new EsIndexCreat(ipPort, "*_small", "monitor_caiji_small");
+//        indexCreat = new EsIndexCreat(ipPort, "*_all", "monitor_caiji_all");
+        indexCreat = new EsIndexCreat(ipPort, "*_preprocess", "monitor_caiji_preprocess");
+        //创建新字段
+        Map<String, String> map = new HashMap<>();
+        map.put("index", "not_analyzed");
+        map.put("type", "keyword");
+        map.put("store", "true");
+        boolean boo = indexCreat.insertField("url_short", map);
+        System.out.println(boo);
+    }
 }
+
 
