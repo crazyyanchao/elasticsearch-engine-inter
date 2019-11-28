@@ -1,7 +1,7 @@
 package casia.isi.elasticsearch.operation.update;
 
 import casia.isi.elasticsearch.common.FieldOccurs;
-import casia.isi.elasticsearch.operation.http.*;
+import casia.isi.elasticsearch.operation.http.HttpSymbol;
 import casia.isi.elasticsearch.util.ClientUtils;
 import casia.isi.elasticsearch.util.StringUtil;
 import casia.isi.elasticsearch.util.Validator;
@@ -14,8 +14,6 @@ import org.apache.log4j.Logger;
  * @author
  */
 public class EsIndexUpdate extends EsIndexUpdateImp {
-
-    private Logger logger = Logger.getLogger(this.getClass());
 
     public static ZHConverter converter = ZHConverter
             .getInstance(ZHConverter.SIMPLIFIED);
@@ -38,11 +36,6 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
 
     // 是否将查询语法繁转简
     public static boolean ZH_Converter = false;
-
-    /**
-     * 是否开启debug模式，debug模式下过程语句将会输出
-     */
-    public static boolean debug = false;
 
     /**
      * 查询索引的url
@@ -98,6 +91,10 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
     @Deprecated
     public EsIndexUpdate(String IP, int Port, String indexName, String typeName) {
         super(IP, Port, indexName, typeName);
+    }
+
+    public EsIndexUpdate(HttpSymbol httpPoolName, String ipPorts, String indexName, String typeName) {
+        super(httpPoolName,ipPorts,indexName,typeName);
     }
 
     /**
@@ -257,7 +254,7 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
             logger.info("curl:" + queryUrl + " -d " + esQuery);
             System.out.println("curl:" + queryUrl + " -d " + esQuery);
         }
-        String queryResult = super.httpRequest.httpPost(ClientUtils.referenceUrl(queryUrl), esQuery);
+        String queryResult = super.request.httpPost(ClientUtils.referenceUrl(queryUrl), esQuery);
         if (queryResult != null)
             return JSONObject.parseObject(queryResult);
         if (debug) {

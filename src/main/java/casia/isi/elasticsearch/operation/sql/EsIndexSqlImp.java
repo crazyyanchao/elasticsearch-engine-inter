@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import casia.isi.elasticsearch.operation.http.HttpDiscover;
+import casia.isi.elasticsearch.common.EsAccessor;
 import casia.isi.elasticsearch.operation.http.HttpProxyRegister;
-import casia.isi.elasticsearch.util.ClientUtils;
+import casia.isi.elasticsearch.operation.http.HttpSymbol;
 import org.apache.log4j.Logger;
 
 import com.alibaba.fastjson.JSONArray;
@@ -20,11 +20,8 @@ import casia.isi.elasticsearch.operation.http.HttpRequest;
 import casia.isi.elasticsearch.util.StringUtil;
 import casia.isi.elasticsearch.util.Validator;
 
-public class EsIndexSqlImp {
-    /**
-     * 日志对象
-     */
-    private static Logger logger = Logger.getLogger(EsIndexSqlImp.class);
+public class EsIndexSqlImp extends EsAccessor {
+
     /**
      * http访问对象
      */
@@ -33,10 +30,6 @@ public class EsIndexSqlImp {
      * 查询索引的url
      */
     private String queryUrl;
-    /**
-     * 是否开启debug模式，debug模式下过程语句将会输出
-     */
-    public static boolean debug = false;
 
     /**
      * 设置日志输出对象
@@ -44,7 +37,7 @@ public class EsIndexSqlImp {
      * @param //LOGGER log4j对象
      */
     public void setLogger(Logger logger) {
-        EsIndexSqlImp.logger = logger;
+        super.logger = logger;
     }
 
     /**
@@ -65,6 +58,21 @@ public class EsIndexSqlImp {
 
     @Deprecated
     public EsIndexSqlImp() {
+    }
+
+    public EsIndexSqlImp(HttpSymbol httpPoolName, String ipPorts) {
+        super(httpPoolName, ipPorts);
+        if (ipPorts == null) {
+            logger.error("ip must not be null");
+        }
+        String[] servers = ipPorts.split(Symbol.COMMA_CHARACTER.toString());
+        //构造查询url
+        this.queryUrl = "http://" + servers[new Random().nextInt(servers.length)];
+        this.queryUrl = this.queryUrl + "/_sql";
+        this.request = new HttpRequest();
+
+        // 新增HTTP负载均衡器
+        HttpProxyRegister.register(ipPorts);
     }
 
     /**

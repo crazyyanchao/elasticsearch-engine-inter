@@ -1,5 +1,7 @@
 package casia.isi.elasticsearch.operation.sql;
 
+import casia.isi.elasticsearch.operation.http.HttpSymbol;
+
 public class EsIndexSql extends EsIndexSqlImp {
 
     @Deprecated
@@ -14,5 +16,9 @@ public class EsIndexSql extends EsIndexSqlImp {
     @Deprecated
     public EsIndexSql(String IP, int Port) {
         super(IP, Port);
+    }
+
+    public EsIndexSql(HttpSymbol httpPoolName, String ipPorts) {
+        super(httpPoolName,ipPorts);
     }
 }

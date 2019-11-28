@@ -14,6 +14,7 @@ import casia.isi.elasticsearch.model.BoundBox;
 import casia.isi.elasticsearch.model.BoundPoint;
 import casia.isi.elasticsearch.model.Circle;
 import casia.isi.elasticsearch.model.Shape;
+import casia.isi.elasticsearch.operation.http.HttpSymbol;
 import casia.isi.elasticsearch.operation.search.aircraft.ConfigTask;
 import casia.isi.elasticsearch.util.ClientUtils;
 import casia.isi.elasticsearch.util.Validator;
@@ -49,6 +50,10 @@ public class EsIndexSearch extends EsIndexSearchImp {
     @Deprecated
     public EsIndexSearch(String IP, int Port, String indexName, String typeName) {
         super(IP, Port, indexName, typeName);
+    }
+
+    public EsIndexSearch(HttpSymbol httpPoolName, String ipPorts, String indexName, String typeName) {
+        super(httpPoolName,ipPorts,indexName,typeName);
     }
 
     /**

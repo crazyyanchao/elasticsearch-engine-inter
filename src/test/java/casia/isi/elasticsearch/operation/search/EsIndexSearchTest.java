@@ -3,6 +3,7 @@ package casia.isi.elasticsearch.operation.search;
 import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.common.SortOrder;
 import casia.isi.elasticsearch.operation.http.HttpDiscover;
+import casia.isi.elasticsearch.operation.http.HttpSymbol;
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,11 +47,11 @@ public class EsIndexSearchTest {
 
     private static EsIndexSearch searcher;
 
-//    private String ipPort = "" +
-//            "192.168.12.107:9210,192.168.12.107:9211,localhost:9200,192.168.12.114:9210," +
-//            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
-//            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
-//            "192.168.12.111:9210,192.168.122.111:9219";
+    private String ipPort2 = "" +
+            "192.168.12.107:9210,192.168.12.107:9211,localhost:9200,192.168.12.114:9210," +
+            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
+            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
+            "192.168.12.111:9210,192.168.122.111:9219";
 
     private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
             "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
@@ -62,6 +63,14 @@ public class EsIndexSearchTest {
     @Before
     public void setUp() throws Exception {
         searcher = new EsIndexSearch(ipPort, "mblog_info_small,instagram_thread_small,twitter_info_small,youtube_info_small,facebook_info_small", "monitor_caiji_small");
+
+        /**
+         * 初始化构造函数时指定HTTP服务组：
+         * 适用场景-在多用户访问不同集群时配置
+         *
+         * **/
+        searcher = new EsIndexSearch(ipPort, "*_small", "monitor_caiji_small");
+
     }
 
     @Test
@@ -484,10 +493,43 @@ public class EsIndexSearchTest {
     }
 
     @Test
-    public void taskStatistics() {
+    public void taskStatisticsTransferClusterByInter() {
+        // 1.7.6之前的版本存在的问题【同一上下文切换集群】
+        // 第一个集群:初始化地址成功
         searcher = new EsIndexSearch(ipPort, ".tasks", "task");
         List<String[]> result = searcher.facetCountQueryOrderByCount("task.type", 10, SortOrder.DESC);
         searcher.outputResult(result);
+
+        // 第二个集群:不调用removeLastHttpsAddNewAddress时，初始化地址时失败[!!!返回的还是第一个集群的地址!!!]
+        searcher = new EsIndexSearch(ipPort2, ".tasks", "task");
+
+//        需要更换集群地址时必须单独调用removeLastHttpsAddNewAddress方法，不调用removeLastHttpsAddNewAddress方式时无法初始化成功
+        searcher.removeLastHttpsAddNewAddress(ipPort2); // 不使用HTTP-NAME切换，
+
+        List<String[]> result2 = searcher.facetCountQueryOrderByCount("task.type", 10, SortOrder.DESC);
+        searcher.outputResult(result2);
+    }
+
+    @Test
+    public void taskStatisticsTransferClusterByName() {
+        /**
+         * 1.7.6多集群访问测试
+         * 【升级HTTP组件】【扩展构造函数】同一上下文多个集群同时访问时，使用不同的HTTP连接池名称即可
+         * **/
+        // 第一个集群:初始化地址成功
+        searcher = new EsIndexSearch(Cluster.cluster_1, ipPort, ".tasks", "task");
+        List<String[]> result = searcher.facetCountQueryOrderByCount("task.type", 10, SortOrder.DESC);
+        searcher.outputResult(result);
+
+        // 第二个集群:初始化地址时成功[返回的是第二个集群的地址]
+        searcher = new EsIndexSearch(Cluster.cluster_2, ipPort2, ".tasks", "task");
+        List<String[]> result2 = searcher.facetCountQueryOrderByCount("task.type", 10, SortOrder.DESC);
+        searcher.outputResult(result2);
+    }
+
+    // 自定义多个集群名称
+    public enum Cluster implements HttpSymbol {
+        cluster_1, cluster_2
     }
 
     @Test

@@ -3,12 +3,12 @@ package casia.isi.elasticsearch.operation.index;
 import java.io.File;
 import java.util.*;
 
+import casia.isi.elasticsearch.common.EsAccessor;
 import casia.isi.elasticsearch.common.Message;
 import casia.isi.elasticsearch.operation.http.*;
 import casia.isi.elasticsearch.util.ClientUtils;
 import casia.isi.elasticsearch.util.FileUtil;
 import com.alibaba.fastjson.JSONArray;
-import org.apache.log4j.Logger;
 
 import casia.isi.elasticsearch.common.Symbol;
 import casia.isi.elasticsearch.util.Validator;
@@ -21,8 +21,8 @@ import com.alibaba.fastjson.JSONObject;
  * @author wzy
  * @version elasticsearch
  */
-public class EsIndexCreatImp {
-    private Logger logger = Logger.getLogger(EsIndexCreatImp.class);
+public class EsIndexCreatImp extends EsAccessor {
+
     /**
      * 索引ip
      */
@@ -48,18 +48,13 @@ public class EsIndexCreatImp {
      */
     private String IndexUrl;
 
-    /**
-     * http访问对象 仅仅支持绝对地址接口访问
-     */
-//    public HttpRequest httpRequest =  new HttpRequest();
-
-    /**
-     * http访问对象 支持绝对接口地址和相对接口地址
-     **/
-    public HttpProxyRequest httpRequest = new HttpProxyRequest(HttpPoolSym.DEFAULT.getSymbolValue());
-
     @Deprecated
     public EsIndexCreatImp() {
+    }
+
+    public EsIndexCreatImp(HttpSymbol httpPoolName, String ipPorts, String indexName, String typeName) {
+        super(httpPoolName,ipPorts);
+        EsIndexCreate_imp(ipPorts, indexName, typeName);
     }
 
     public String getIndexType() {
@@ -177,7 +172,7 @@ public class EsIndexCreatImp {
                 indexJson.clear();
             }
         }
-        String queryResultStr = httpRequest.httpPost(ClientUtils.referenceUrl(this.IndexUrl), indexStrBuffer.toString());
+        String queryResultStr = request.httpPost(ClientUtils.referenceUrl(this.IndexUrl), indexStrBuffer.toString());
 
         if (queryResultStr != null && !Message.indexMessage(queryResultStr)) {
             rt = true;
@@ -208,7 +203,7 @@ public class EsIndexCreatImp {
         jsonProperties.put("properties", jsonField);
         json.put(this.IndexType, jsonProperties);
 
-        String creatResultStr = httpRequest.httpPost(ClientUtils.referenceUrl(this.IndexUrl), json.toString());
+        String creatResultStr = request.httpPost(ClientUtils.referenceUrl(this.IndexUrl), json.toString());
         try {
             JSONObject jsonResult = new JSONObject();
             jsonResult = jsonResult.parseObject(creatResultStr);
@@ -234,7 +229,7 @@ public class EsIndexCreatImp {
         if (!Validator.check(typeJson)) {
             return !rs;
         }
-        String ResultStr = httpRequest.httpPut(ClientUtils.referenceUrl(this.IpPort + "/" + this.indexName), typeJson);
+        String ResultStr = request.httpPut(ClientUtils.referenceUrl(this.IpPort + "/" + this.indexName), typeJson);
 
         try {
             JSONObject jsonResult = new JSONObject();
@@ -258,7 +253,7 @@ public class EsIndexCreatImp {
      */
     public boolean isIndexName() {
         boolean rs = true;
-        String ResultStr = httpRequest.httpGet(ClientUtils.referenceUrl(this.IpPort + "/" + this.indexName));
+        String ResultStr = request.httpGet(ClientUtils.referenceUrl(this.IpPort + "/" + this.indexName));
 
         try {
             JSONObject jsonResult = new JSONObject();
@@ -281,7 +276,7 @@ public class EsIndexCreatImp {
      */
     public List<String> searchIndexNames() {
         List<String> list = new ArrayList<String>();
-        String ResultStr = httpRequest.httpGet(ClientUtils.referenceUrl(this.IpPort + "/_cat/indices?h=index"));
+        String ResultStr = request.httpGet(ClientUtils.referenceUrl(this.IpPort + "/_cat/indices?h=index"));
 
         try {
             if (Validator.check(ResultStr)) {
@@ -299,7 +294,7 @@ public class EsIndexCreatImp {
     }
 
     /**
-     * @param url:http://localhost:9200/tb_linkedin_projects 接口的绝对路径
+     * @param url:http://localhost:9200/tb_linkedin_projects        接口的绝对路径
      * @param mappingFile:mapping/loading/tb_linkedin_projects.json
      * @return
      * @Description: TODO(当前mapping文件创建映射)
@@ -307,7 +302,7 @@ public class EsIndexCreatImp {
     public String singleMapping(String url, String mappingFile) throws Exception {
         String json = JSONObject.parseObject(FileUtil.readAllLine(mappingFile, "UTF-8")).toJSONString();
         System.out.println(json);
-        return httpRequest.httpPut(url, json);
+        return request.httpPut(url, json);
     }
 
     /**
@@ -335,7 +330,7 @@ public class EsIndexCreatImp {
 
                 String json = JSONObject.parseObject(FileUtil.readAllLine(fileName, "UTF-8")).toJSONString();
                 System.out.println(json);
-                folderMappingMessage.add(httpRequest.httpPut(ClientUtils.referenceUrl(url), json));
+                folderMappingMessage.add(request.httpPut(ClientUtils.referenceUrl(url), json));
             }
         }
         return folderMappingMessage.toJSONString();

@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import casia.isi.elasticsearch.common.EsAccessor;
 import casia.isi.elasticsearch.operation.http.*;
 import casia.isi.elasticsearch.util.ClientUtils;
 import com.alibaba.fastjson.JSON;
@@ -19,12 +20,8 @@ import com.alibaba.fastjson.JSONObject;
  * @author wzy
  * @version elasticsearch - 5.6.3
  */
-public class EsIndexUpdateImp {
-    private static Logger logger = Logger.getLogger(EsIndexUpdateImp.class);
-    /**
-     * 是否开启debug模式，debug模式下过程语句将会输出
-     */
-    public static boolean debug = false;
+public class EsIndexUpdateImp extends EsAccessor {
+
     /**
      * 索引名称
      */
@@ -51,16 +48,6 @@ public class EsIndexUpdateImp {
     private static int Port = 0;
 
     /**
-     * http访问对象 仅仅支持绝对地址接口访问
-     */
-//    public HttpRequest httpRequest =  new HttpRequest();
-
-    /**
-     * http访问对象 支持绝对接口地址和相对接口地址
-     **/
-    public HttpProxyRequest httpRequest = new HttpProxyRequest(HttpPoolSym.DEFAULT.getSymbolValue());
-
-    /**
      * 重置条件
      */
     public void reset() {
@@ -72,6 +59,11 @@ public class EsIndexUpdateImp {
 
     @Deprecated
     public EsIndexUpdateImp() {
+    }
+
+    public EsIndexUpdateImp(HttpSymbol httpPoolName, String ipPorts, String indexName, String typeName) {
+        super(httpPoolName,ipPorts);
+        EsIndexUpdate_imp(ipPorts, indexName, typeName);
     }
 
     /**
@@ -177,7 +169,7 @@ public class EsIndexUpdateImp {
                 logger.info("papameter: -d " + allJson);
             }
 
-            String queryResultStr = httpRequest.httpPost(ClientUtils.referenceUrl(posturl), allJson.toString());
+            String queryResultStr = request.httpPost(ClientUtils.referenceUrl(posturl), allJson.toString());
 
             if (queryResultStr == null) {
                 return false;
@@ -225,7 +217,7 @@ public class EsIndexUpdateImp {
             }
 
             allJson = addUpsert(allJson, parameterUpsert);
-            String queryResultStr = httpRequest.httpPost(ClientUtils.referenceUrl(posturl), allJson.toString());
+            String queryResultStr = request.httpPost(ClientUtils.referenceUrl(posturl), allJson.toString());
 
             if (queryResultStr == null) {
                 return false;

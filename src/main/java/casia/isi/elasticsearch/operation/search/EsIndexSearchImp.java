@@ -29,12 +29,8 @@ import com.spreada.utils.chinese.ZHConverter;
  * @author
  * @version elasticsearch
  */
-public class EsIndexSearchImp {
+public class EsIndexSearchImp extends EsAccessor {
 
-    /**
-     * 日志对象
-     */
-    public static Logger logger = Logger.getLogger(EsIndexSearchImp.class);
     public static ZHConverter converter = ZHConverter
             .getInstance(ZHConverter.SIMPLIFIED);
     protected static IKAnalyzer analyzer = AnalyzerFactory.getInstanceMax();
@@ -43,26 +39,12 @@ public class EsIndexSearchImp {
      * 是否将查询语法繁转简
      */
     public static boolean ZH_Converter = false;
-    /**
-     * 是否开启debug模式，debug模式下过程语句将会输出
-     */
-    public static boolean debug = false;
 
     /**
      * 查询索引的url
      */
     public String queryUrl;
 
-
-    /**
-     * http访问对象 仅仅支持绝对地址接口访问
-     */
-//    public HttpRequest request =  new HttpRequest();
-
-    /**
-     * http访问对象 支持绝对接口地址和相对接口地址
-     **/
-    public HttpProxyRequest request = new HttpProxyRequest(HttpPoolSym.DEFAULT.getSymbolValue());
 
     /**
      * 查询的字段
@@ -119,11 +101,39 @@ public class EsIndexSearchImp {
      * @param logger log4j对象
      */
     public void setLogger(Logger logger) {
-        EsIndexSearchImp.logger = logger;
+        this.logger = logger;
     }
 
     @Deprecated
     public EsIndexSearchImp() {
+    }
+
+    public EsIndexSearchImp(HttpSymbol httpPoolName, String ipPorts, String indexName, String typeName) {
+
+        super(httpPoolName, ipPorts);
+
+        if (ipPorts == null) {
+            logger.error("ip must not be null");
+        }
+        if (indexName == null && typeName == null) {
+            logger.error("prefix must not be null");
+        }
+        String[] servers = ipPorts.split(Symbol.COMMA_CHARACTER.getSymbolValue());
+        //构造查询url
+        this.queryUrl = "http://" + servers[new Random().nextInt(servers.length)];
+        if (indexName != null)
+            this.queryUrl = this.queryUrl + "/" + indexName;
+
+        if (typeName != null)
+            this.queryUrl = this.queryUrl + "/" + typeName;
+
+        this.queryUrl = this.queryUrl + "/_search";
+        this.queryJson = new JSONObject();
+        this.queryJsonResult = new JSONObject();
+        this.queryMustJarr = new JSONArray();
+        this.queryMustNotJarr = new JSONArray();
+        this.queryFilterMustJarr = new JSONArray();
+        this.queryFilterMustNotJarr = new JSONArray();
     }
 
     /**
@@ -2450,18 +2460,6 @@ public class EsIndexSearchImp {
     public String addQueryConditionBylucene(String QuerString) {
         String queryResult = request.httpPost(this.queryUrl, QuerString);
         return queryResult;
-    }
-
-    /**
-     * @param
-     * @return
-     * @Description: TODO(重置HTTP模块 - 将上一次注册的地址移除 ， 并加入新的集群地址)
-     */
-    public void removeLastHttpsAddNewAddress(String ipPorts) {
-        boolean status;
-        do {
-            status = HttpDiscoverRegister.discover(ipPorts);
-        } while (!status);
     }
 
 }

@@ -1,5 +1,7 @@
 package casia.isi.elasticsearch.operation.index;
 
+import casia.isi.elasticsearch.operation.http.HttpSymbol;
+
 /**
  * ElasticSearch的索引创建接口(Http方式)
  *
@@ -11,6 +13,10 @@ public class EsIndexCreat extends EsIndexCreatImp {
     @Deprecated
     public EsIndexCreat() {
         super();
+    }
+
+    public EsIndexCreat(HttpSymbol httpPoolName, String ipPorts, String indexName, String typeName) {
+        super(httpPoolName,ipPorts,indexName,typeName);
     }
 
     @Deprecated

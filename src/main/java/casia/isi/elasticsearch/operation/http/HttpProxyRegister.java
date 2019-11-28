@@ -23,6 +23,7 @@ package casia.isi.elasticsearch.operation.http;
  * 　　　　　　　　　 ┗┻┛　 ┗┻┛+ + + +
  */
 
+import casia.isi.elasticsearch.common.EsAccessor;
 import org.slf4j.Logger;
 import org.frameworkset.spi.remote.http.HttpRequestProxy;
 import org.slf4j.LoggerFactory;
@@ -70,13 +71,11 @@ public class HttpProxyRegister {
         configs.put("http.hosts", ipPorts.replace(" ", ""));
         HttpRequestProxy.startHttpPools(configs);
 
-        if (logger.isInfoEnabled()) {
-            logger.info(new StringBuilder().append("Register http pool[")
-                    .append(HttpPoolSym.DEFAULT.getSymbolValue()).append("]").toString());
-            logger.info(new StringBuilder().append("Register hosts[").append(ipPorts).append("]").toString());
+        if (EsAccessor.isDebug()) {
+            logger.info("Register http pool[" + HttpPoolSym.DEFAULT.getSymbolValue() + "]");
+            logger.info("Register hosts[" + ipPorts + "]");
         }
 
     }
-
 }
 
