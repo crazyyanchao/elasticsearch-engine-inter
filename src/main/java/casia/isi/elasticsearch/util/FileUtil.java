@@ -35,6 +35,7 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -851,6 +852,33 @@ public class FileUtil {
                 e.printStackTrace();
             }
         }
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(BYTES转换)
+     */
+    public static String convertFileSizeDescription(long size) {
+        StringBuffer bytes = new StringBuffer();
+        DecimalFormat format = new DecimalFormat("###.0");
+        if (size >= 1024 * 1024 * 1024) {
+            double i = (size / (1024.0 * 1024.0 * 1024.0));
+            bytes.append(format.format(i)).append("GB");
+        } else if (size >= 1024 * 1024) {
+            double i = (size / (1024.0 * 1024.0));
+            bytes.append(format.format(i)).append("MB");
+        } else if (size >= 1024) {
+            double i = (size / (1024.0));
+            bytes.append(format.format(i)).append("KB");
+        } else {
+            if (size <= 0) {
+                bytes.append("0B");
+            } else {
+                bytes.append((int) size).append("B");
+            }
+        }
+        return bytes.toString();
     }
 
     /**

@@ -2,7 +2,6 @@ package casia.isi.elasticsearch.operation.search;
 
 import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.common.SortOrder;
-import casia.isi.elasticsearch.operation.http.HttpDiscover;
 import casia.isi.elasticsearch.operation.http.HttpSymbol;
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.Before;
