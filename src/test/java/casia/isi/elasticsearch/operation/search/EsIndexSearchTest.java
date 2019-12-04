@@ -487,6 +487,7 @@ public class EsIndexSearchTest {
     public void aircraftFacetcount() {
         searcher = new EsIndexSearch(ipPort, "aircraft_info", "graph");
         searcher.addRangeTerms("pubtime", "2019-09-22 09:20:54", "2019-09-22 15:20:54");
+        searcher.setDebug(true);
         List<String[]> result = searcher.facetCountQueryOrderByCount("site", 10, SortOrder.DESC);
         searcher.outputResult(result);
     }
