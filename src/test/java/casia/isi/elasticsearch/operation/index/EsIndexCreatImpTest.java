@@ -40,14 +40,14 @@ public class EsIndexCreatImpTest {
 
     private static EsIndexCreat indexCreat;
 
-    private String ipPort = "" +
-            "192.168.12.107:9210,192.168.12.107:9211,localhost:9200,192.168.12.114:9210," +
-            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
-            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
-            "192.168.12.111:9210,192.168.122.111:9219";
+//    private String ipPort = "" +
+//            "192.168.12.107:9210,192.168.12.107:9211,localhost:9200,192.168.12.114:9210," +
+//            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
+//            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
+//            "192.168.12.111:9210,192.168.122.111:9219";
 
-//    private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
-//            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
+    private String ipPort = "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
+            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
 
 //    private String ipPort = "" +
 //            "192.168.12.107:9210,localhost:9200";
@@ -92,6 +92,24 @@ public class EsIndexCreatImpTest {
         boolean boo = indexCreat.insertField("url_short", map);
         System.out.println(boo);
     }
+
+    @Test
+    public void insertFields2() {
+        // 新增字段
+        // 修改字段 - lon字段从float修改为keyword   - ！！！！ 无法覆盖只能先删除再插入
+//        indexCreat = new EsIndexCreat(ipPort, "*", "monitor_data");
+//        indexCreat = new EsIndexCreat(ipPort, "*", "event_data");
+//        indexCreat = new EsIndexCreat(ipPort, "*", "zdr_caiji");
+        indexCreat = new EsIndexCreat(ipPort, "*", "zdr_data");
+        //创建新字段
+        Map<String, String> map = new HashMap<>();
+        map.put("index", "not_analyzed");
+        map.put("type", "keyword");
+        map.put("store", "true");
+        boolean boo = indexCreat.insertField("url_short", map);
+        System.out.println(boo);
+    }
+
 }
 
 
