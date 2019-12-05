@@ -76,4 +76,22 @@ public class StringUtil {
         return null;
     }
 
+    /**
+     * 从URL中提取主体，如http://news.163.com/xxx/xxx.html --> news.163.com/xxx/xxx.html
+     *
+     * @param url
+     *            输入的URL
+     * @return String 主机地址
+     */
+    public static String urlShort(String url) {
+        if (url == null) {
+            return null;
+        }
+
+        String short_url = url.replaceAll("^https?://", "");
+        short_url = short_url.replace("www.","");
+
+        return short_url;
+    }
+
 }

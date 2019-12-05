@@ -3,6 +3,7 @@ package casia.isi.elasticsearch.operation.search;
 import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.common.SortOrder;
 import casia.isi.elasticsearch.operation.http.HttpSymbol;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.Before;
 import org.junit.Test;
@@ -547,6 +548,37 @@ public class EsIndexSearchTest {
         searcher.outputResult(result);
 
         // 检索对象内部重置
+        searcher.reset();
+    }
+
+    @Test
+    public void urlShortTest() {
+        searcher.setDebug(true);
+        searcher = new EsIndexSearch(ipPort, "*", "monitor_data");
+
+//       searcher.addPrimitiveTermQuery("url_short", "twitter.com/hoganindc2015/*", casia.isi.elasticsearch.common.FieldOccurs.MUST);
+        /**
+         * URL的模糊匹配使用下面的方式查询
+         * wildcard通配符查询ES-KEYWORD
+         * URL的通配符查询的条件添加
+         * {
+         *   "wildcard": {
+         *     "url_short": "twitter.com/haku2013/status/*"
+         *   }
+         * }
+         *
+         * **/
+        JSONObject wildcardObj = new JSONObject();
+        wildcardObj.put("url_short", "twitter.com/haku2013/status/*");
+        JSONObject wildcard = new JSONObject();
+        wildcard.put("wildcard", wildcardObj);
+        searcher.queryFilterMustJarr.add(wildcard);
+
+        searcher.addRangeTerms("pubtime", "2019-12-04 00:00:00", "2019-12-04 16:12:10");
+        searcher.setRow(10);
+        searcher.execute(new String[]{"pubtime", "content"});
+        List<String[]> result = searcher.getResults();
+        searcher.outputResult(result);
         searcher.reset();
     }
 
