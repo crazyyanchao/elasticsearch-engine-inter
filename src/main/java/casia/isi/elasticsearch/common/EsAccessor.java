@@ -24,6 +24,7 @@ package casia.isi.elasticsearch.common;
  */
 
 import casia.isi.elasticsearch.operation.http.*;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.log4j.Logger;
 
 /**
@@ -72,6 +73,7 @@ public abstract class EsAccessor {
             status = HttpDiscoverRegister.discover(ipPorts);
         } while (!status);
     }
+
 
     public static boolean isDebug() {
         return debug;

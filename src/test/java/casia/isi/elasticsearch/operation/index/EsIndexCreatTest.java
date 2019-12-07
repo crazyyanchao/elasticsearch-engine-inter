@@ -1,6 +1,10 @@
 package casia.isi.elasticsearch.operation.index;
 
+import casia.isi.elasticsearch.common.EsAccessor;
+import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.operation.http.HttpRequest;
+import casia.isi.elasticsearch.operation.modify.EsModify;
+import casia.isi.elasticsearch.operation.search.EsIndexSearch;
 import casia.isi.elasticsearch.util.FileUtil;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.log4j.PropertyConfigurator;
@@ -47,7 +51,7 @@ public class EsIndexCreatTest {
 
     private EsIndexCreat esIndexCreat;
 
-    private String ipPort ="localhost:9200";
+    private String ipPort = "localhost:9200";
 //    private String ipPort = "" +
 //            "192.168.12.107:9210,192.168.12.107:9211,localhost:9200,192.168.12.114:9210," +
 //            "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
@@ -250,3 +254,5 @@ public class EsIndexCreatTest {
     }
 
 }
+
+

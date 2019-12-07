@@ -120,4 +120,15 @@ public class HttpAccessor extends EsAccessor {
 3、优化HTTP池初始化
 4、优化DEBUG日志输出与操作【所有DEBUG操作都在顶级父类中】
 
+# elasticsearch-engine-inter-1.7.6.jar接口包更新说明
+增加配置修改方法
+```
+// casia.isi.elasticsearch.operation.modify.EsModifyTest
+// 修改索引的刷新间隔
+EsModify.modifyRefreshIntervalSecond("localhost:9200", "ship_info,.monitor_task_alarm", 60);
+
+// 索引执行一次手动刷新-对于数据可见性有实时性要求的需要调用此方法
+EsModify.executeAutoRefresh("localhost:9200", "ship_info");
+```
+
 

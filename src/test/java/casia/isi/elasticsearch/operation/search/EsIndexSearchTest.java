@@ -1,5 +1,6 @@
 package casia.isi.elasticsearch.operation.search;
 
+import casia.isi.elasticsearch.common.EsAccessor;
 import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.common.SortOrder;
 import casia.isi.elasticsearch.operation.http.HttpSymbol;
