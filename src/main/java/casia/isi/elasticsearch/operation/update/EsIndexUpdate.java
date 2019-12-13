@@ -5,83 +5,12 @@ import casia.isi.elasticsearch.operation.http.HttpSymbol;
 import casia.isi.elasticsearch.util.ClientUtils;
 import casia.isi.elasticsearch.util.StringUtil;
 import casia.isi.elasticsearch.util.Validator;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.spreada.utils.chinese.ZHConverter;
-import org.apache.log4j.Logger;
 
 /**
  * @author
  */
 public class EsIndexUpdate extends EsIndexUpdateImp {
-
-    public static ZHConverter converter = ZHConverter
-            .getInstance(ZHConverter.SIMPLIFIED);
-
-    // 索引集群连接的IP-PORT用冒号分隔
-    private String ipPort;
-
-    // 索引名称/多个索引名称使用逗号分隔
-    private String indexName;
-
-    // 索引类型
-    private String typeName;
-
-
-    // 记录关键词，以及关键词出现情况
-    private String keywordString = "";
-
-    // 空格符
-    public final String BLANK = " ";
-
-    // 是否将查询语法繁转简
-    public static boolean ZH_Converter = false;
-
-    /**
-     * 查询索引的url
-     */
-    public String queryUrl;
-
-    /**
-     * 查询的字段
-     */
-    private String[] fields;
-
-    /**
-     * 查询的返回值
-     */
-    public JSONObject queryJsonResult;
-
-    /**
-     * 构造查询条件的json串
-     */
-    public JSONObject queryJson;
-    /**
-     * 构造查询必须条件的json串
-     */
-    public JSONArray queryMustJarr;
-    /**
-     * 构造查询否定条件的json串
-     */
-    public JSONArray queryMustNotJarr;
-    /**
-     * 构造过滤必须条件的json串
-     */
-    public JSONArray queryFilterMustJarr;
-    /**
-     * 构造过滤否定条件的json串
-     */
-    public JSONArray queryFilterMustNotJarr;
-
-    /**
-     * 构建聚合结果数量
-     */
-    public long countTotle = 0;
-    /**
-     * 分片返回最大数量
-     */
-    private static long shard_size = 100000;
-
 
     /**
      * @param
@@ -94,7 +23,7 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
     }
 
     public EsIndexUpdate(HttpSymbol httpPoolName, String ipPorts, String indexName, String typeName) {
-        super(httpPoolName,ipPorts,indexName,typeName);
+        super(httpPoolName, ipPorts, indexName, typeName);
     }
 
     /**
@@ -222,6 +151,38 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
         return queryStr;
     }
 
+    /**
+     * 获取提交请求串
+     *
+     * @return
+     */
+    public String getQueryString(String... fieldValue) {
+        String esQuery = getQueryString();
+        this.queryJson = JSONObject.parseObject(esQuery);
+        this.queryJson.put("script", putGroovyScriptField(fieldValue));
+        String queryStr = this.queryJson.toString();
+        return queryStr;
+    }
+
+    private JSONObject putGroovyScriptField(String[] fieldValue) {
+        JSONObject object = new JSONObject();
+        if (fieldValue.length % 2 == 0) {
+            StringBuilder builder = new StringBuilder();
+            String[] keys = fieldValue;
+
+            for (int i = 0; i < keys.length; i++) {
+                String key = keys[i];
+                Object value = keys[i + 1];
+                builder.append("ctx._source['" + key + "'] = '" + value + "';");
+                i += 1;
+                if (i >= keys.length) break;
+            }
+            String inline = builder.substring(0, builder.length() - 1);
+            object.put("inline", inline);
+        }
+        return object;
+    }
+
     public void addGroovyScriptField() {
 //        POST soc-system/_update_by_query
 //        {
@@ -243,13 +204,22 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
     }
 
     /**
+     * @param isWaitResponse:是否等待响应
+     * @return
+     * @Description: TODO(是否在集群中以后台任务的形式执行删除)
+     */
+    public void setWaitForCompletion(boolean isWaitResponse) {
+        this.isWaitResponse=isWaitResponse;
+    }
+
+    /**
      * 提交更新请求
      *
      * @return
      */
-    public JSONObject execute() {
-        String queryUrl = queryUrl();
-        String esQuery = getQueryString();
+    public JSONObject execute(String... fieldValue) {
+        this.queryUrl = queryUrl();
+        String esQuery = getQueryString(fieldValue);
         if (debug) {
             logger.info("curl:" + queryUrl + " -d " + esQuery);
             System.out.println("curl:" + queryUrl + " -d " + esQuery);
@@ -269,17 +239,9 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
      * @Description: TODO(构造接口URL)
      */
     private String queryUrl() {
-        return "http://" + ipPort + "/" + indexName + "/" + typeName + "/_update_by_query";
-    }
-
-    /**
-     * 重置搜索条件
-     */
-    public void reset() {
-        try {
-            this.keywordString = "";
-        } catch (Exception e) {
-        }
+        this.queryUrl = "http://" + ipPort + "/" + indexName + "/" + typeName + "/_update_by_query";
+        this.queryUrl = this.queryUrl + "?wait_for_completion=" + isWaitResponse + "";
+        return queryUrl;
     }
 
 }

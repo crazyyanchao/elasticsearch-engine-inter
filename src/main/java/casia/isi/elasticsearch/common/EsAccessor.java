@@ -43,6 +43,11 @@ public abstract class EsAccessor {
     public static boolean debug = false;
 
     /**
+     * 是否等待接口响应
+     */
+    public static boolean isWaitResponse = true;
+
+    /**
      * http访问对象 仅仅支持绝对地址接口访问
      */
 //    public HttpRequest request =  new HttpRequest();

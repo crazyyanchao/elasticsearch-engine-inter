@@ -8,11 +8,12 @@ import casia.isi.elasticsearch.common.EsAccessor;
 import casia.isi.elasticsearch.operation.http.*;
 import casia.isi.elasticsearch.util.ClientUtils;
 import com.alibaba.fastjson.JSON;
-import org.apache.log4j.Logger;
 
 import casia.isi.elasticsearch.common.Symbol;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.spreada.utils.chinese.ZHConverter;
 
 /**
  * ElasticSearch
@@ -22,37 +23,85 @@ import com.alibaba.fastjson.JSONObject;
  */
 public class EsIndexUpdateImp extends EsAccessor {
 
-    /**
-     * 索引名称
-     */
-    private static String indexname = null;
-    /**
-     * 类型名称
-     */
-    private static String typename = null;
+    // 索引集群连接的IP-PORT用冒号分隔
+    public String ipPort;
+
+    // 索引名称/多个索引名称使用逗号分隔
+    public String indexName;
+
+    // 索引类型
+    public String typeName;
+
     /**
      * 空格符
      */
-    private final String BLANK = " ";
+    public final String BLANK = " ";
+
     /**
      * 更新地址
      */
-    private static String update_index = null;
+    public static String update_index;
     /**
      * IP
      */
-    private static String IP = null;
+    public static String IP;
     /**
      * Port
      */
-    private static int Port = 0;
+    public static int Port = 0;
+
+    public static ZHConverter converter = ZHConverter
+            .getInstance(ZHConverter.SIMPLIFIED);
+
+    // 记录关键词，以及关键词出现情况
+    public String keywordString = "";
+
+    // 是否将查询语法繁转简
+    public static boolean ZH_Converter = false;
+
+    /**
+     * 查询索引的url
+     */
+    public String queryUrl;
+
+    /**
+     * 查询的返回值
+     */
+    public JSONObject queryJsonResult;
+
+    /**
+     * 构造查询条件的json串
+     */
+    public JSONObject queryJson;
+    /**
+     * 构造查询必须条件的json串
+     */
+    public JSONArray queryMustJarr;
+    /**
+     * 构造查询否定条件的json串
+     */
+    public JSONArray queryMustNotJarr;
+    /**
+     * 构造过滤必须条件的json串
+     */
+    public JSONArray queryFilterMustJarr;
+    /**
+     * 构造过滤否定条件的json串
+     */
+    public JSONArray queryFilterMustNotJarr;
 
     /**
      * 重置条件
      */
     public void reset() {
         try {
-            this.debug = false;
+            this.keywordString = "";
+            this.queryJson.clear();
+            this.queryJsonResult.clear();
+            this.queryMustJarr.clear();
+            this.queryMustNotJarr.clear();
+            this.queryFilterMustJarr.clear();
+            this.queryFilterMustNotJarr.clear();
         } catch (Exception e) {
         }
     }
@@ -62,7 +111,7 @@ public class EsIndexUpdateImp extends EsAccessor {
     }
 
     public EsIndexUpdateImp(HttpSymbol httpPoolName, String ipPorts, String indexName, String typeName) {
-        super(httpPoolName,ipPorts);
+        super(httpPoolName, ipPorts);
         EsIndexUpdate_imp(ipPorts, indexName, typeName);
     }
 
@@ -101,14 +150,22 @@ public class EsIndexUpdateImp extends EsAccessor {
         try {
             String[] servers = IPADRESS.split(Symbol.COMMA_CHARACTER.toString());
             //构造查询url
-            this.indexname = indexname;
-            this.typename = typename;
+            this.ipPort = IPADRESS;
+            this.indexName = indexname;
+            this.typeName = typename;
             this.update_index = "http://" + servers[new Random().nextInt(servers.length)];
             this.update_index = indexname == null ? "" : this.update_index + "/" + indexname;
             this.update_index = typename == null ? "" : this.update_index + "/" + typename;
 
             // 新增HTTP负载均衡器
             HttpProxyRegister.register(IPADRESS);
+
+            this.queryJson = new JSONObject();
+            this.queryJsonResult = new JSONObject();
+            this.queryMustJarr = new JSONArray();
+            this.queryMustNotJarr = new JSONArray();
+            this.queryFilterMustJarr = new JSONArray();
+            this.queryFilterMustNotJarr = new JSONArray();
 
         } catch (Exception e) {
             // TODO Auto-generated catch block
@@ -128,14 +185,22 @@ public class EsIndexUpdateImp extends EsAccessor {
         try {
             this.IP = IP;
             this.Port = Port;
-            this.indexname = indexname;
-            this.typename = typename;
+            this.ipPort = this.IP + ":" + this.Port;
+            this.indexName = indexname;
+            this.typeName = typename;
             this.update_index = "http://" + this.IP + ":" + this.Port;
             this.update_index = indexname == null ? "" : this.update_index + "/" + indexname;
             this.update_index = typename == null ? "" : this.update_index + "/" + typename;
 
             // 新增HTTP负载均衡器
             HttpProxyRegister.register(IP + ":" + Port);
+
+            this.queryJson = new JSONObject();
+            this.queryJsonResult = new JSONObject();
+            this.queryMustJarr = new JSONArray();
+            this.queryMustNotJarr = new JSONArray();
+            this.queryFilterMustJarr = new JSONArray();
+            this.queryFilterMustNotJarr = new JSONArray();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

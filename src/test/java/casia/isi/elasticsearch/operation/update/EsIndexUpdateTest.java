@@ -1,9 +1,12 @@
 package casia.isi.elasticsearch.operation.update;
 
+import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.common.SortOrder;
 import casia.isi.elasticsearch.operation.delete.EsIndexDelete;
 import casia.isi.elasticsearch.operation.index.EsIndexCreat;
+import casia.isi.elasticsearch.operation.modify.EsModify;
 import casia.isi.elasticsearch.operation.search.EsIndexSearch;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.Before;
@@ -148,8 +151,116 @@ public class EsIndexUpdateTest {
         Map<String, String> map = new HashMap<>();
         map.put("type", "keyword");
         map.put("index", "not_analyzed");
-        boolean a= indexer.insertField("data_source", map);
+        boolean a = indexer.insertField("data_source", map);
         System.out.println(a);
+    }
+
+    @Test
+    public void _update_by_query_0() {
+
+        /**
+         * 下面更新测试为将索引ship_info中匹配到的数据mmsi字段修改为ms-kk
+         * 精确匹配
+         *
+         * **/
+
+        String ipPorts = "192.168.1.12:9200";
+        String indexName = "ship_info";
+        String indexType = "graph";
+
+        // 构造索引更新对象
+        EsIndexUpdate esIndexUpdate = new EsIndexUpdate(ipPorts, indexName, indexType);
+        esIndexUpdate.setDebug(true);
+
+        // 批量修改_update_by_query
+        String[] array = new String[]{"aa-ff"};
+        esIndexUpdate.addPrimitiveTermFilter("mmsi", array, FieldOccurs.MUST);
+
+        // 以后台任务的形式执行更新【数据量较大时使用此配置】
+        // isWaitResponse:是否等待响应
+        esIndexUpdate.setWaitForCompletion(false);
+
+        // 匹配到的数据中的字段值全部修改为某一值
+        JSONObject result = esIndexUpdate.execute("mmsi", "aa-ff-2");
+        System.out.println(result);
+        esIndexUpdate.reset();
+
+        // 执行刷新
+        EsModify.executeAutoRefresh(ipPorts, indexName);
+    }
+
+    @Test
+    public void _update_by_query_1() {
+
+        /**
+         * 下面更新测试为将索引ship_info中匹配到的数据mmsi字段修改为ms-kk
+         * 精确匹配
+         *
+         * **/
+
+        String ipPorts = "192.168.1.12:9200";
+        String indexName = "ship_info";
+        String indexType = "graph";
+
+        // 构造索引更新对象
+        EsIndexUpdate esIndexUpdate = new EsIndexUpdate(ipPorts, indexName, indexType);
+        esIndexUpdate.setDebug(true);
+
+        // 批量修改_update_by_query
+        String[] array = new String[]{"mmsi-test0"};
+        esIndexUpdate.addPrimitiveTermFilter("mmsi", array, FieldOccurs.MUST);
+
+        // 匹配到的数据中的字段值全部修改为某一值
+        JSONObject result = esIndexUpdate.execute("mmsi", "ms-kk", "field2", "ms-kk");
+        System.out.println(result);
+        esIndexUpdate.reset();
+
+        // 执行刷新
+        EsModify.executeAutoRefresh(ipPorts, indexName);
+    }
+
+    @Test
+    public void _update_by_query_2() {
+
+        /**
+         * 下面更新测试为将索引ship_info中匹配到的数据mmsi字段修改为ms-kk
+         * 模糊匹配
+         *
+         * **/
+
+        String ipPorts = "192.168.1.12:9200";
+        String indexName = "ship_info";
+        String indexType = "graph";
+
+        // 构造索引更新对象
+        EsIndexUpdate esIndexUpdate = new EsIndexUpdate(ipPorts, indexName, indexType);
+        esIndexUpdate.setDebug(true);
+
+        // 批量修改_update_by_query
+        /**
+         * URL的模糊匹配使用下面的方式查询
+         * wildcard通配符查询ES-KEYWORD
+         * URL的通配符查询的条件添加
+         * {
+         *   "wildcard": {
+         *     "url_short": "twitter.com/haku2013/status/*"
+         *   }
+         * }
+         *
+         * **/
+        JSONObject wildcardObj = new JSONObject();
+        wildcardObj.put("mmsi", "mmsi*");
+        JSONObject wildcard = new JSONObject();
+        wildcard.put("wildcard", wildcardObj);
+        esIndexUpdate.queryFilterMustJarr.add(wildcard);
+
+        // 匹配到的数据中的字段值全部修改为某一值
+        JSONObject result = esIndexUpdate.execute("mmsi", "ms-kk");
+        System.out.println(result);
+        esIndexUpdate.reset();
+
+        // 执行刷新
+        EsModify.executeAutoRefresh(ipPorts, indexName);
     }
 
 }

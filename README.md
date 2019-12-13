@@ -121,14 +121,22 @@ public class HttpAccessor extends EsAccessor {
 4、优化DEBUG日志输出与操作【所有DEBUG操作都在顶级父类中】
 
 # elasticsearch-engine-inter-1.7.6.jar接口包更新说明
-增加配置修改方法
+1.增加批量修改以及测试
+2.更新实时可见刷新接口
+3.配置修改接口
 ```
 // casia.isi.elasticsearch.operation.modify.EsModifyTest
-// 修改索引的刷新间隔
-EsModify.modifyRefreshIntervalSecond("localhost:9200", "ship_info,.monitor_task_alarm", 60);
-
 // 索引执行一次手动刷新-对于数据可见性有实时性要求的需要调用此方法
 EsModify.executeAutoRefresh("localhost:9200", "ship_info");
+
+// 批量更新测试：casia.isi.elasticsearch.operation.update.EsIndexUpdateTest
+// 更新任务是否等待响应
+// 以后台任务的形式执行更新【数据量较大时使用此配置】
+// isWaitResponse:是否等待响应
+esIndexUpdate.setWaitForCompletion(true);
+
+// 修改索引的刷新间隔
+EsModify.modifyRefreshIntervalSecond("localhost:9200", "ship_info,.monitor_task_alarm", 60);
 ```
 
 

@@ -557,7 +557,7 @@ public class EsIndexSearchTest {
         searcher.setDebug(true);
         searcher = new EsIndexSearch(ipPort, "*", "monitor_data");
 
-//       searcher.addPrimitiveTermQuery("url_short", "twitter.com/hoganindc2015/*", casia.isi.elasticsearch.common.FieldOccurs.MUST);
+       searcher.addPrimitiveTermQuery("url_short", "twitter.com/hoganindc2015/*", casia.isi.elasticsearch.common.FieldOccurs.MUST);
         /**
          * URL的模糊匹配使用下面的方式查询
          * wildcard通配符查询ES-KEYWORD
