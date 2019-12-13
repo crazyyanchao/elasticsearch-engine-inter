@@ -2,7 +2,6 @@ package casia.isi.elasticsearch.operation.update;
 
 import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.common.SortOrder;
-import casia.isi.elasticsearch.operation.delete.EsIndexDelete;
 import casia.isi.elasticsearch.operation.index.EsIndexCreat;
 import casia.isi.elasticsearch.operation.modify.EsModify;
 import casia.isi.elasticsearch.operation.search.EsIndexSearch;
