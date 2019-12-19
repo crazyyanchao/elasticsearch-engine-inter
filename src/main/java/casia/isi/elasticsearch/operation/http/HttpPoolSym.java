@@ -28,7 +28,7 @@ package casia.isi.elasticsearch.operation.http;/**
  * @Description: TODO(HTTP POOL SYMBOL)
  * @date 2019/7/1 12:00
  */
-public enum HttpPoolSym {
+public enum HttpPoolSym implements HttpSymbol {
 
     /**
      * 多个集群时才需要新增指定HTTP连接池
@@ -37,7 +37,9 @@ public enum HttpPoolSym {
     /**
      * 默认连接池
      */
-    DEFAULT("default");
+    DEFAULT("default"),
+
+    REPORT("report");
 
     private String symbol;
 

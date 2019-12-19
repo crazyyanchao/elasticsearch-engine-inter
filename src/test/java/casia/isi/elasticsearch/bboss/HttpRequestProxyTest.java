@@ -25,9 +25,9 @@ package casia.isi.elasticsearch.bboss;
 
 import casia.isi.elasticsearch.operation.http.HttpDiscover;
 import com.alibaba.fastjson.JSONObject;
-import org.frameworkset.spi.remote.http.HttpHost;
-import org.frameworkset.spi.remote.http.HttpRequestProxy;
-import org.frameworkset.spi.remote.http.proxy.HttpProxyUtil;
+import casia.isi.component.http.HttpHost;
+import casia.isi.component.http.HttpRequestProxy;
+import casia.isi.component.http.proxy.HttpProxyUtil;
 import org.junit.Test;
 
 import java.util.ArrayList;

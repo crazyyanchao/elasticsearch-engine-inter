@@ -25,7 +25,7 @@ package casia.isi.elasticsearch.operation.http;
 
 import casia.isi.elasticsearch.common.EsAccessor;
 import org.slf4j.Logger;
-import org.frameworkset.spi.remote.http.HttpRequestProxy;
+import casia.isi.component.http.HttpRequestProxy;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;

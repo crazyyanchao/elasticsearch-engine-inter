@@ -24,10 +24,10 @@ package casia.isi.elasticsearch.operation.http;
  */
 
 import org.frameworkset.spi.assemble.GetProperties;
-import org.frameworkset.spi.remote.http.ClientConfiguration;
-import org.frameworkset.spi.remote.http.HttpHost;
-import org.frameworkset.spi.remote.http.proxy.HttpHostDiscover;
-import org.frameworkset.spi.remote.http.proxy.HttpServiceHostsConfig;
+import casia.isi.component.http.ClientConfiguration;
+import casia.isi.component.http.HttpHost;
+import casia.isi.component.http.proxy.HttpHostDiscover;
+import casia.isi.component.http.proxy.HttpServiceHostsConfig;
 
 import java.util.ArrayList;
 import java.util.List;

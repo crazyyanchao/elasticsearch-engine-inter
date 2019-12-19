@@ -38,12 +38,12 @@ import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-import org.frameworkset.spi.remote.http.ClientConfiguration;
-import org.frameworkset.spi.remote.http.HttpRequestProxy;
-import org.frameworkset.spi.remote.http.proxy.ExceptionWare;
-import org.frameworkset.spi.remote.http.proxy.HttpAddress;
-import org.frameworkset.spi.remote.http.proxy.HttpProxyRequestException;
-import org.frameworkset.spi.remote.http.proxy.NoHttpServerException;
+import casia.isi.component.http.ClientConfiguration;
+import casia.isi.component.http.HttpRequestProxy;
+import casia.isi.component.http.proxy.ExceptionWare;
+import casia.isi.component.http.proxy.HttpAddress;
+import casia.isi.component.http.proxy.HttpProxyRequestException;
+import casia.isi.component.http.proxy.NoHttpServerException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;

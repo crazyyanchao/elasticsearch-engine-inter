@@ -23,9 +23,13 @@ package casia.isi.elasticsearch.common;
  * 　　　　　　　　　 ┗┻┛　 ┗┻┛+ + + +
  */
 
+import casia.isi.component.http.ClientConfiguration;
+import casia.isi.component.http.proxy.HttpAddress;
+import casia.isi.component.http.proxy.HttpServiceHosts;
 import casia.isi.elasticsearch.operation.http.*;
-import com.alibaba.fastjson.JSONObject;
 import org.apache.log4j.Logger;
+
+import java.util.List;
 
 /**
  * @author YanchaoMa yanchaoma@foxmail.com
@@ -47,6 +51,8 @@ public abstract class EsAccessor {
      */
     public static boolean isWaitResponse = true;
 
+    public static String httpPoolName = HttpPoolSym.DEFAULT.getSymbolValue();
+
     /**
      * http访问对象 仅仅支持绝对地址接口访问
      */
@@ -55,13 +61,13 @@ public abstract class EsAccessor {
     /**
      * http访问对象 支持绝对接口地址和相对接口地址
      **/
-    public HttpProxyRequest request = new HttpProxyRequest(HttpPoolSym.DEFAULT.getSymbolValue());
+    public HttpProxyRequest request = new HttpProxyRequest(httpPoolName);
 
     public EsAccessor() {
     }
 
     public EsAccessor(HttpSymbol httpPoolName, String ipPorts) {
-        if (httpPoolName.name().equals(HttpPoolSym.DEFAULT.getSymbolValue()))
+        if (httpPoolName.name().equals(httpPoolName))
             logger.error(httpPoolName + " hold on...", new IllegalArgumentException());
         HttpProxyRegister.register(ipPorts);
         removeLastHttpsAddNewAddress(ipPorts);
@@ -73,12 +79,20 @@ public abstract class EsAccessor {
      * @Description: TODO(重置HTTP模块 - 将上一次注册的地址移除 ， 并加入新的集群地址)
      */
     public void removeLastHttpsAddNewAddress(String ipPorts) {
+        // MODIFY STATUS
+        ClientConfiguration config = ClientConfiguration.getClientConfiguration(HttpPoolSym.DEFAULT.getSymbolValue());
+        HttpServiceHosts httpServiceHosts = config.getHttpServiceHosts();
+        List<HttpAddress> httpAddressList = httpServiceHosts.getAddressList();
+        for (HttpAddress address : httpAddressList) {
+            address.setStatus(2);
+        }
+
+        // REGISTER
         boolean status;
         do {
             status = HttpDiscoverRegister.discover(ipPorts);
         } while (!status);
     }
-
 
     public static boolean isDebug() {
         return debug;

@@ -26,7 +26,7 @@ package casia.isi.elasticsearch.operation.http;
 /**
  * @author YanchaoMa yanchaoma@foxmail.com
  * @PACKAGE_NAME: casia.isi.neo4j.model
- * @Description: TODO(标签接口)
+ * @Description: TODO(HTTP池 - 标签接口)
  * @date 2019/7/9 14:40
  */
 public interface HttpSymbol {

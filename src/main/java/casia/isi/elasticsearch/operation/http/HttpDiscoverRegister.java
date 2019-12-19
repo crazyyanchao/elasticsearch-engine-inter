@@ -23,13 +23,12 @@ package casia.isi.elasticsearch.operation.http;
  * 　　　　　　　　　 ┗┻┛　 ┗┻┛+ + + +
  */
 
+import casia.isi.component.http.proxy.HttpServiceHosts;
 import casia.isi.elasticsearch.common.Symbol;
-import casia.isi.elasticsearch.util.ClientUtils;
-import org.frameworkset.spi.remote.http.ClientConfiguration;
-import org.frameworkset.spi.remote.http.HttpHost;
-import org.frameworkset.spi.remote.http.proxy.HttpAddress;
-import org.frameworkset.spi.remote.http.proxy.HttpProxyUtil;
-import org.frameworkset.spi.remote.http.proxy.HttpServiceHosts;
+import casia.isi.component.http.ClientConfiguration;
+import casia.isi.component.http.HttpHost;
+import casia.isi.component.http.proxy.HttpAddress;
+import casia.isi.component.http.proxy.HttpProxyUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,13 +40,13 @@ import java.util.List;
  * @date 2019/11/26 10:45
  */
 public class HttpDiscoverRegister {
+
     /**
      * @param ipPorts:逗号分隔的IP:PORT地址
      * @return
      * @Description: TODO(被动发现服务地址)
      */
     public static boolean discover(String ipPorts) {
-
         List<HttpHost> httpHosts = packHosts(ipPorts);
 
         /**
@@ -75,7 +74,7 @@ public class HttpDiscoverRegister {
      * @return
      * @Description: TODO(封装HTTP HOSTS)
      */
-    private static List<HttpHost> packHosts(String ipPorts) {
+    public static List<HttpHost> packHosts(String ipPorts) {
         List<HttpHost> httpHosts = new ArrayList<>();
         String[] servers = ipPorts
                 .replace(" ", "")
