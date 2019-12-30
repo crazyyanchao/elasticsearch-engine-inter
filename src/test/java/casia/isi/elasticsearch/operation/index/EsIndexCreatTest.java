@@ -58,14 +58,14 @@ public class EsIndexCreatTest {
 //            "192.168.12.114:9211,192.168.12.114:9210,192.168.12.110:9210," +
 //            "192.168.12.111:9210,192.168.122.111:9219";
 
-//    private String dxEsIpPorts = "" +
-//            "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
-//            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
+    private String dxEsIpPorts = "" +
+            "39.97.167.206:9210,39.97.243.92:9210,182.92.217.237:9210," +
+            "39.97.243.129:9210,39.97.173.122:9210,39.97.242.194:9210";
 
 
     @Before
     public void setUp() throws Exception {
-        esIndexCreat = new EsIndexCreat(ipPort, "ship_info", "graph");
+//        esIndexCreat = new EsIndexCreat(ipPort, "ship_info", "graph");
     }
 
     /**
@@ -170,14 +170,29 @@ public class EsIndexCreatTest {
      */
     @Test
     public void createImport() {
+        esIndexCreat = new EsIndexCreat(dxEsIpPorts, "operation_log", "log_data");
+
         List<JSONObject> messageDataArray = new ArrayList<>();
         JSONObject object = new JSONObject();
-        object.put("id", 123);
-        object.put("test", "test");
+        object.put("md5", "dasdw32wreasdweqgrtyr");
+        object.put("subsys_name", "shechao");
+
+        object.put("log_content","信息监测->查询巡查站点。筛选条件(站点名称:大)" );
+        object.put("operate_type", 4);
+        object.put("operate","查询" );
+        object.put("oper_time","2019-12-03 11:03:23" );
+        object.put("user_id", 533);
+        object.put("user_name","test" );
+        object.put("dep_id",126 );
+        object.put("inst_id", 74);
+        object.put("query_kws", "退伍");
+        object.put("query_not_kws","习近平" );
+        object.put("query_site","*中华时报*" );
         messageDataArray.add(object);
+
         // 传入做为唯一键的字段名称
         // 此接口具备覆盖更新的能力（批量覆盖更新可以使用此接口） -  EsIndexUpdate的部分更新不同
-        boolean bool = esIndexCreat.index(messageDataArray, "id");
+        boolean bool = esIndexCreat.index(messageDataArray, "md5");
         System.out.println(bool);
     }
 
