@@ -3,6 +3,7 @@ package casia.isi.elasticsearch.operation.delete;
 import casia.isi.elasticsearch.common.FieldOccurs;
 import casia.isi.elasticsearch.common.RangeOccurs;
 import casia.isi.elasticsearch.operation.http.HttpSymbol;
+import casia.isi.elasticsearch.util.ClientUtils;
 import casia.isi.elasticsearch.util.Validator;
 import com.alibaba.fastjson.JSONObject;
 
@@ -102,7 +103,7 @@ public class EsIndexDelete extends EsIndexDeleteImp {
     public String forceMerge() {
         String url = this.deleteUrl + "/" + this.IndexName + "/_forcemerge?only_expunge_deletes=true&max_num_segments=1&flush=true";
         if (super.isDebug()) System.out.println("_forcemerge:" + url);
-        return super.request.httpPost(url, "");
+        return super.request.httpPost(ClientUtils.referenceUrl(url), "");
     }
 
     /**
@@ -122,7 +123,7 @@ public class EsIndexDelete extends EsIndexDeleteImp {
     public String outputLastTaskInfo(String lastTaskId) {
         String url = this.deleteUrl + "/_tasks/" + lastTaskId + "";
         if (super.isDebug()) System.out.println("_tasks:" + url);
-        return super.request.httpGet(url);
+        return super.request.httpGet(ClientUtils.referenceUrl(url));
     }
 
 }

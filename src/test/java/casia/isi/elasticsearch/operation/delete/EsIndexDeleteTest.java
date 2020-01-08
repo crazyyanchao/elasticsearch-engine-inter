@@ -136,6 +136,11 @@ public class EsIndexDeleteTest {
         System.out.println(esIndexDelete.deleteIndexNameRun());
     }
 
+    @Test
+    public void name() {
+        EsIndexDelete esIndexDelete = new EsIndexDelete("localhost:9200", "ship_info", "graph");
+        System.out.println(esIndexDelete.forceMerge());
+    }
 }
 
 
