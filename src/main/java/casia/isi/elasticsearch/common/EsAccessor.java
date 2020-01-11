@@ -82,16 +82,17 @@ public abstract class EsAccessor {
         // MODIFY STATUS
         ClientConfiguration config = ClientConfiguration.getClientConfiguration(HttpPoolSym.DEFAULT.getSymbolValue());
         HttpServiceHosts httpServiceHosts = config.getHttpServiceHosts();
-        List<HttpAddress> httpAddressList = httpServiceHosts.getAddressList();
-        for (HttpAddress address : httpAddressList) {
-            address.setStatus(2);
+        if (httpServiceHosts != null) {
+            List<HttpAddress> httpAddressList = httpServiceHosts.getAddressList();
+            for (HttpAddress address : httpAddressList) {
+                address.setStatus(2);
+            }
+            // REGISTER
+            boolean status;
+            do {
+                status = HttpDiscoverRegister.discover(ipPorts);
+            } while (!status);
         }
-
-        // REGISTER
-        boolean status;
-        do {
-            status = HttpDiscoverRegister.discover(ipPorts);
-        } while (!status);
     }
 
     public static boolean isDebug() {
@@ -102,5 +103,22 @@ public abstract class EsAccessor {
         debug = isDebug;
     }
 
+    /**
+     * @param
+     * @return
+     * @Description: TODO(获取索引信息)
+     */
+    public String catIndicesInfo(String indicesName) {
+        return request.httpGet("/_cat/indices/" + indicesName + "?v&format=json&pretty");
+    }
+
+    /**
+     * @param
+     * @return
+     * @Description: TODO(获取索引信息 - 指定字段返回)
+     */
+    public String catIndicesInfo(String indicesName, String fields) {
+        return request.httpGet("/_cat/indices/" + indicesName + "?v&h=" + fields + "&format=json&pretty");
+    }
 }
 
