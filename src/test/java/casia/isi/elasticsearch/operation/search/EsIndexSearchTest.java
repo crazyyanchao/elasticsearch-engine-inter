@@ -63,6 +63,7 @@ public class EsIndexSearchTest {
 
     @Before
     public void setUp() throws Exception {
+        PropertyConfigurator.configureAndWatch("config" + File.separator + "log4j.properties");
         searcher = new EsIndexSearch(ipPort, "mblog_info_small,instagram_thread_small,twitter_info_small,youtube_info_small,facebook_info_small", "monitor_caiji_small");
 
         /**
@@ -557,7 +558,7 @@ public class EsIndexSearchTest {
         searcher.setDebug(true);
         searcher = new EsIndexSearch(ipPort, "*", "monitor_data");
 
-       searcher.addPrimitiveTermQuery("url_short", "twitter.com/hoganindc2015/*", casia.isi.elasticsearch.common.FieldOccurs.MUST);
+        searcher.addPrimitiveTermQuery("url_short", "twitter.com/hoganindc2015/*", casia.isi.elasticsearch.common.FieldOccurs.MUST);
         /**
          * URL的模糊匹配使用下面的方式查询
          * wildcard通配符查询ES-KEYWORD
