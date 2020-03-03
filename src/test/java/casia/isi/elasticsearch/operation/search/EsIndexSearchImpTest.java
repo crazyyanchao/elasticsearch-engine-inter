@@ -2400,13 +2400,24 @@ public class EsIndexSearchImpTest {
                 "b4a80fd7190a5d065fbcf2e01e6a5da6"};
         esIndexSearch.addPrimitiveTermFilter("blogger_id", bloggerIds, KeywordsCombine.OR, FieldOccurs.MUST);
         esIndexSearch.setRow(1000);
-        esIndexSearch.execute(new String[]{"eid","blogger_id","blogger"});
+        esIndexSearch.execute(new String[]{"eid", "blogger_id", "blogger"});
         // OUTPUT
         List<String[]> result = esIndexSearch.getResults();
         esIndexSearch.outputResult(result);
         esIndexSearch.reset();
     }
 
+    @Test
+    public void searchByTerm() {
+        EsIndexSearch.debug = true;
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+        esc.addQueryCondition("+(mode_s:40058A~)"); // 40058A|40058B|40058a|40054D|4005B9
+        esc.setStart(0);
+        esc.setRow(1000);
+        esc.execute(new String[]{"mode_s", "flight_number"});
+        List<String[]> result = esc.getResults();
+        esc.outputResult(result);
+    }
 }
 
 

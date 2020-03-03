@@ -49,7 +49,7 @@ public class EsIndexUpdateTest {
 
     private static EsIndexUpdate esSmallIndexUpdate;
 
-    private String ipPort = "localhost:9200";
+    private String ipPort = "39.97.167.206:9210";
 
     private static HashMap<String, String> itMap = new HashMap<>();
 
@@ -86,11 +86,11 @@ public class EsIndexUpdateTest {
 
         EsIndexUpdate esIndexUpdate = new EsIndexUpdate(ipPort, "aircraft_info", "graph");
 
-        String _id = "124";
+        String _id = "15470498081";
 
         Map<String, Object> map = new HashMap<String, Object>();
         map.put("id", _id);
-        map.put("test", "榆林治沙: 一茬接着一茬干誓将沙海变绿洲-UPDATE");
+        map.put("mode_s", "40058a");
 //        esIndexUpdate.updateParameterById(map,_id);
         esIndexUpdate.upsertParameterById(map, _id, map);
     }
