@@ -66,10 +66,10 @@ public class StringUtilTest {
 
     @Test
     public void lowerUpperCombination() {
-        String[] keywords = StringUtil.lowerUpperCombination("71BF07D");
+        String[] keywords = StringUtil.lowerUpperCombination("c7c6dB2");
         System.out.println("KEYWORD LOWER UPPER:");
         for (String key : keywords) {
-            System.out.println(key);
+            System.out.print(key+"|");
         }
     }
 }

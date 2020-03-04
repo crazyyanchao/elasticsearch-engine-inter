@@ -2410,9 +2410,27 @@ public class EsIndexSearchImpTest {
 
     @Test
     public void searchByTerm() {
+        /**
+         *
+         * 索引KEYWORD字段不区分大小写检索实现方式：
+         * 方式一：【索引MAPPING配置标准化器】
+         *   线上修改mapping：【检索使用索引别名检索】【预处理调整写入索引名】
+         *   1.旧索引关联别名【_aliases接口】
+         *   2.创建修改mapping之后的索引
+         *   3._reindex接口将旧索引数据导入新索引
+         *   4.为新索引增加与旧索引相同的别名
+         *   5.删除旧索引
+         *
+         * 方式二：【生成字符串的所有大小写组合】使用TERM过滤生成的项
+         *   例如输入：7c6dB4
+         *   则生成2的3次方个项：|7c6db4|7c6dB4|7c6Db4|7c6DB4|7C6db4|7C6dB4|7C6Db4|7C6DB4|
+         *   例如输入：A7c6dB2
+         *   则生成2的4次方个项：|a7c6db2|a7c6dB2|a7c6Db2|a7c6DB2|a7C6db2|a7C6dB2|a7C6Db2|a7C6DB2|A7c6db2|A7c6dB2|A7c6Db2|A7c6DB2|A7C6db2|A7C6dB2|A7C6Db2|A7C6DB2|
+         *
+         * **/
         EsIndexSearch.debug = true;
         EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info", "graph");
-        esc.addPrimitiveTermFilter("mode_s", StringUtil.lowerUpperCombination("e8020D"), FieldOccurs.MUST);
+        esc.addPrimitiveTermFilter("mode_s", StringUtil.lowerUpperCombination("7c6dB4"), FieldOccurs.MUST);
         esc.setStart(0);
         esc.setRow(1000);
         esc.execute(new String[]{"mode_s", "flight_number"});
@@ -2420,18 +2438,6 @@ public class EsIndexSearchImpTest {
         esc.outputResult(result);
     }
 
-    /**
-     * 索引KEYWORD字段不区分大小写检索实现方式：
-     * 方式一：【索引MAPPING配置标准化器】
-     * 线上修改mapping：【检索使用索引别名检索】【预处理调整写入索引名】
-     * 1.旧索引关联别名【_aliases接口】
-     * 2.创建修改mapping之后的索引
-     * 3._reindex接口将旧索引数据导入新索引
-     * 4.为新索引增加与旧索引相同的别名
-     * 5.删除旧索引
-     * 方式二：【生成字符串的所有大小写组合】使用TERM过滤
-     *
-     * **/
 }
 
 
