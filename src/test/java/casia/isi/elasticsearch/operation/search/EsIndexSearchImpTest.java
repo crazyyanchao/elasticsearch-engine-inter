@@ -2412,7 +2412,7 @@ public class EsIndexSearchImpTest {
     public void searchByTerm() {
         /**
          *
-         * 索引KEYWORD字段不区分大小写检索实现方式：
+         * 对已有索引KEYWORD字段不区分大小写检索实现方式：
          * 方式一：【索引MAPPING配置标准化器】
          *   线上修改mapping：【检索使用索引别名检索】【预处理调整写入索引名】
          *   1.旧索引关联别名【_aliases接口】
@@ -2437,7 +2437,6 @@ public class EsIndexSearchImpTest {
         List<String[]> result = esc.getResults();
         esc.outputResult(result);
     }
-
 }
 
 
