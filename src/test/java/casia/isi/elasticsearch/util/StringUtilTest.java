@@ -2,6 +2,8 @@ package casia.isi.elasticsearch.util;
 
 import org.junit.Test;
 
+import java.util.Scanner;
+
 import static org.junit.Assert.*;
 /**
  * 　　　　　　　 ┏┓       ┏┓+ +
@@ -28,12 +30,10 @@ import static org.junit.Assert.*;
  */
 
 /**
+ * @author YanchaoMa yanchaoma@foxmail.com
  * @PACKAGE_NAME: casia.isi.elasticsearch.util
  * @Description: TODO(Describe the role of this JAVA class)
- * @author YanchaoMa yanchaoma@foxmail.com
  * @date 2019/12/4 16:04
- *
- *
  */
 public class StringUtilTest {
 
@@ -47,5 +47,30 @@ public class StringUtilTest {
         System.out.println(StringUtil.urlShort("http://twitter.com/hoganindc2015/"));
     }
 
+    @Test
+    public void countAbcCode() {
+        System.out.println("abc count:" + StringUtil.countAbcCode("71BF07"));
+    }
+
+    @Test
+    public void isAbcCode() {
+        System.out.println(StringUtil.isAbcCode("d".charAt(0)));
+    }
+
+    @Test
+    public void is() {
+        System.out.println("字母:" + StringUtil.isAbcCode("z".charAt(0)));
+        System.out.println("小写字母:" + StringUtil.isLower("z".charAt(0)));
+        System.out.println("大写字母:" + StringUtil.isUpper("z".charAt(0)));
+    }
+
+    @Test
+    public void lowerUpperCombination() {
+        String[] keywords = StringUtil.lowerUpperCombination("71BF07D");
+        System.out.println("KEYWORD LOWER UPPER:");
+        for (String key : keywords) {
+            System.out.println(key);
+        }
+    }
 }
 

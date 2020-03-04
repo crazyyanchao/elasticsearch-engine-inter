@@ -10,6 +10,7 @@ import casia.isi.elasticsearch.model.Circle;
 import casia.isi.elasticsearch.operation.search.analyzer.AggsAnalyzer;
 import casia.isi.elasticsearch.util.DateUtil;
 import casia.isi.elasticsearch.util.FileUtil;
+import casia.isi.elasticsearch.util.StringUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import org.apache.log4j.Logger;
@@ -2411,13 +2412,26 @@ public class EsIndexSearchImpTest {
     public void searchByTerm() {
         EsIndexSearch.debug = true;
         EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info", "graph");
-        esc.addQueryCondition("+(mode_s:40058A~)"); // 40058A|40058B|40058a|40054D|4005B9
+        esc.addPrimitiveTermFilter("mode_s", StringUtil.lowerUpperCombination("e8020D"), FieldOccurs.MUST);
         esc.setStart(0);
         esc.setRow(1000);
         esc.execute(new String[]{"mode_s", "flight_number"});
         List<String[]> result = esc.getResults();
         esc.outputResult(result);
     }
+
+    /**
+     * 索引KEYWORD字段不区分大小写检索实现方式：
+     * 方式一：【索引MAPPING配置标准化器】
+     * 线上修改mapping：【检索使用索引别名检索】【预处理调整写入索引名】
+     * 1.旧索引关联别名【_aliases接口】
+     * 2.创建修改mapping之后的索引
+     * 3._reindex接口将旧索引数据导入新索引
+     * 4.为新索引增加与旧索引相同的别名
+     * 5.删除旧索引
+     * 方式二：【生成字符串的所有大小写组合】使用TERM过滤
+     *
+     * **/
 }
 
 

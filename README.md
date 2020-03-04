@@ -139,4 +139,6 @@ esIndexUpdate.setWaitForCompletion(true);
 EsModify.modifyRefreshIntervalSecond("localhost:9200", "ship_info,.monitor_task_alarm", 60);
 ```
 
+# elasticsearch-engine-inter-1.7.7.jar接口包更新说明
+1. 增加字符串的所有大小写组合算法
 
