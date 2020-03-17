@@ -2426,17 +2426,92 @@ public class EsIndexSearchImpTest {
          *   则生成2的3次方个项：|7c6db4|7c6dB4|7c6Db4|7c6DB4|7C6db4|7C6dB4|7C6Db4|7C6DB4|
          *   例如输入：A7c6dB2
          *   则生成2的4次方个项：|a7c6db2|a7c6dB2|a7c6Db2|a7c6DB2|a7C6db2|a7C6dB2|a7C6Db2|a7C6DB2|A7c6db2|A7c6dB2|A7c6Db2|A7c6DB2|A7C6db2|A7C6dB2|A7C6Db2|A7C6DB2|
-         *
+         *   例如输入：A7c6dB2
+         *   则生成2的5次方个项：|lx-lgg|lx-lgG|lx-lGg|lx-lGG|lx-Lgg|lx-LgG|lx-LGg|lx-LGG|lX-lgg|lX-lgG|lX-lGg|lX-lGG|lX-Lgg|lX-LgG|lX-LGg|lX-LGG|Lx-lgg|Lx-lgG|Lx-lGg|Lx-lGG|Lx-Lgg|Lx-LgG|Lx-LGg|Lx-LGG|LX-lgg|LX-lgG|LX-lGg|LX-lGG|LX-Lgg|LX-LgG|LX-LGg|LX-LGG|
          * **/
         EsIndexSearch.debug = true;
         EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info", "graph");
-        esc.addPrimitiveTermFilter("mode_s", StringUtil.lowerUpperCombination("7c6dB4"), FieldOccurs.MUST);
+        esc.addPrimitiveTermFilter("mode_s", StringUtil.lowerUpperCombination("LX-LGG"), FieldOccurs.MUST);
         esc.setStart(0);
         esc.setRow(1000);
         esc.execute(new String[]{"mode_s", "flight_number"});
         List<String[]> result = esc.getResults();
         esc.outputResult(result);
     }
+
+    @Test
+    public void searchFromNormalizerByTerm() {
+        EsIndexSearch.debug = true;
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+        esc.addPrimitiveTermFilter("mode_s", "7C6DB4", FieldOccurs.MUST);
+        esc.setStart(0);
+        esc.setRow(1000);
+        esc.execute(new String[]{"mode_s", "flight_number"});
+        List<String[]> result = esc.getResults();
+        esc.outputResult(result);
+    }
+
+    @Test
+    public void aircraftSearchRange() {
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+        // 时间
+        esc.addRangeTerms("pubtime", "2020-03-06 00:20:00", "2020-03-06 12:35:00");
+        // 位置
+        aircraftSearch.addGeoDistance("location_point", 35.57, 126.57, 30, DistanceUnit.KILOMETER, GeoDistanceOccurs.PLANE);
+
+        // 通过航号聚合
+        List<String[]> result = aircraftSearch.facetCountQueryOrderByCount("flight_number", -1, SortOrder.DESC);
+        aircraftSearch.outputResult(result);
+        aircraftSearch.reset();
+    }
+
+    @Test
+    public void aircraftSearchTerm() {
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+        // 时间
+        esc.addRangeTerms("pubtime", "2020-03-16 13:24:50", "2020-03-16 14:00:09");
+        esc.addPrimitiveTermFilter("site", "flightradar24.com", FieldOccurs.MUST);
+        esc.setStart(0);
+        esc.setRow(1000);
+        esc.execute(new String[]{"id"});
+        List<String[]> result = esc.getResults();
+        esc.outputResult(result);
+        esc.reset();
+    }
+
+    @Test
+    public void aircraftSearchTermSortPubtime() {
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info_latest_status", "graph");
+        // 时间
+        esc.addSortField("pubtime", SortOrder.DESC);
+        esc.setStart(0);
+        esc.setRow(1000);
+        esc.execute(new String[]{"id", "pubtime"});
+        List<String[]> result = esc.getResults();
+        esc.outputResult(result);
+        esc.reset();
+    }
+
+    @Test
+    public void facetTwoCountQueryOrderByCountThree01() {
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+
+        // 分桶统计
+        List<String[]> result = esc.facetTwoCountQueryOrderByCount("aircraft", new String[]{"mode_s", "site"}, 0, SortOrder.DESC);
+        esc.outputResult(result);
+        esc.reset();
+    }
+
+    @Test
+    public void facetTwoCountQueryOrderByCountThree02() {
+        EsIndexSearch esc = new EsIndexSearch(ipPort, "aircraft_info", "graph");
+
+        // 分桶统计
+        List<String[]> result = esc.facetMultipleCountQueryOrderByCount("aircraft", new String[]{"mode_s", "site"},0);
+        esc.outputResult(result);
+        esc.reset();
+    }
+
 }
 
 

@@ -2,7 +2,8 @@ package casia.isi.elasticsearch.util;
 
 import org.junit.Test;
 
-import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.*;
 /**
@@ -32,45 +33,25 @@ import static org.junit.Assert.*;
 /**
  * @author YanchaoMa yanchaoma@foxmail.com
  * @PACKAGE_NAME: casia.isi.elasticsearch.util
- * @Description: TODO(Describe the role of this JAVA class)
- * @date 2019/12/4 16:04
+ * @Description: TODO(Date Util)
+ * @date 2020/3/12 17:00
  */
-public class StringUtilTest {
+public class DateUtilTest {
 
     @Test
-    public void utilTest() {
-        System.out.println(StringUtil.escapeSolrQueryChars("sda.cn/sd/sad*"));
+    public void subHowMin() {
+        String sub = DateUtil.subHowMin("2020-03-12 10:02:01", "2020-03-12 16:52:01");
+        String regEx = "[0-9]";
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(sub);
+        String str= m.replaceAll("").trim();
+        System.out.println(sub);
     }
 
     @Test
-    public void utilTest01() {
-        System.out.println(StringUtil.urlShort("http://twitter.com/hoganindc2015/"));
-    }
-
-    @Test
-    public void countAbcCode() {
-        System.out.println("abc count:" + StringUtil.countAbcCode("71BF07"));
-    }
-
-    @Test
-    public void isAbcCode() {
-        System.out.println(StringUtil.isAbcCode("d".charAt(0)));
-    }
-
-    @Test
-    public void is() {
-        System.out.println("字母:" + StringUtil.isAbcCode("z".charAt(0)));
-        System.out.println("小写字母:" + StringUtil.isLower("z".charAt(0)));
-        System.out.println("大写字母:" + StringUtil.isUpper("z".charAt(0)));
-    }
-
-    @Test
-    public void lowerUpperCombination() {
-        String[] keywords = StringUtil.lowerUpperCombination("LX-LGG");
-        System.out.println("KEYWORD LOWER UPPER:");
-        for (String key : keywords) {
-            System.out.print(key+"|");
-        }
+    public void subMillHowMin() {
+        int min = DateUtil.subMillHowToMin("2020-03-11 16:02:01", "2020-03-12 16:52:01");
+        System.out.println(min);
     }
 }
 
