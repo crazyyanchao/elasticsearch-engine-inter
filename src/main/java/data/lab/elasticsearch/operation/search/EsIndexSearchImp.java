@@ -15,7 +15,7 @@ import data.lab.elasticsearch.util.ClientUtils;
 import data.lab.elasticsearch.util.StringUtil;
 import data.lab.elasticsearch.util.Validator;
 import org.apache.log4j.Logger;
-import org.apache.lucene.queryparser.classic.QueryParser;
+//import org.apache.lucene.queryparser.classic.QueryParser;
 //import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.alibaba.fastjson.JSON;
@@ -232,7 +232,7 @@ public class EsIndexSearchImp extends EsAccessor {
                 if (!Validator.check(p))
                     continue;
                 //对搜索词中的特殊字符做转移处理
-                p = QueryParser.escape(p);
+//                p = QueryParser.escape(p);
                 if (first) {
                     queryString += p;
                     first = false;
@@ -272,7 +272,7 @@ public class EsIndexSearchImp extends EsAccessor {
                 return;
 
             //对搜索词中的特殊字符做转移处理
-            p = QueryParser.escape(p);
+//            p = QueryParser.escape(p);
 
             queryString += p;
 
@@ -305,7 +305,7 @@ public class EsIndexSearchImp extends EsAccessor {
             if (!Validator.check(p))
                 continue;
             //对搜索词中的特殊字符做转移处理
-            p = QueryParser.escape(p);
+//            p = QueryParser.escape(p);
             queryString += p;
             queryString += ")";
             query += (BLANK + queryString);
@@ -382,7 +382,7 @@ public class EsIndexSearchImp extends EsAccessor {
                 if (!Validator.check(p))
                     continue;
                 //对搜索词中的特殊字符做转义处理
-                p = QueryParser.escape(p);
+//                p = QueryParser.escape(p);
                 if (first) {
                     queryString += ("\"" + p + "\"");
                     first = false;
@@ -424,7 +424,7 @@ public class EsIndexSearchImp extends EsAccessor {
                     if (!Validator.check(p))
                         continue;
                     //对搜索词中的特殊字符做转义处理
-                    p = QueryParser.escape(p);
+//                    p = QueryParser.escape(p);
                     if (first) {
                         queryString += ("\"" + p + "\"");
                         first = false;
@@ -470,7 +470,7 @@ public class EsIndexSearchImp extends EsAccessor {
                 if (!Validator.check(p))
                     continue;
                 //对搜索词中的特殊字符做转义处理
-                p = QueryParser.escape(p);
+//                p = QueryParser.escape(p);
                 if (first) {
                     sv += ("\"" + p + "\"");
                     first = false;
@@ -534,7 +534,7 @@ public class EsIndexSearchImp extends EsAccessor {
                     if (!Validator.check(p))
                         continue;
                     //对搜索词中的特殊字符做转移处理
-                    p = QueryParser.escape(p);
+//                    p = QueryParser.escape(p);
                     if (first) {
                         queryString += ("\"" + p + "\"");
                         first = false;

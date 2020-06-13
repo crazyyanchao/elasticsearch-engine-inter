@@ -9,10 +9,10 @@ import data.lab.elasticsearch.operation.http.HttpSymbol;
 import data.lab.elasticsearch.util.ClientUtils;
 import data.lab.elasticsearch.util.StringUtil;
 import data.lab.elasticsearch.util.Validator;
-import org.apache.lucene.queryparser.classic.QueryParser;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+//import org.apache.lucene.queryparser.classic.QueryParser;
 
 /**
  * delete
@@ -575,7 +575,7 @@ public class EsIndexDeleteImp extends EsAccessor {
                 if (!Validator.check(p))
                     continue;
                 //对搜索词中的特殊字符做转移处理
-                p = QueryParser.escape(p);
+//                p = QueryParser.escape(p);
                 if (first) {
                     queryString += p;
                     first = false;
@@ -612,7 +612,7 @@ public class EsIndexDeleteImp extends EsAccessor {
             if (!Validator.check(p))
                 continue;
             //对搜索词中的特殊字符做转移处理
-            p = QueryParser.escape(p);
+//            p = QueryParser.escape(p);
             queryString += p;
             queryString += ")";
             query += (BLANK + queryString);
@@ -647,7 +647,7 @@ public class EsIndexDeleteImp extends EsAccessor {
                 if (!Validator.check(p))
                     continue;
                 //对搜索词中的特殊字符做转义处理
-                p = QueryParser.escape(p);
+//                p = QueryParser.escape(p);
                 if (first) {
                     queryString += ("\"" + p + "\"");
                     first = false;
@@ -689,7 +689,7 @@ public class EsIndexDeleteImp extends EsAccessor {
                     if (!Validator.check(p))
                         continue;
                     //对搜索词中的特殊字符做转义处理
-                    p = QueryParser.escape(p);
+//                    p = QueryParser.escape(p);
                     if (first) {
                         queryString += ("\"" + p + "\"");
                         first = false;
