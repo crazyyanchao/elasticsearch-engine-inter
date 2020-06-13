@@ -16,12 +16,12 @@ import data.lab.elasticsearch.util.StringUtil;
 import data.lab.elasticsearch.util.Validator;
 import org.apache.log4j.Logger;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.wltea.analyzer.lucene.IKAnalyzer;
+//import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.spreada.utils.chinese.ZHConverter;
+//import com.spreada.utils.chinese.ZHConverter;
 
 /**
  * ElasticSearch
@@ -31,9 +31,9 @@ import com.spreada.utils.chinese.ZHConverter;
  */
 public class EsIndexSearchImp extends EsAccessor {
 
-    public static ZHConverter converter = ZHConverter
-            .getInstance(ZHConverter.SIMPLIFIED);
-    protected static IKAnalyzer analyzer = AnalyzerFactory.getInstanceMax();
+//    public static ZHConverter converter = ZHConverter
+//            .getInstance(ZHConverter.SIMPLIFIED);
+//    protected static IKAnalyzer analyzer = AnalyzerFactory.getInstanceMax();
 
     /**
      * 是否将查询语法繁转简
@@ -221,7 +221,7 @@ public class EsIndexSearchImp extends EsAccessor {
         if (!Validator.check(keywords))
             return;
         if (ZH_Converter) {
-            keywords = converter.convert(keywords);
+//            keywords = converter.convert(keywords);
         }
 
         String[] phraseSplit = keywords.split("\\s+");
@@ -257,7 +257,7 @@ public class EsIndexSearchImp extends EsAccessor {
         if (!Validator.check(keywords))
             return;
         if (ZH_Converter) {
-            keywords = converter.convert(keywords);
+//            keywords = converter.convert(keywords);
         }
 
         if (field != null) {
@@ -294,7 +294,7 @@ public class EsIndexSearchImp extends EsAccessor {
         if (!Validator.check(keywords))
             return;
         if (ZH_Converter) {
-            keywords = converter.convert(keywords);
+//            keywords = converter.convert(keywords);
         }
         String query = "";
         query = BLANK + "(";
@@ -372,7 +372,7 @@ public class EsIndexSearchImp extends EsAccessor {
         if (!Validator.check(keywords))
             return;
         if (ZH_Converter) {
-            keywords = converter.convert(keywords);
+//            keywords = converter.convert(keywords);
         }
         String[] phraseSplit = keywords.split("\\s+");
         if (field != null) {
@@ -409,7 +409,7 @@ public class EsIndexSearchImp extends EsAccessor {
         if (!Validator.check(keywords))
             return;
         if (ZH_Converter) {
-            keywords = converter.convert(keywords);
+//            keywords = converter.convert(keywords);
         }
         String[] phraseSplit = keywords.split("\\s+");
         if (Validator.check(fields)) {
@@ -460,7 +460,7 @@ public class EsIndexSearchImp extends EsAccessor {
                 continue;
 
             if (ZH_Converter) {
-                keysword = converter.convert(keysword);
+//                keysword = converter.convert(keysword);
             }
 
             String[] phraseSplit = keysword.split("\\s+");
@@ -574,7 +574,7 @@ public class EsIndexSearchImp extends EsAccessor {
         if (!Validator.check(term))
             return;
         if (ZH_Converter) {
-            term = converter.convert(term);
+//            term = converter.convert(term);
         }
         term = StringUtil.escapeSolrQueryChars(term);
         keywordString += (BLANK + occurs.getSymbolValue() + field + ":" + term);
@@ -600,7 +600,7 @@ public class EsIndexSearchImp extends EsAccessor {
                 continue;
             }
             if (ZH_Converter) {
-                term = converter.convert(term);
+//                term = converter.convert(term);
             }
             term = StringUtil.escapeSolrQueryChars(term);
             if (i > 0) {
@@ -625,7 +625,7 @@ public class EsIndexSearchImp extends EsAccessor {
         if (!Validator.check(term))
             return;
         if (ZH_Converter) {
-            term = converter.convert(term);
+//            term = converter.convert(term);
         }
         JSONObject termJson = new JSONObject();
         JSONObject json = new JSONObject();
@@ -663,7 +663,7 @@ public class EsIndexSearchImp extends EsAccessor {
                     continue;
                 }
                 if (ZH_Converter) {
-                    term = converter.convert(term);
+//                    term = converter.convert(term);
                 }
                 term = StringUtil.escapeSolrQueryChars(term);
                 if (i > 0) {
@@ -698,7 +698,7 @@ public class EsIndexSearchImp extends EsAccessor {
                 continue;
             }
             if (ZH_Converter) {
-                term = converter.convert(term);
+//                term = converter.convert(term);
             }
             term = StringUtil.escapeSolrQueryChars(term);
             if (i > 0) {

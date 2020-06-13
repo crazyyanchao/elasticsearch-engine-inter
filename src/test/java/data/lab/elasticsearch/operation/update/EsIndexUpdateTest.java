@@ -4,7 +4,7 @@ import data.lab.elasticsearch.common.FieldOccurs;
 import data.lab.elasticsearch.common.SortOrder;
 import data.lab.elasticsearch.operation.index.EsIndexCreat;
 import data.lab.elasticsearch.operation.modify.EsModify;
-import data.lab.elasticsearch.operation.search.EsIndexSearch;
+import data.lab.elasticsearch.operation.search.*;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.PropertyConfigurator;

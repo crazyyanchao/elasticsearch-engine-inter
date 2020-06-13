@@ -1,11 +1,11 @@
 package data.lab.elasticsearch.common;
 
-import data.lab.elasticsearch.operation.search.EsIndexSearch;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 
+import data.lab.elasticsearch.operation.search.*;
 /*
  *
  * Data Lab - graph database organization.

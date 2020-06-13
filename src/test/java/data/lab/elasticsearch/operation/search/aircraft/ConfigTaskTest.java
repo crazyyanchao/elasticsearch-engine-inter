@@ -7,7 +7,7 @@ import data.lab.elasticsearch.model.BoundBox;
 import data.lab.elasticsearch.model.BoundPoint;
 import data.lab.elasticsearch.model.Circle;
 import data.lab.elasticsearch.model.Shape;
-import data.lab.elasticsearch.operation.search.EsIndexSearch;
+import data.lab.elasticsearch.operation.search.*;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.log4j.PropertyConfigurator;

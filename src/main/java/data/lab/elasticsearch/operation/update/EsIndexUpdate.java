@@ -1,5 +1,6 @@
 package data.lab.elasticsearch.operation.update;
 
+import data.lab.elasticsearch.common.EsAccessor;
 import data.lab.elasticsearch.common.FieldOccurs;
 import data.lab.elasticsearch.operation.http.HttpSymbol;
 import data.lab.elasticsearch.util.ClientUtils;
@@ -48,23 +49,23 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
     public void addPrimitiveTermFilter(String field, String[] terms, FieldOccurs occurs) {
         if (terms == null || terms.length == 0)
             return;
-        keywordString = keywordString + BLANK + occurs.getSymbolValue() + field
+        super.keywordString = super.keywordString + super.BLANK + occurs.getSymbolValue() + field
                 + ":(";
         for (int i = 0; i < terms.length; i++) {
             String term = terms[i];
             if (term == null || term.trim().equals("")) {
                 continue;
             }
-            if (ZH_Converter) {
-                term = converter.convert(term);
+            if (EsIndexUpdateImp.ZH_Converter) {
+//                term = super.converter.convert(term);
             }
             term = StringUtil.escapeSolrQueryChars(term);
             if (i > 0) {
-                keywordString = keywordString + " OR ";
+                super.keywordString = super.keywordString + " OR ";
             }
-            keywordString = keywordString + term;
+            super.keywordString = super.keywordString + term;
         }
-        keywordString = keywordString + ")";
+        super.keywordString = super.keywordString + ")";
     }
 
     /**
@@ -78,37 +79,37 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
         JSONObject queryFilterBoolJson = new JSONObject();
 
         //当不设置查询条件时，匹配全部
-        if (keywordString == null || keywordString.trim().equals("")) {
+        if (super.keywordString == null || super.keywordString.trim().equals("")) {
 
             // 不设置查询条件时，取消匹配全部的操作
             // keywordString = "*:*";
         }
 
-        if (keywordString != null && !keywordString.trim().equals("")) {
+        if (super.keywordString != null && !super.keywordString.trim().equals("")) {
             //添加条件
-            if (keywordString.startsWith(BLANK)) {
-                keywordString = keywordString.substring(1);
+            if (super.keywordString.startsWith(super.BLANK)) {
+                super.keywordString = super.keywordString.substring(1);
             }
             String queryCondition = "";
-            if (this.queryJson.containsKey("query")) {
-                queryCondition = this.queryJson.getString("query") + BLANK + keywordString.trim();
+            if (super.queryJson.containsKey("query")) {
+                queryCondition = super.queryJson.getString("query") +super. BLANK + super.keywordString.trim();
             } else {
-                queryCondition = keywordString.trim();
+                queryCondition = super.keywordString.trim();
             }
             JSONObject queryJson = new JSONObject();
             JSONObject queryStringJson = new JSONObject();
             queryJson.put("query", queryCondition);
             queryStringJson.put("query_string", queryJson);
-            this.queryMustJarr.add(queryStringJson);
+            super.queryMustJarr.add(queryStringJson);
         }
 
-        if (this.queryFilterMustJarr.size() > 0) {
+        if (super.queryFilterMustJarr.size() > 0) {
             //添加过滤必须区间
-            queryFilterBoolJson.put("must", this.queryFilterMustJarr);
+            queryFilterBoolJson.put("must", super.queryFilterMustJarr);
         }
-        if (this.queryFilterMustNotJarr.size() > 0) {
+        if (super.queryFilterMustNotJarr.size() > 0) {
             //添加过滤非区间
-            queryFilterBoolJson.put("must_not", this.queryFilterMustNotJarr);
+            queryFilterBoolJson.put("must_not", super.queryFilterMustNotJarr);
         }
 
 //        if (this.termFilterJarry.size() > 0) {
@@ -133,11 +134,11 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
 ////			filterConditionJson.put("filter", andFilterJson);
 //		}
 
-        if (Validator.check(this.queryMustJarr)) {
-            queryboolJson.put("must", this.queryMustJarr);
+        if (Validator.check(super.queryMustJarr)) {
+            queryboolJson.put("must", super.queryMustJarr);
         }
-        if (Validator.check(this.queryMustNotJarr)) {
-            queryboolJson.put("must_not", this.queryMustNotJarr);
+        if (Validator.check(super.queryMustNotJarr)) {
+            queryboolJson.put("must_not", super.queryMustNotJarr);
         }
 //        if (Validator.check(this.fields)) {
 //            //返回值字段
@@ -146,8 +147,8 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
 
         JSONObject queryJson = new JSONObject();
         queryJson.put("bool", queryboolJson);
-        this.queryJson.put("query", queryJson);
-        String queryStr = this.queryJson.toString();
+        super.queryJson.put("query", queryJson);
+        String queryStr = super.queryJson.toString();
         return queryStr;
     }
 
@@ -158,9 +159,9 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
      */
     public String getQueryString(String... fieldValue) {
         String esQuery = getQueryString();
-        this.queryJson = JSONObject.parseObject(esQuery);
-        this.queryJson.put("script", putGroovyScriptField(fieldValue));
-        String queryStr = this.queryJson.toString();
+        super.queryJson = JSONObject.parseObject(esQuery);
+        super.queryJson.put("script", putGroovyScriptField(fieldValue));
+        String queryStr = super.queryJson.toString();
         return queryStr;
     }
 
@@ -209,7 +210,7 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
      * @Description: TODO(是否在集群中以后台任务的形式执行删除)
      */
     public void setWaitForCompletion(boolean isWaitResponse) {
-        this.isWaitResponse=isWaitResponse;
+        EsAccessor.isWaitResponse =isWaitResponse;
     }
 
     /**
@@ -218,17 +219,17 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
      * @return
      */
     public JSONObject execute(String... fieldValue) {
-        this.queryUrl = queryUrl();
+        super.queryUrl = queryUrl();
         String esQuery = getQueryString(fieldValue);
-        if (debug) {
-            logger.info("curl:" + queryUrl + " -d " + esQuery);
-            System.out.println("curl:" + queryUrl + " -d " + esQuery);
+        if (EsAccessor.debug) {
+            super.logger.info("curl:" + super.queryUrl + " -d " + esQuery);
+            System.out.println("curl:" + super.queryUrl + " -d " + esQuery);
         }
-        String queryResult = super.request.httpPost(ClientUtils.referenceUrl(queryUrl), esQuery);
+        String queryResult = super.request.httpPost(ClientUtils.referenceUrl(super.queryUrl), esQuery);
         if (queryResult != null)
             return JSONObject.parseObject(queryResult);
-        if (debug) {
-            logger.info("queryResult: -d " + queryResult);
+        if (EsAccessor.debug) {
+            super.logger.info("queryResult: -d " + queryResult);
         }
         return null;
     }
@@ -239,9 +240,9 @@ public class EsIndexUpdate extends EsIndexUpdateImp {
      * @Description: TODO(构造接口URL)
      */
     private String queryUrl() {
-        this.queryUrl = "http://" + ipPort + "/" + indexName + "/" + typeName + "/_update_by_query";
-        this.queryUrl = this.queryUrl + "?wait_for_completion=" + isWaitResponse + "";
-        return queryUrl;
+        super.queryUrl = "http://" + super.ipPort + "/" + super.indexName + "/" + super.typeName + "/_update_by_query";
+        super.queryUrl = super.queryUrl + "?wait_for_completion=" + EsAccessor.isWaitResponse + "";
+        return super.queryUrl;
     }
 
 }

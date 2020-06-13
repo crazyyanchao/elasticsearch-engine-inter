@@ -45,16 +45,16 @@
             <artifactId>lucene-queryparser</artifactId>
             <version>5.5.2</version>
         </dependency>
-        <dependency>
-            <groupId>ZHConverter</groupId>
-            <artifactId>ZHConverter</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>IKAnalyzer</groupId>
-            <artifactId>IKAnalyzer</artifactId>
-            <version>5.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ZHConverter</groupId>-->
+<!--            <artifactId>ZHConverter</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>IKAnalyzer</groupId>-->
+<!--            <artifactId>IKAnalyzer</artifactId>-->
+<!--            <version>5.0</version>-->
+<!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/dom4j/dom4j -->
         <dependency>
             <groupId>dom4j</groupId>

@@ -1,4 +1,5 @@
 # ELASTICSEARCH接口程序
+The different versions of elasticsearch (5.x are supported on different branches).
 
 ## 一、创建映射到ES
 ### 1、index的三个选项

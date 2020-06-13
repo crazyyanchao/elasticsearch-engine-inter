@@ -1,8 +1,8 @@
 package data.lab.elasticsearch.operation.search;
 
 
-import java.io.IOException;
-import java.io.StringReader;
+//import java.io.IOException;
+//import java.io.StringReader;
 import java.util.*;
 
 import data.lab.elasticsearch.common.*;
@@ -22,13 +22,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import data.lab.elasticsearch.util.RegexUtil;
 import data.lab.elasticsearch.util.StringUtil;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+//import org.apache.lucene.analysis.TokenStream;
+//import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import com.alibaba.fastjson.JSONArray;
 
-import org.wltea.analyzer.core.IKSegmenter;
-import org.wltea.analyzer.core.Lexeme;
+//import org.wltea.analyzer.core.IKSegmenter;
+//import org.wltea.analyzer.core.Lexeme;
 
 /**
  * ElasticSearch的索引查询接口(Http方式)
@@ -63,51 +63,51 @@ public class EsIndexSearch extends EsIndexSearchImp {
      * @param size       返回数量,负数时返回全部
      * @return 返回一个{@code Set<String>}对象，存放分词后的关键词
      */
-    public static List<String> extractKeywords(String text, int size) {
-
-        Map<String, Integer> map = new HashMap<>();
-        StringReader stringReader = new StringReader(text);
-        TokenStream ts = analyzer.tokenStream("", stringReader);
-        try {
-            ts.reset();
-            if (ts == null)
-                return null;
-            CharTermAttribute attribute = ts.getAttribute(CharTermAttribute.class);
-            // 分词，将分词得到的词加到查询中
-            while (ts.incrementToken()) {
-                String word = new String(attribute.buffer(), 0, attribute.length());
-                if (word.length() < 2)
-                    continue;
-                Integer count = map.get(word);
-                if (count == null || count == 0)
-                    count = 1;
-                else
-                    count = count + 1;
-                map.put(word, count);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                ts.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        stringReader.close();
-        //排序，获取前size个
-        List<Map.Entry<String, Integer>> rt = StringUtil.sort(map);
-        int rtSize = rt.size();
-        if (size == -1 || size > rtSize) {
-            size = rtSize;
-        }
-        //將key值返回
-        List<String> rtList = new ArrayList<String>();
-        for (int i = 0; i < size; i++) {
-            rtList.add(rt.get(i).getKey());
-        }
-        return rtList;
-    }
+//    public static List<String> extractKeywords(String text, int size) {
+//
+//        Map<String, Integer> map = new HashMap<>();
+//        StringReader stringReader = new StringReader(text);
+//        TokenStream ts = analyzer.tokenStream("", stringReader);
+//        try {
+//            ts.reset();
+//            if (ts == null)
+//                return null;
+//            CharTermAttribute attribute = ts.getAttribute(CharTermAttribute.class);
+//            // 分词，将分词得到的词加到查询中
+//            while (ts.incrementToken()) {
+//                String word = new String(attribute.buffer(), 0, attribute.length());
+//                if (word.length() < 2)
+//                    continue;
+//                Integer count = map.get(word);
+//                if (count == null || count == 0)
+//                    count = 1;
+//                else
+//                    count = count + 1;
+//                map.put(word, count);
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                ts.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        stringReader.close();
+//        //排序，获取前size个
+//        List<Map.Entry<String, Integer>> rt = StringUtil.sort(map);
+//        int rtSize = rt.size();
+//        if (size == -1 || size > rtSize) {
+//            size = rtSize;
+//        }
+//        //將key值返回
+//        List<String> rtList = new ArrayList<String>();
+//        for (int i = 0; i < size; i++) {
+//            rtList.add(rt.get(i).getKey());
+//        }
+//        return rtList;
+//    }
 
     /**
      * 工具类：对数组类型的字符串进行转换为数组
@@ -177,24 +177,24 @@ public class EsIndexSearch extends EsIndexSearchImp {
      * @param minLen     分词的最小长度，如2则表示分词后只返回长度大于等于2的分词结果
      * @return
      */
-    public static Set<String> analysis(String keywords, boolean isUsingMax, int minLen) {
-        Set<String> set = new LinkedHashSet<String>();
-        StringReader stringReader = new StringReader(keywords);
-
-        IKSegmenter ik = new IKSegmenter(stringReader, isUsingMax);
-        Lexeme lex;
-        try {
-            while ((lex = ik.next()) != null) {
-                String keyword = lex.getLexemeText();
-                if (keyword.length() >= minLen)
-                    set.add(keyword);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        stringReader.close();
-        return set;
-    }
+//    public static Set<String> analysis(String keywords, boolean isUsingMax, int minLen) {
+//        Set<String> set = new LinkedHashSet<String>();
+//        StringReader stringReader = new StringReader(keywords);
+//
+//        IKSegmenter ik = new IKSegmenter(stringReader, isUsingMax);
+//        Lexeme lex;
+//        try {
+//            while ((lex = ik.next()) != null) {
+//                String keyword = lex.getLexemeText();
+//                if (keyword.length() >= minLen)
+//                    set.add(keyword);
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        stringReader.close();
+//        return set;
+//    }
 
     /**
      * 此方法用于对一些不可分词的数据进行检索，例如int,long型数据的genus，alarm等字段 <br>
@@ -218,7 +218,7 @@ public class EsIndexSearch extends EsIndexSearchImp {
                 continue;
             }
             if (ZH_Converter) {
-                term = converter.convert(term);
+//                term = converter.convert(term);
             }
             term = StringUtil.escapeSolrQueryChars(term);
             if (i > 0) {
@@ -321,12 +321,12 @@ public class EsIndexSearch extends EsIndexSearchImp {
      * @return
      * @Description: TODO(相似性查询 - 控制分词)
      */
-    public void addMoreLikeThisQuery(String field, String sentence, int keywordSize) {
-        if ((field == null) || ("".equals(field.trim())))
-            return;
-        List list = extractKeywords(sentence, keywordSize);
-        super.addKeywordsQuery(field, list, FieldOccurs.MUST);
-    }
+//    public void addMoreLikeThisQuery(String field, String sentence, int keywordSize) {
+//        if ((field == null) || ("".equals(field.trim())))
+//            return;
+//        List list = extractKeywords(sentence, keywordSize);
+//        super.addKeywordsQuery(field, list, FieldOccurs.MUST);
+//    }
 
     /**
      * 筛选某区间内的数据，筛选的字段必须为数字形式。 如时间、 id、 评论数等

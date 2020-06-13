@@ -12,7 +12,7 @@ import data.lab.elasticsearch.common.Symbol;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.spreada.utils.chinese.ZHConverter;
+//import com.spreada.utils.chinese.ZHConverter;
 import data.lab.elasticsearch.operation.http.HttpProxyRegister;
 import data.lab.elasticsearch.operation.http.HttpSymbol;
 
@@ -51,8 +51,8 @@ public class EsIndexUpdateImp extends EsAccessor {
      */
     public static int Port = 0;
 
-    public static ZHConverter converter = ZHConverter
-            .getInstance(ZHConverter.SIMPLIFIED);
+//    public static ZHConverter converter = ZHConverter
+//            .getInstance(ZHConverter.SIMPLIFIED);
 
     // 记录关键词，以及关键词出现情况
     public String keywordString = "";

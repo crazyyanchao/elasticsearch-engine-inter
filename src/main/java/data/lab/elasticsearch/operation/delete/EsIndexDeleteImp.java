@@ -22,8 +22,8 @@ import com.alibaba.fastjson.JSONObject;
  */
 public class EsIndexDeleteImp extends EsAccessor {
 
-    private static ZHConverter converter = ZHConverter
-            .getInstance(ZHConverter.SIMPLIFIED);
+//    private static ZHConverter converter = ZHConverter
+//            .getInstance(ZHConverter.SIMPLIFIED);
     /**
      * 索引ip
      */
@@ -564,7 +564,7 @@ public class EsIndexDeleteImp extends EsAccessor {
         if (!Validator.check(keywords))
             return;
         if (ZH_Converter) {
-            keywords = converter.convert(keywords);
+//            keywords = converter.convert(keywords);
         }
 
         String[] phraseSplit = keywords.split("\\s+");
@@ -601,7 +601,7 @@ public class EsIndexDeleteImp extends EsAccessor {
         if (!Validator.check(keywords))
             return;
         if (ZH_Converter) {
-            keywords = converter.convert(keywords);
+//            keywords = converter.convert(keywords);
         }
         String query = "";
         query = BLANK + "(";
@@ -637,7 +637,7 @@ public class EsIndexDeleteImp extends EsAccessor {
         if (!Validator.check(keywords))
             return;
         if (ZH_Converter) {
-            keywords = converter.convert(keywords);
+//            keywords = converter.convert(keywords);
         }
         String[] phraseSplit = keywords.split("\\s+");
         if (field != null) {
@@ -674,7 +674,7 @@ public class EsIndexDeleteImp extends EsAccessor {
         if (!Validator.check(keywords))
             return;
         if (ZH_Converter) {
-            keywords = converter.convert(keywords);
+//            keywords = converter.convert(keywords);
         }
         String[] phraseSplit = keywords.split("\\s+");
         if (Validator.check(fields)) {
@@ -718,7 +718,7 @@ public class EsIndexDeleteImp extends EsAccessor {
         if (!Validator.check(term))
             return;
         if (ZH_Converter) {
-            term = converter.convert(term);
+//            term = converter.convert(term);
         }
         term = StringUtil.escapeSolrQueryChars(term);
 

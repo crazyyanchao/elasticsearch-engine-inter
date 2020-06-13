@@ -2,7 +2,7 @@ package data.lab.elasticsearch.operation.modify;
 
 import data.lab.elasticsearch.common.FieldOccurs;
 import data.lab.elasticsearch.operation.index.EsIndexCreat;
-import data.lab.elasticsearch.operation.search.EsIndexSearch;
+import data.lab.elasticsearch.operation.search.*;
 import com.alibaba.fastjson.JSONObject;
 import org.junit.Test;
 

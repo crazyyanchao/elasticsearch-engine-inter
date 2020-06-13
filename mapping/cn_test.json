@@ -1,0 +1,30 @@
+{
+  "settings": {
+    "number_of_shards": 5,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "测试类型标签": {
+      "dynamic": "false",
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "md5": {
+          "index": "not_analyzed",
+          "type": "keyword"
+        },
+        "name": {
+          "index": "not_analyzed",
+          "type": "double"
+        },
+        "content": {
+          "analyzer": "standard",
+          "store": true,
+          "type": "text"
+        }
+      }
+    }
+  }
+}
+
