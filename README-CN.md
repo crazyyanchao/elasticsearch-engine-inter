@@ -34,7 +34,7 @@ The different versions of elasticsearch (5.x are supported on different branches
 
 2、【注意点】使用增删改查接口程序时，标记有Deprecated注解的构造函数尽量避免使用。
 
-3、所里本地elasticsearch集群所有地址：
+3、test-elasticsearch集群所有地址：
    private String ipPort = "" +
             "192.168.12.107:9210,192.168.12.107:9211,192.168.12.114:9210," +
             "192.168.12.109:9211,192.168.12.112:9211,192.168.12.109:9210," +
